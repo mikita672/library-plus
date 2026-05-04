@@ -1,7 +1,7 @@
 using LibraryPlus.Endpoints;
 using LibraryPlus.Endpoints.User;
 using LibraryPlus.Extensions;
-using LibraryPlus.Services;
+using LibraryPlus.Services.User;
 using LibraryPlus.Services.Auth;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
@@ -24,11 +24,15 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "MongoDB connection string is missing. Configure MongoDbSettings:ConnectionString or ConnectionStrings:MongoDb.");
 }
 
-builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
+var mongoClient = new MongoClient(connectionString);
+var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
+
+builder.Services.AddSingleton(db);
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<AuthService>();
+builder.Services.AddSingleton<NotificationService>();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -39,5 +43,6 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
+app.MapNotificationEndpoints();
 
 app.Run();

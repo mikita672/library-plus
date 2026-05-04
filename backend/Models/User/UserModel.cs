@@ -1,19 +1,20 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace LibraryPlus.Models;
+namespace LibraryPlus.Models.User;
 
 [BsonIgnoreExtraElements]
-public class User
+public class UserModel
 {
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!;
-    public string PhoneNumber { get; set; } = null!;
-    public string Name { get; set; } = null!;
-    public string AvatarUrl { get; set; } = null!;
-    public long DeliveryAddressId { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? Name { get; set; }
+    public string? AvatarUrl { get; set; }
+    public AddressModel DeliveryAddress { get; set; } = null!; 
     public DateTime JoinedAt { get; set; }
     public bool IsDeleted { get; set; }
+    public bool IsAdmin { get; set; } = false;
 }
