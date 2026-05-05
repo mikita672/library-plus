@@ -4,7 +4,7 @@ import React, { useContext } from 'react'
 import { UserData } from '@/types/user/UserData';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import HeaderUserMenuAvatar from './user-menu-avatar';
-import { SignOutIcon, UserCircleIcon } from '@phosphor-icons/react';
+import { ShoppingBagIcon, SignOutIcon, UserCircleIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -50,6 +50,12 @@ function HeaderUserMenu({ userData } : Props) {
             <Link href="/profile" className="flex gap-2 align-center">
               <UserCircleIcon className="w-6 h-6" />
               <span>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">
+            <Link href="/profile/orders" className="flex gap-2 align-center">
+              <ShoppingBagIcon className="w-6 h-6" />
+              <span>Your orders</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
