@@ -1,49 +1,165 @@
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import React from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+
+const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().nonempty("Current password is required"),
+    newPassword: z
+      .string()
+      .nonempty("Password is required")
+      .min(8, "Must be at least 8 character long")
+      .max(64, "Must be shorter than 64 characters")
+      .regex(/[a-z]/, "Must include at least 1 lowercase character")
+      .regex(/[A-Z]/, "Must include at least 1 uppercase character")
+      .regex(/[0-9]/, "Must include at least 1 digit")
+      .regex(/[^a-zA-Z0-9]/, "Must include at least 1 special character"),
+    confirmPassword: z.string().nonempty("Please confirm your new password"),
+  })
+  .superRefine(({ newPassword, confirmPassword }, ctx) => {
+    if (newPassword !== confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+    }
+  });
+
+type ChangePasswordFormSchema = z.infer<typeof changePasswordSchema>;
 
 function ChangePassword() {
+  const form = useForm<ChangePasswordFormSchema>({
+    resolver: zodResolver(changePasswordSchema),
+    mode: "onChange",
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const onSubmit = async (data: ChangePasswordFormSchema) => {
+    setLoading(true);
+    setServerError(null);
+
+    try {
+      const response = await fetch("/api/user/updatePassword", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          oldPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        setServerError(errorData?.message ?? "Failed to update password");
+        return;
+      }
+
+      form.reset();
+    } catch {
+      setServerError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Change password</h2>
+      <h2 className="mb-4 text-xl font-semibold">Change password</h2>
 
-      <form>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup className="flex flex-col gap-4">
-          <Field>
-            <FieldLabel htmlFor="currentPassword">Current password</FieldLabel>
-            <Input
-              id="currentPassword"
-              name="currentPassword"
-              type="password"
-              autoComplete="current-password"
-            />
-          </Field>
+          <Controller
+            name="currentPassword"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>Current password</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="password"
+                  autoComplete="current-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-          <Field>
-            <FieldLabel htmlFor="newPassword">New password</FieldLabel>
-            <Input
-              id="newPassword"
-              name="newPassword"
-              type="password"
-              autoComplete="new-password"
-            />
-          </Field>
+          <Controller
+            name="newPassword"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>New password</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-          <Field>
-            <FieldLabel htmlFor="confirmPassword">
-              Confirm new password
-            </FieldLabel>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-            />
-          </Field>
+          <Controller
+            name="confirmPassword"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>
+                  Confirm new password
+                </FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-          <button className="bg-primary px-10 py-1 text-white font-semibold">
-            Submit
-          </button>
+          {serverError ? (
+            <p className="text-sm text-red-600">{serverError}</p>
+          ) : null}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Saving..." : "Submit"}
+          </Button>
         </FieldGroup>
       </form>
     </section>
