@@ -1,6 +1,5 @@
 using LibraryPlus.DTO;
 using LibraryPlus.Models.User;
-using Microsoft.Extensions.Configuration.UserSecrets;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -71,5 +70,5 @@ public class NotificationService(IMongoDatabase db)
         );
         return res.MatchedCount == 1;
     }
-    
+
 }
