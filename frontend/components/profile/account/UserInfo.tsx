@@ -26,7 +26,7 @@ function UserInfo() {
       </div>
       <div className="flex items-center gap-4">
         <img
-          src={fullUserData.avatarUrl || "/Smileys.jpg"}
+          src={fullUserData.avatarUrl || "/images/Smileys.jpg"}
           alt="User Avatar"
           className="size-24 rounded-full"
         />
