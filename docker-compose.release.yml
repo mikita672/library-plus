@@ -1,0 +1,7 @@
+services:
+  backend-core:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    healthcheck:
+      start_period: 20s 

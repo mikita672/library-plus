@@ -13,82 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
-  # dev
-  mongo-express:
-    image: mongo-express:1.0.2-20-alpine3.19
-    profiles: ["dev"]
-    restart: always
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:some_secret_password@mongo:27017/
-      ME_CONFIG_BASICAUTH_ENABLED: true
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
-    depends_on:
-      mongo:
-        condition: service_healthy
 
-  minio-dev:
-    image: minio/minio
-    environment:
-      - MINIO_ROOT_USER=miniouser
-      - MINIO_ROOT_PASSWORD=miniopass
-      - MINIO_DEFAULT_BUCKETS=library-plus
-    volumes:
-      - minio_data:/data
-    ports:
-      - "9001:9001"
-    networks:
-      - minio_network
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: "curl -k -f http://127.0.0.1:9001/minio/health/live || exit 1"
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  dotnet-release-dev:
-    profiles: ["dev"]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    depends_on:
-      mongo:
-        condition: service_healthy
-      minio-dev:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - dotnet-bin:/app/bin
-      - dotnet-obj:/app/obj
-      - nuget-cache:/root/.nuget/packages
-    networks:
-      default:
-        aliases:
-          - api
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-
-  frontend-dev:
-    profiles: ["dev"]
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - API_URL=http://api:8080/api/v1
-    depends_on:
-      dotnet-release-dev:
-        condition: service_healthy
-
-  
-  # release
-  minio-release:
+  minio:
     image: minio/minio
     environment:
       - MINIO_ROOT_USER=miniouser
@@ -105,30 +31,23 @@ services:
       timeout: 5s
       retries: 5
 
-
-  dotnet-release:
-    profiles: ["release"]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  backend-core:
     depends_on:
       mongo:
         condition: service_healthy
-      minio-release:
+      minio:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - api
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 20s
-    networks:
-      default:
-        aliases:
-          - api
 
-  frontend-release:
-    profiles: ["release"]
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -137,14 +56,11 @@ services:
     environment:
       - API_URL=http://api:8080/api/v1
     depends_on:
-      dotnet-release:
+      backend-core:
         condition: service_healthy
 
 volumes:
   db:
-  nuget-cache:
-  dotnet-bin:
-  dotnet-obj:
   minio_data:
     driver: local
 
