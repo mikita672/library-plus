@@ -27,6 +27,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 var mongoClient = new MongoClient(connectionString);
 var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
 
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton(db);
@@ -45,6 +46,7 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapHealthChecks("/healthz");
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapNotificationEndpoints();
