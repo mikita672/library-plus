@@ -7,7 +7,7 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex  bg-card py-8">
+    <section className="flex  bg-card py-4">
       <div className="flex w-full gap-8 px-6">
         <aside className="shrink-0 w-3xs">
           <Sidebar />

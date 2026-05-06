@@ -7,16 +7,16 @@ import React from "react";
 function page() {
   return (
     <div className="grid grid-cols-2 gap-8">
-      <div className="p-6">
+      <div className="p-2">
         <UserInfo />
       </div>
-      <div className=" p-6">
+      <div className=" p-2">
         <DeliveryAddress />
       </div>
-      <div className=" p-6">
+      <div className=" p-2">
         <ChangePassword />
       </div>
-      <div className="p-6">
+      <div className="p-2">
         <DangerZone />
       </div>
     </div>
