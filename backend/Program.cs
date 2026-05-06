@@ -27,6 +27,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
 var mongoClient = new MongoClient(connectionString);
 var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton(db);
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<JwtService>();
@@ -40,6 +42,8 @@ var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
