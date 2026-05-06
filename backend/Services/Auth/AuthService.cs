@@ -1,4 +1,5 @@
-using LibraryPlus.UserRequests;
+using LibraryPlus.Requests;
+using LibraryPlus.Services.User;
 
 namespace LibraryPlus.Services.Auth;
 

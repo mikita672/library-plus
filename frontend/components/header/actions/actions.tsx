@@ -7,9 +7,13 @@ import HeaderActionThemeToggle from './theme-toggle';
 function HeaderActions() {
   return (
     <div className="flex gap-3">
-      <BellIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
+      <div title="Notifications">
+        <BellIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
+      </div>
     
-      <BasketIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
+      <div title="Your cart">
+        <BasketIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
+      </div>
     
       <HeaderActionThemeToggle />
     </div>

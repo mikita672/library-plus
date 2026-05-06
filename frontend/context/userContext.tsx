@@ -20,7 +20,7 @@ export const UserProvider = ({ children } : { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     setIsLoading(true);
-    const response = await fetch("/api/user/me", {
+    const response = await fetch("/api/user/meShort", {
       method: "GET",
     });
 

@@ -1,39 +1,38 @@
 using System.Security.Cryptography;
 using System.Text;
-using LibraryPlus.Models;
+using LibraryPlus.Models.User;
 using MongoDB.Driver;
+using LibraryPlus.Services.User;
 
 namespace LibraryPlus.Services.Auth;
 
 public class RefreshTokenService
 {
-    private readonly IMongoCollection<RefreshToken> _refreshTokens;
+    private readonly IMongoCollection<RefreshTokenModel> _refreshTokens;
     private readonly UserService _userService;
 
-    public RefreshTokenService(IMongoClient mongoClient, IConfiguration config, UserService userService)
+    public RefreshTokenService(IMongoDatabase db, UserService userService)
     {
-        var databaseName = config["MongoDbSettings:DatabaseName"];
-        var database = mongoClient.GetDatabase(databaseName);
+        _refreshTokens = db.GetCollection<RefreshTokenModel>("refreshTokens");
         _userService = userService;
-        _refreshTokens = database.GetCollection<RefreshToken>("refreshTokens");
-
-        var indexKeys = Builders<RefreshToken>.IndexKeys.Ascending(t => t.ExpiryDate);
+        
+        var indexKeys = Builders<RefreshTokenModel>.IndexKeys.Ascending(t => t.ExpiryDate);
         var indexOptions = new CreateIndexOptions { ExpireAfter = TimeSpan.Zero };
-        _refreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshToken>(indexKeys, indexOptions));
+        _refreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshTokenModel>(indexKeys, indexOptions));
     }
 
 
-    public async Task<User?> GetUserByRefreshToken(string refreshTokenPlain)
+    public async Task<UserModel?> GetUserByRefreshToken(string refreshTokenPlain)
     {
         string refreshTokenHash = HashToken(refreshTokenPlain);
-        RefreshToken? refreshToken = await _refreshTokens
+        RefreshTokenModel? refreshToken = await _refreshTokens
             .Find(t => t.RefreshTokenHash == refreshTokenHash)
             .FirstOrDefaultAsync();
         if (refreshToken == null)
         {
             return null;
         }
-        return await _userService.GetUserByIdAsync(refreshToken.UserId);
+        return await _userService.GetUserById(refreshToken.UserId);
     }
 
     public async Task<string> AddRefreshToken(string userId)
@@ -44,7 +43,7 @@ public class RefreshTokenService
         string refreshTokenPlain = Convert.ToBase64String(randomNumber);
         string refreshTokenHash = HashToken(refreshTokenPlain);
 
-        RefreshToken refreshToken = new()
+        RefreshTokenModel refreshToken = new()
         {
             RefreshTokenHash = refreshTokenHash,
             UserId = userId,

@@ -1,28 +1,29 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using LibraryPlus.Models;
+using LibraryPlus.Models.User;
 using Microsoft.IdentityModel.Tokens;
 
 namespace LibraryPlus.Services.Auth;
 
 public class JwtService(IConfiguration config)
 {
-    private readonly IConfiguration _config = config;
+    private readonly byte[] _key = Encoding.UTF8.GetBytes(config["Jwt:Key"]!);
+    private readonly string _issuer = config["Jwt:Issuer"]!;
+    private readonly string _audience = config["Jwt:Audience"]!;
 
-    public string GenerateJwtToken(User user)
+    public string GenerateJwtToken(UserModel user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([new Claim("sub", user.Id)]),
-            Expires = DateTime.UtcNow.AddMinutes(1),
-            Issuer = _config["Jwt:Issuer"],
-            Audience = _config["Jwt:Audience"],
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            Issuer = _issuer,
+            Audience = _audience,
             SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature
+                new SymmetricSecurityKey(_key), SecurityAlgorithms.HmacSha256Signature
             )
         };
 
