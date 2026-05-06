@@ -1,11 +1,16 @@
-import React from "react";
+"use client";
+
+import { useContext } from "react";
 import EditButton from "./EditButton";
+import { userContext } from "@/context/userContext";
 
 function DeliveryAddress() {
-  let city = "Łódź";
-  let street = "Aleje Politechniki";
-  let buildingNumber = "9A";
-  let postCode = "93-590";
+  const { fullUserData } = useContext(userContext);
+
+  if (!fullUserData) return <div>Loading...</div>;
+
+  const address = fullUserData.address;
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -15,11 +20,11 @@ function DeliveryAddress() {
       <div className="flex items-center gap-4">
         <div className="flex flex-col text-base">
           <div className="inline-flex gap-6 mb-2">
-            <h4>City: {city}</h4>
-            <h4>Street: {street}</h4>
-            <h4>Building number: {buildingNumber}</h4>
+            <h4>City: {address.city || "Not provided"}</h4>
+            <h4>Street: {address.street || "Not provided"}</h4>
+            <h4>Building number: {address.buildingNumber || "Not provided"}</h4>
           </div>
-          <h4>Post code: {postCode}</h4>
+          <h4>Post code: {address.postalCode || "Not provided"}</h4>
         </div>
       </div>
     </div>
