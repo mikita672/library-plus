@@ -9,11 +9,11 @@ public class AuthorService(IMongoDatabase db)
 {
     private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
 
-    public async Task<AuthorModel> CreateAuthor(CreateAuthorRequest updateAuthorRequest)
+    public async Task<AuthorModel> CreateAuthor(CreateAuthorRequest createAuthorRequest)
     {
         var author = new AuthorModel
         {
-            Name = updateAuthorRequest.Name,
+            Name = createAuthorRequest.Name,
         };
         await _authors.InsertOneAsync(author);
         return author;
