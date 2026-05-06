@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo
+    image: mongo:8.3.1-noble
     restart: always
     volumes:
       - db:/data/db
@@ -15,7 +15,7 @@ services:
       retries: 5
 
   mongo-express:
-    image: mongo-express
+    image: mongo-express:1.0.2-20-alpine3.19
     profiles: ["dev"]
     restart: always
     ports:
@@ -33,28 +33,36 @@ services:
     profiles: ["dev"]
     build:
       context: ./backend
-      dockerfile: backend/Dockerfile.dev
+      dockerfile: Dockerfile.dev
     depends_on:
       mongo:
         condition: service_healthy
-    ports:
-      - "8080:8080"
     volumes:
       - ./backend:/app
       - dotnet-bin:/app/bin
       - dotnet-obj:/app/obj
       - nuget-cache:/root/.nuget/packages
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   dotnet-app:
     profiles: ["release"]
     build:
       context: ./backend
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       mongo:
         condition: service_healthy
-    ports:
-      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   db:
