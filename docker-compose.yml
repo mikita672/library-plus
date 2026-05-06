@@ -13,7 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+  
+  # dev
   mongo-express:
     image: mongo-express:1.0.2-20-alpine3.19
     profiles: ["dev"]
@@ -29,13 +30,34 @@ services:
       mongo:
         condition: service_healthy
 
-  dotnet-app-dev:
+  minio-dev:
+    image: minio/minio
+    environment:
+      - MINIO_ROOT_USER=miniouser
+      - MINIO_ROOT_PASSWORD=miniopass
+      - MINIO_DEFAULT_BUCKETS=library-plus
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9001:9001"
+    networks:
+      - minio_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: "curl -k -f http://127.0.0.1:9001/minio/health/live || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dotnet-release-dev:
     profiles: ["dev"]
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
     depends_on:
       mongo:
+        condition: service_healthy
+      minio-dev:
         condition: service_healthy
     volumes:
       - ./backend:/app
@@ -61,16 +83,38 @@ services:
     environment:
       - API_URL=http://api:8080/api/v1
     depends_on:
-      dotnet-app-dev:
+      dotnet-release-dev:
         condition: service_healthy
 
-  dotnet-app:
+  
+  # release
+  minio-release:
+    image: minio/minio
+    environment:
+      - MINIO_ROOT_USER=miniouser
+      - MINIO_ROOT_PASSWORD=miniopass
+      - MINIO_DEFAULT_BUCKETS=library-plus
+    volumes:
+      - minio_data:/data
+    networks:
+      - minio_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: "curl -k -f http://127.0.0.1:9001/minio/health/live || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  dotnet-release:
     profiles: ["release"]
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
       mongo:
+        condition: service_healthy
+      minio-release:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
@@ -83,7 +127,7 @@ services:
         aliases:
           - api
 
-  frontend-app:
+  frontend-release:
     profiles: ["release"]
     build:
       context: ./frontend
@@ -93,7 +137,7 @@ services:
     environment:
       - API_URL=http://api:8080/api/v1
     depends_on:
-      dotnet-app:
+      dotnet-release:
         condition: service_healthy
 
 volumes:
@@ -101,3 +145,9 @@ volumes:
   nuget-cache:
   dotnet-bin:
   dotnet-obj:
+  minio_data:
+    driver: local
+
+networks:
+  minio_network:
+    driver: bridge
