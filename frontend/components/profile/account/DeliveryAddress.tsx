@@ -1,11 +1,11 @@
 "use client";
 
 import { useContext } from "react";
-import EditButton from "./EditButton";
 import { userContext } from "@/context/userContext";
+import ChangeAddressPopover from "./ChangeAddressPopover";
 
 function DeliveryAddress() {
-  const { fullUserData } = useContext(userContext);
+  const { fullUserData, refreshFullUser } = useContext(userContext);
 
   if (!fullUserData) return <div>Loading...</div>;
 
@@ -15,7 +15,7 @@ function DeliveryAddress() {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xl font-semibold">Preferred delivery address</h2>
-        <EditButton />
+        <ChangeAddressPopover address={address} onSuccess={refreshFullUser} />
       </div>
       <div className="flex items-center gap-4">
         <div className="flex flex-col text-base">
