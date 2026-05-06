@@ -9,6 +9,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { z } from "zod";
+
+const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{9}$/, "Phone number must be exactly 9 digits");
 
 type Props = {
   phoneNumber: string | null;
@@ -20,21 +26,32 @@ export default function ChangePhonePopover({ phoneNumber, onSuccess }: Props) {
   const [phone, setPhone] = useState(phoneNumber ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setPhone(phoneNumber ?? "");
       setError(null);
+      setValidationError(null);
     }
   }, [open, phoneNumber]);
 
   const handleSave = async () => {
+    const validation = phoneSchema.safeParse(phone);
+    if (!validation.success) {
+      setValidationError(
+        validation.error.issues[0]?.message ?? "Invalid phone number",
+      );
+      return;
+    }
+
+    setValidationError(null);
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/v1/user/updatePhoneNumber", {
-        method: "POST",
+      const response = await fetch("/api/user/updatePhoneNumber", {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -44,15 +61,24 @@ export default function ChangePhonePopover({ phoneNumber, onSuccess }: Props) {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        setError(data?.message ?? "Failed to update phone number");
+        let errorMsg = `Request failed (${response.status})`;
+        try {
+          const data = await response.json();
+          errorMsg = data?.message || data?.error || errorMsg;
+        } catch {
+          errorMsg = response.statusText || errorMsg;
+        }
+        console.error("Phone update error:", errorMsg);
+        setError(errorMsg);
         return;
       }
 
       setOpen(false);
       onSuccess();
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Network error";
+      console.error("Phone update exception:", message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -81,11 +107,19 @@ export default function ChangePhonePopover({ phoneNumber, onSuccess }: Props) {
 
           <Input
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setValidationError(null);
+            }}
             placeholder="New phone number"
           />
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {validationError ? (
+            <p className="text-sm text-red-600">{validationError}</p>
+          ) : error ? (
+            <p className="text-sm text-red-600">{error}</p>
+          ) : null}
 
           <div className="flex justify-end gap-2">
             <Button
