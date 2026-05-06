@@ -21,10 +21,10 @@ const changePasswordSchema = z
       .nonempty("Password is required")
       .min(8, "Must be at least 8 character long")
       .max(64, "Must be shorter than 64 characters")
-      .regex(/[a-z]/, "Must include at least 1 lowercase character")
-      .regex(/[A-Z]/, "Must include at least 1 uppercase character")
-      .regex(/[0-9]/, "Must include at least 1 digit")
-      .regex(/[^a-zA-Z0-9]/, "Must include at least 1 special character"),
+      .regex(/(?=.*[a-z])/, "Must include at least 1 lowercase character")
+      .regex(/(?=.*[A-Z])/, "Must include at least 1 uppercase character")
+      .regex(/(?=.*[0-9])/, "Must include at least 1 digit")
+      .regex(/(?=.*[^a-zA-Z0-9])/, "Must include at least 1 special character"),
     confirmPassword: z.string().nonempty("Please confirm your new password"),
   })
   .superRefine(({ newPassword, confirmPassword }, ctx) => {
