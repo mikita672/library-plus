@@ -1,0 +1,33 @@
+services:
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:some_secret_password@mongo:27017/
+      ME_CONFIG_BASICAUTH_ENABLED: true
+      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
+      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  minio:
+    ports:
+      - "9001:9001"
+
+  backend-core:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+      - dotnet-bin:/app/bin
+      - dotnet-obj:/app/obj
+      - nuget-cache:/root/.nuget/packages
+
+volumes:
+  nuget-cache:
+  dotnet-bin:
+  dotnet-obj:

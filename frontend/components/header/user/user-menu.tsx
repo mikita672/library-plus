@@ -14,14 +14,14 @@ interface Props {
   userData: UserData;
 }
 
-function HeaderUserMenu({ userData } : Props) {
+function HeaderUserMenu({ userData }: Props) {
   const router = useRouter();
   const { logout } = useContext(userContext);
-  
+
   const onLogout = async () => {
     const error = await logout();
     if (error === null) {
-      toast.success("Logged out in successfully");
+      toast.success("Logged out successfully");
       router.refresh();
     } else {
       toast.error("Failed to logout", {
@@ -34,13 +34,13 @@ function HeaderUserMenu({ userData } : Props) {
   if (username.length > 12) {
     username = username.substring(0, 12) + '...';
   }
-  
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <div className="flex gap-2 items-center cursor-pointer transition-colors hover:text-gray-400 outline-none">
           <HeaderUserMenuAvatar avatarUrl={userData.avatarUrl} />
-          <span>{ username }</span>
+          <span>{username}</span>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={10} className="w-50">
@@ -60,12 +60,12 @@ function HeaderUserMenu({ userData } : Props) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer">
-            <div onClick={onLogout} className="flex gap-2 align-center">
-              <SignOutIcon className="w-6 h-6" />
-              <span>Logout</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <div onClick={onLogout} className="flex gap-2 align-center">
+            <SignOutIcon className="w-6 h-6" />
+            <span>Logout</span>
+          </div>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
