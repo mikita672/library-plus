@@ -3,9 +3,10 @@
 import { useContext } from "react";
 import EditButton from "./EditButton";
 import { userContext } from "@/context/userContext";
+import ChangePhonePopover from "./ChangePhoneModal";
 
 function UserInfo() {
-  const { fullUserData, isLoading } = useContext(userContext);
+  const { fullUserData, isLoading, refreshFullUser } = useContext(userContext);
 
   if (isLoading) return <div>Loading...</div>;
   if (!fullUserData) return <div>No user data available</div>;
@@ -22,7 +23,10 @@ function UserInfo() {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xl font-semibold">Account Info</h2>
-        <EditButton />
+        <ChangePhonePopover
+          phoneNumber={fullUserData.phoneNumber}
+          onSuccess={refreshFullUser}
+        />
       </div>
       <div className="flex items-center gap-4">
         <img
