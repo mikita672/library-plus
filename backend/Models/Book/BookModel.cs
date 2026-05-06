@@ -12,12 +12,12 @@ public class BookModel
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
     [BsonRepresentation(BsonType.ObjectId)]
-    public string AuthorId { get; set; } = null!;
+    public string? AuthorId { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? PublisherId { get; set; }
     public string Language { get; set; } = null!;
     public uint PublicationYear { get; set; }
     public uint PagesCount { get; set; }
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string PublisherId { get; set; } = null!;
     public decimal RepurchasePrice { get; set; }
     public string? OriginalTitle { get; set; }
     public string? OriginalLanguage { get; set; }
