@@ -1,0 +1,103 @@
+services:
+  mongo:
+    image: mongo:8.3.1-noble
+    restart: always
+    volumes:
+      - db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: some_secret_password
+    command: mongod --quiet --logpath /dev/null 
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    profiles: ["dev"]
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:some_secret_password@mongo:27017/
+      ME_CONFIG_BASICAUTH_ENABLED: true
+      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
+      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  dotnet-app-dev:
+    profiles: ["dev"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - dotnet-bin:/app/bin
+      - dotnet-obj:/app/obj
+      - nuget-cache:/root/.nuget/packages
+    networks:
+      default:
+        aliases:
+          - api
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  frontend-dev:
+    profiles: ["dev"]
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080/api/v1
+    depends_on:
+      dotnet-app-dev:
+        condition: service_healthy
+
+  dotnet-app:
+    profiles: ["release"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      default:
+        aliases:
+          - api
+
+  frontend-app:
+    profiles: ["release"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080/api/v1
+    depends_on:
+      dotnet-app:
+        condition: service_healthy
+
+volumes:
+  db:
+  nuget-cache:
+  dotnet-bin:
+  dotnet-obj:
