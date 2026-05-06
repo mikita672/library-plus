@@ -1,9 +1,8 @@
 "use client";
 
 import { useContext } from "react";
-import EditButton from "./EditButton";
 import { userContext } from "@/context/userContext";
-import ChangePhonePopover from "./ChangePhoneModal";
+import ChangePhonePopover from "./ChangePhonePopover";
 
 function UserInfo() {
   const { fullUserData, isLoading, refreshFullUser } = useContext(userContext);
