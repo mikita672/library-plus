@@ -10,7 +10,7 @@ public class BookModel
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = null!;
     public string Title { get; set; } = null!;
-    public string Description { get; set; } = null!;
+    public string Description { get; set; } = "";
     [BsonRepresentation(BsonType.ObjectId)]
     public string? AuthorId { get; set; }
     [BsonRepresentation(BsonType.ObjectId)]
