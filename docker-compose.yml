@@ -16,6 +16,7 @@ services:
 
   mongo-express:
     image: mongo-express
+    profiles: ["dev"]
     restart: always
     ports:
       - "8081:8081"
@@ -28,34 +29,35 @@ services:
       mongo:
         condition: service_healthy
 
-
-  # dev build
   dotnet-app-dev:
+    profiles: ["dev"]
     build:
-      dockerfile: Dockerfile.dev
+      context: ./backend
+      dockerfile: backend/Dockerfile.dev
     depends_on:
       mongo:
         condition: service_healthy
     ports:
       - "8080:8080"
     volumes:
-      - .:/app
+      - ./backend:/app
       - dotnet-bin:/app/bin
       - dotnet-obj:/app/obj
       - nuget-cache:/root/.nuget/packages
 
-  # release build
-  # dotnet-app:
-  #   build: .
-  #   depends_on:
-  #     mongo:
-  #       condition: service_healthy
-  #   ports:
-  #     - "8080:8080"
+  dotnet-app:
+    profiles: ["release"]
+    build:
+      context: ./backend
+      dockerfile: backend/Dockerfile
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
 
 volumes:
   db:
-  # Only use the volumes below if you use the dotnet-app-dev
   nuget-cache:
   dotnet-bin:
   dotnet-obj:
