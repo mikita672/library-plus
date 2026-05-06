@@ -2,6 +2,7 @@ using System.Security.Claims;
 using LibraryPlus.DTO;
 using LibraryPlus.Filters;
 using LibraryPlus.Requests;
+using LibraryPlus.Services.Auth;
 using LibraryPlus.Services.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ public static class UserEndpoints
     {
         var group = app.MapGroup("/api/v1/user");
         group.AddEndpointFilter<ActiveUserFilter>();
-        
+
         group.MapGet("/meShort", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
             var userId = claims.FindFirstValue("sub")!;
@@ -33,7 +34,8 @@ public static class UserEndpoints
             ClaimsPrincipal claims,
             UserService userService,
             [FromBody] UpdateAddressRequest updateAddressRequest
-        ) => {
+        ) =>
+        {
             var userId = claims.FindFirstValue("sub")!;
             await userService.UpdateAddress(userId, updateAddressRequest);
         });
@@ -71,6 +73,20 @@ public static class UserEndpoints
             var userId = claims.FindFirstValue("sub")!;
             return await notificationService.GetUserNotifications(userId, page);
         });
-        
+
+        group.MapDelete("/me", [Authorize] async (
+            ClaimsPrincipal claims,
+            UserService userService,
+            RefreshTokenService refreshTokenService) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            var deleted = await userService.SoftDeleteUser(userId);
+            if (deleted)
+            {
+                await refreshTokenService.RemoveRefreshTokensForUser(userId);
+            }
+
+            return deleted ? Results.NoContent() : Results.NotFound();
+        });
     }
 }

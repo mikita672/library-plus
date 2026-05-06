@@ -68,7 +68,7 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     public async Task<bool> UpdatePassword(string userId, string oldPassword, string newPassword)
     {
         var user = await (await _users.FindAsync(u => u.Id == userId)).FirstAsync();
-    
+
         if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
         {
             return false;
@@ -94,4 +94,10 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return user.IsAdmin;
     }
 
+    public async Task<bool> SoftDeleteUser(string userId)
+    {
+        var result = await _users.UpdateOneAsync(u => u.Id == userId && !u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, true));
+
+        return result.ModifiedCount == 1;
+    }
 }
