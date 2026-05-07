@@ -47,13 +47,13 @@ function HeaderUserMenu({ userData }: Props) {
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuItem className="cursor-pointer">
-            <Link href="/profile" className="flex gap-2 align-center">
+            <Link href="/profile" className="flex flex-1 gap-2 align-center">
               <UserCircleIcon className="w-6 h-6" />
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer">
-            <Link href="/profile/orders" className="flex gap-2 align-center">
+            <Link href="/profile/orders" className="flex flex-1 gap-2 align-center">
               <ShoppingBagIcon className="w-6 h-6" />
               <span>Your orders</span>
             </Link>
@@ -61,7 +61,7 @@ function HeaderUserMenu({ userData }: Props) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer">
-          <div onClick={onLogout} className="flex gap-2 align-center">
+          <div onClick={onLogout} className="flex flex-1 gap-2 align-center">
             <SignOutIcon className="w-6 h-6" />
             <span>Logout</span>
           </div>
