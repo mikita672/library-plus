@@ -3,7 +3,7 @@
 import React, { useContext } from 'react'
 import { UserData } from '@/types/user/UserData';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import HeaderUserMenuAvatar from './user-menu-avatar';
+import HeaderUserMenuAvatar from './UserMenuAvatar';
 import { ShoppingBagIcon, SignOutIcon, UserCircleIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { toast } from 'sonner';

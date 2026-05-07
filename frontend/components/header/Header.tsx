@@ -1,7 +1,7 @@
 import React from 'react'
-import HeaderActions from './actions/actions'
-import Logo from './logo'
-import HeaderUser from './user/user'
+import HeaderActions from './actions/Actions'
+import Logo from './Logo'
+import HeaderUser from './user/User'
 
 function Header() {
   return (
