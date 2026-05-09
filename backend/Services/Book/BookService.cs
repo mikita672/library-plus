@@ -50,4 +50,8 @@ public class BookService(IMongoDatabase db)
         return res.MatchedCount == 1;
     }
 
+    public async Task DeleteBook(string id)
+    {
+        await _books.FindOneAndDeleteAsync(b => b.Id == id);
+    }
 }
