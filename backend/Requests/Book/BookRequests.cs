@@ -14,3 +14,18 @@ public record CreateBookRequest(
     uint? OriginalPublicationYear,
     string? OriginalPublisherId
 );
+
+public record UpdateBookRequest(
+    string NewTitle,
+    string NewDescription,
+    string NewLanguage,
+    uint NewPublicationYear,
+    uint NewPagesCount,
+    decimal NewRepurchasePrice,
+    string NewAuthorId,
+    string NewPublisherId,
+    string? NewOriginalTitle,
+    string? NewOriginalLanguage,
+    uint? NewOriginalPublicationYear,
+    string? NewOriginalPublisherId
+);

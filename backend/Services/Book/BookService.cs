@@ -28,4 +28,26 @@ public class BookService(IMongoDatabase db)
         await _books.InsertOneAsync(book);
         return book;
     }
+
+    public async Task<bool> EditBook(string id, UpdateBookRequest updateBookRequest)
+    {
+        var res = await _books.UpdateOneAsync(
+            Builders<BookModel>.Filter.Eq(b => b.Id, id),
+            Builders<BookModel>.Update
+                .Set(b => b.Title, updateBookRequest.NewTitle)
+                .Set(b => b.Description, updateBookRequest.NewDescription)
+                .Set(b => b.Language, updateBookRequest.NewLanguage)
+                .Set(b => b.PublicationYear, updateBookRequest.NewPublicationYear)
+                .Set(b => b.PagesCount, updateBookRequest.NewPagesCount)
+                .Set(b => b.RepurchasePrice, updateBookRequest.NewRepurchasePrice)
+                .Set(b => b.AuthorId, updateBookRequest.NewAuthorId)
+                .Set(b => b.PublisherId, updateBookRequest.NewPublisherId)
+                .Set(b => b.OriginalTitle, updateBookRequest.NewOriginalTitle)
+                .Set(b => b.OriginalLanguage, updateBookRequest.NewOriginalLanguage)
+                .Set(b => b.OriginalPublicationYear, updateBookRequest.NewOriginalPublicationYear)
+                .Set(b => b.OriginalPublisherId, updateBookRequest.NewOriginalPublisherId)
+        );
+        return res.MatchedCount == 1;
+    }
+
 }
