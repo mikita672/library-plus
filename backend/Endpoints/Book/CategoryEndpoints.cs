@@ -23,7 +23,7 @@ public static class CategoryEndpoints
             [FromBody] CreateCategoryRequest createCategoryRequest
         ) =>
         {
-            await categoryService.CreateCategory(createCategoryRequest);
+            return await categoryService.CreateCategory(createCategoryRequest);
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();

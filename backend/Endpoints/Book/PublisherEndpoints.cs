@@ -23,7 +23,7 @@ public static class PublisherEndpoints
             [FromBody] CreatePublisherRequest createPublisherRequest
         ) =>
         {
-            await publisherService.CreatePublisher(createPublisherRequest);
+            return await publisherService.CreatePublisher(createPublisherRequest);
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();

@@ -23,7 +23,7 @@ public static class AuthorEndpoints
             [FromBody] CreateAuthorRequest createAuthorRequest
         ) =>
         {
-            await authorService.CreateAuthor(createAuthorRequest);
+            return await authorService.CreateAuthor(createAuthorRequest);
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
