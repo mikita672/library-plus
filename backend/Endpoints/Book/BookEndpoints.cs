@@ -73,5 +73,25 @@ public static class BookEndpoints
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPost("/bookUnit", [Authorize] async (
+            BookService bookService,
+            [FromBody] AddBookUnitRequest addBookUnitRequest
+        ) =>
+        {
+            await bookService.AddBookUnit(addBookUnitRequest.BookId);
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapDelete("/bookUnit/{id}", [Authorize] async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            await bookService.DeleteBookUnit(id);
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
     }
 }

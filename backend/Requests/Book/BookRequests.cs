@@ -31,3 +31,7 @@ public record UpdateBookRequest(
     uint? NewOriginalPublicationYear,
     string? NewOriginalPublisherId
 );
+
+public record AddBookUnitRequest(
+    string BookId
+);

@@ -8,6 +8,7 @@ namespace LibraryPlus.Services.Book;
 public class BookService(IMongoDatabase db, CategoryService categoryService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
+    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("booksUnits");
     private readonly CategoryService _categoryService = categoryService;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
@@ -117,4 +118,20 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
     {
         await _books.FindOneAndDeleteAsync(b => b.Id == id);
     }
+
+    public async Task<BookUnitModel> AddBookUnit(string bookId)
+    {
+        var bookUnit = new BookUnitModel
+        {
+            BookId = bookId,
+        };
+        await _bookUnits.InsertOneAsync(bookUnit);
+        return bookUnit;
+    }
+
+    public async Task DeleteBookUnit(string bookUnitId)
+    {
+        await _bookUnits.FindOneAndDeleteAsync(b => b.Id == bookUnitId);
+    }
+
 }
