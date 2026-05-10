@@ -35,7 +35,7 @@ public class CategoryService(IMongoDatabase db)
         );
     }
 
-    public async Task<IList<CategoryModel>> GetCategories()
+    public async Task<IList<CategoryModel>> GetAllCategories()
     {
         return await _categories.AsQueryable().ToListAsync();
     }
