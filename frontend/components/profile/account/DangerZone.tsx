@@ -66,7 +66,8 @@ function DangerZone() {
           <div className="space-y-3">
             <div className="text-sm font-semibold">Delete account</div>
             <p className="text-xs text-muted-foreground">
-              This action cannot be undone. Your account and all associated data will be permanently deleted.
+              This action cannot be undone. Your account and all associated data
+              will be permanently deleted.
             </p>
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}

@@ -18,16 +18,13 @@ function ProfilePage() {
   return (
     <div className="grid grid-cols-2 gap-8">
       <AccountSection>
-        <UserInfo />
-      </AccountSection>
-      <AccountSection>
-        <DeliveryAddress />
+        <div className="flex flex-col gap-8">
+          <UserInfo />
+          <DangerZone />
+        </div>
       </AccountSection>
       <AccountSection>
         <ChangePassword />
-      </AccountSection>
-      <AccountSection>
-        <DangerZone />
       </AccountSection>
     </div>
   );
