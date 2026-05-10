@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useContext } from 'react'
-import HeaderLoginLink from './login-link';
-import HeaderUserMenu from './user-menu';
+import HeaderLoginLink from './LoginLink';
+import HeaderUserMenu from './UserMenu';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { userContext } from '@/context/userContext';
@@ -23,10 +23,10 @@ function HeaderUser() {
 
   return (
     <div className="flex gap-2 items-center cursor-pointer transition-colors hover:text-gray-400">
-        { userData === null ?
-          <HeaderLoginLink />
-          : <HeaderUserMenu userData={userData} />
-        }
+      {userData === null ?
+        <HeaderLoginLink />
+        : <HeaderUserMenu userData={userData} />
+      }
     </div>
   )
 }
