@@ -24,7 +24,9 @@ public static class AuthorEndpoints
         ) =>
         {
             await authorService.CreateAuthor(createAuthorRequest);
-        }).AddEndpointFilter<AdminUserFilter>();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
 
         group.MapPut("/{id}", [Authorize] async (
             AuthorService authorService,

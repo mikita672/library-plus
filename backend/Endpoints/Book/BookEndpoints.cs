@@ -45,7 +45,9 @@ public static class BookEndpoints
         ) =>
         {
             await bookService.CreateBook(createBookRequest);
-        }).AddEndpointFilter<AdminUserFilter>();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
 
         group.MapPut("/{id}", [Authorize] async (
             BookService bookService,

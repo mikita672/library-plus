@@ -24,7 +24,9 @@ public static class PublisherEndpoints
         ) =>
         {
             await publisherService.CreatePublisher(createPublisherRequest);
-        }).AddEndpointFilter<AdminUserFilter>();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
 
         group.MapPut("/{id}", [Authorize] async (
             PublisherService publisherService,

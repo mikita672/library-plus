@@ -24,7 +24,9 @@ public static class CategoryEndpoints
         ) =>
         {
             await categoryService.CreateCategory(createCategoryRequest);
-        }).AddEndpointFilter<AdminUserFilter>();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
 
         group.MapPut("/{id}", [Authorize] async (
             CategoryService categoryService,
