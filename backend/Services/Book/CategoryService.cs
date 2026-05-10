@@ -35,6 +35,13 @@ public class CategoryService(IMongoDatabase db)
         );
     }
 
+    public async Task<IList<CategoryModel>> GetCategoriesByIds(IList<string> ids)
+    {
+        return await _categories.AsQueryable()
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
+    }
+
     public async Task<IList<CategoryModel>> GetAllCategories()
     {
         return await _categories.AsQueryable().ToListAsync();

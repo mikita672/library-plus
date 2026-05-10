@@ -5,12 +5,15 @@ using MongoDB.Driver.Linq;
 
 namespace LibraryPlus.Services.Book;
 
-public class BookService(IMongoDatabase db)
+public class BookService(IMongoDatabase db, CategoryService categoryService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
+    private readonly CategoryService _categoryService = categoryService;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
     {
+        var categories = await _categoryService.GetCategoriesByIds(createBookRequest.CategoryIds);
+
         var book = new BookModel
         {
             Title = createBookRequest.Title,
@@ -20,7 +23,7 @@ public class BookService(IMongoDatabase db)
             Language = createBookRequest.Language,
             PublicationYear = createBookRequest.PublicationYear,
             PagesCount = createBookRequest.PagesCount,
-            Categories = createBookRequest.Categories,
+            Categories = categories,
             RepurchasePrice = createBookRequest.RepurchasePrice,
             OriginalTitle = createBookRequest.OriginalTitle,
             OriginalLanguage = createBookRequest.OriginalLanguage,
@@ -33,6 +36,8 @@ public class BookService(IMongoDatabase db)
 
     public async Task<bool> EditBook(string id, UpdateBookRequest updateBookRequest)
     {
+        var newCategories = await _categoryService.GetCategoriesByIds(updateBookRequest.NewCategoryIds);
+
         var res = await _books.UpdateOneAsync(
             Builders<BookModel>.Filter.Eq(b => b.Id, id),
             Builders<BookModel>.Update
@@ -41,7 +46,7 @@ public class BookService(IMongoDatabase db)
                 .Set(b => b.Language, updateBookRequest.NewLanguage)
                 .Set(b => b.PublicationYear, updateBookRequest.NewPublicationYear)
                 .Set(b => b.PagesCount, updateBookRequest.NewPagesCount)
-                .Set(b => b.Categories, updateBookRequest.NewCategories)
+                .Set(b => b.Categories, newCategories)
                 .Set(b => b.RepurchasePrice, updateBookRequest.NewRepurchasePrice)
                 .Set(b => b.AuthorId, updateBookRequest.NewAuthorId)
                 .Set(b => b.PublisherId, updateBookRequest.NewPublisherId)
@@ -57,7 +62,7 @@ public class BookService(IMongoDatabase db)
         string? searchToken = null,
         string? authorId = null,
         string? publisherId = null,
-        List<CategoryModel>? categories = null,
+        List<string>? categoryIds = null,
         uint? minPublicationYear = null,
         uint? maxPublicationYear = null,
         int pageNumber = 1,
@@ -67,7 +72,7 @@ public class BookService(IMongoDatabase db)
     {
         searchToken ??= "";
         minPublicationYear ??= 0;
-        maxPublicationYear ??= uint.MaxValue;
+        maxPublicationYear ??= (uint)DateTime.Now.Year;
 
         var query = _books.AsQueryable()
             .Where(b => b.Title.StartsWith(searchToken))
@@ -81,19 +86,17 @@ public class BookService(IMongoDatabase db)
         {
             query = query.Where(b => b.PublisherId == publisherId);
         }
-        if (categories != null)
+        if (categoryIds != null && categoryIds.Count != 0)
         {
-            query = query.Where(b => categories.Intersect(b.Categories).Count() == categories.Count);
+            query = query.Where(b =>
+                categoryIds.All(id => b.Categories.Any(c => c.Id == id)));
         }
-
         string normalizedSortBy = sortBy?.ToLower() ?? "title";
         if (sortDescending)
         {
             query = normalizedSortBy switch
             {
                 "publicationyear" => query.OrderByDescending(b => b.PublicationYear),
-                "authorid" => query.OrderByDescending(b => b.AuthorId),
-                "publisherid" => query.OrderByDescending(b => b.PublisherId),
                 _ => query.OrderByDescending(b => b.Title)
             };
         }
@@ -102,8 +105,6 @@ public class BookService(IMongoDatabase db)
             query = normalizedSortBy switch
             {
                 "publicationyear" => query.OrderBy(b => b.PublicationYear),
-                "authorid" => query.OrderBy(b => b.AuthorId),
-                "publisherid" => query.OrderBy(b => b.PublisherId),
                 _ => query.OrderBy(b => b.Title)
             };
         }
