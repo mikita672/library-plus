@@ -5,5 +5,5 @@ public record CreatePublisherRequest(
 );
 
 public record UpdatePublisherRequest(
-    string NewName
+    string Name
 );

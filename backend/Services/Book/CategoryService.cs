@@ -23,7 +23,7 @@ public class CategoryService(IMongoDatabase db)
     {
         var res = await _categories.UpdateOneAsync(
             Builders<CategoryModel>.Filter.Eq(c => c.Id, id),
-            Builders<CategoryModel>.Update.Set(c => c.Name, updateCategoryRequest.NewName)
+            Builders<CategoryModel>.Update.Set(c => c.Name, updateCategoryRequest.Name)
         );
         return res.MatchedCount == 1;
     }

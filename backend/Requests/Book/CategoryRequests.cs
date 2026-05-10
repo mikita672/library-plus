@@ -5,5 +5,5 @@ public record CreateCategoryRequest(
 );
 
 public record UpdateCategoryRequest(
-    string NewName
+    string Name
 );

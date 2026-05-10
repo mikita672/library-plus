@@ -23,7 +23,7 @@ public class PublisherService(IMongoDatabase db)
     {
         var res = await _publishers.UpdateOneAsync(
             Builders<PublisherModel>.Filter.Eq(p => p.Id, id),
-            Builders<PublisherModel>.Update.Set(p => p.Name, updatePublisherRequest.NewName)
+            Builders<PublisherModel>.Update.Set(p => p.Name, updatePublisherRequest.Name)
         );
         return res.MatchedCount == 1;
     }

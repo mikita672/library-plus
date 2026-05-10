@@ -5,5 +5,5 @@ public record CreateAuthorRequest(
 );
 
 public record UpdateAuthorRequest(
-    string NewName
+    string Name
 );

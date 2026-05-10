@@ -23,7 +23,7 @@ public class AuthorService(IMongoDatabase db)
     {
         var res = await _authors.UpdateOneAsync(
             Builders<AuthorModel>.Filter.Eq(a => a.Id, id),
-            Builders<AuthorModel>.Update.Set(a => a.Name, updateAuthorRequest.NewName)
+            Builders<AuthorModel>.Update.Set(a => a.Name, updateAuthorRequest.Name)
         );
         return res.MatchedCount == 1;
     }

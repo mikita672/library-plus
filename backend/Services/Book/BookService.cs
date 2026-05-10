@@ -41,19 +41,19 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         var res = await _books.UpdateOneAsync(
             Builders<BookModel>.Filter.Eq(b => b.Id, id),
             Builders<BookModel>.Update
-                .Set(b => b.Title, updateBookRequest.NewTitle)
-                .Set(b => b.Description, updateBookRequest.NewDescription)
-                .Set(b => b.Language, updateBookRequest.NewLanguage)
-                .Set(b => b.PublicationYear, updateBookRequest.NewPublicationYear)
-                .Set(b => b.PagesCount, updateBookRequest.NewPagesCount)
-                .Set(b => b.CategoryIds, updateBookRequest.NewCategoryIds)
-                .Set(b => b.RepurchasePrice, updateBookRequest.NewRepurchasePrice)
-                .Set(b => b.AuthorId, updateBookRequest.NewAuthorId)
-                .Set(b => b.PublisherId, updateBookRequest.NewPublisherId)
-                .Set(b => b.OriginalTitle, updateBookRequest.NewOriginalTitle)
-                .Set(b => b.OriginalLanguage, updateBookRequest.NewOriginalLanguage)
-                .Set(b => b.OriginalPublicationYear, updateBookRequest.NewOriginalPublicationYear)
-                .Set(b => b.OriginalPublisherId, updateBookRequest.NewOriginalPublisherId)
+                .Set(b => b.Title, updateBookRequest.Title)
+                .Set(b => b.Description, updateBookRequest.Description)
+                .Set(b => b.Language, updateBookRequest.Language)
+                .Set(b => b.PublicationYear, updateBookRequest.PublicationYear)
+                .Set(b => b.PagesCount, updateBookRequest.PagesCount)
+                .Set(b => b.CategoryIds, updateBookRequest.CategoryIds)
+                .Set(b => b.RepurchasePrice, updateBookRequest.RepurchasePrice)
+                .Set(b => b.AuthorId, updateBookRequest.AuthorId)
+                .Set(b => b.PublisherId, updateBookRequest.PublisherId)
+                .Set(b => b.OriginalTitle, updateBookRequest.OriginalTitle)
+                .Set(b => b.OriginalLanguage, updateBookRequest.OriginalLanguage)
+                .Set(b => b.OriginalPublicationYear, updateBookRequest.OriginalPublicationYear)
+                .Set(b => b.OriginalPublisherId, updateBookRequest.OriginalPublisherId)
         );
         return res.MatchedCount == 1;
     }
