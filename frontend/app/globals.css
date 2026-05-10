@@ -7,9 +7,6 @@
 @theme inline {
   --color-light: #fdffff;
   --color-dark: #201615;
-  --color-light-accent: #47a657;
-  --color-light-background: #f0ebe5;
-  --color-light-contrast: #201615;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
