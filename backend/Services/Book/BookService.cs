@@ -1,5 +1,7 @@
 using LibraryPlus.Models.Book;
+using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Book;
+using LibraryPlus.Services.Reservation;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -9,6 +11,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("booksUnits");
+    private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
     private readonly CategoryService _categoryService = categoryService;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
@@ -132,6 +135,29 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
     public async Task DeleteBookUnit(string bookUnitId)
     {
         await _bookUnits.FindOneAndDeleteAsync(b => b.Id == bookUnitId);
+    }
+
+    public async Task<BookModel?> GetBookById(string id)
+    {
+        return await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<BookUnitModel?> GetAvailableBookUnit(string bookId)
+    {
+        var reservedBookUnitIds = await _reservations.AsQueryable()
+            .Where(r => r.ReturnedDate == null)
+            .Join(
+                _bookUnits.AsQueryable().Where(bu => bu.BookId == bookId),
+                r => r.BookUnitId,
+                bu => bu.Id,
+                (r, bu) => bu
+            )
+            .Select(bu => bu.Id)
+            .ToListAsync();
+
+        return await _bookUnits.AsQueryable()
+            .Where(bu => bu.BookId == bookId && !reservedBookUnitIds.Contains(bu.Id))
+            .FirstOrDefaultAsync();
     }
 
 }

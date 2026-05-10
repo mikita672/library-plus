@@ -39,6 +39,22 @@ public static class BookEndpoints
             );
         });
 
+        group.MapGet("/{id}/check", async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            return bookService.GetAvailableBookUnit(id) != null;
+        });
+
+        group.MapGet("/{id}", async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            return bookService.GetBookById(id);
+        });
+
         group.MapPost("/", [Authorize] async (
             BookService bookService,
             [FromBody] CreateBookRequest createBookRequest
@@ -93,5 +109,6 @@ public static class BookEndpoints
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
+
     }
 }

@@ -14,7 +14,7 @@ public class ReservationModel
     public string UserId { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public DateTime ReturnedDate { get; set; }
+    public DateTime? ReturnedDate { get; set; }
     public string? BookConditionUponReturn { get; set; }
     public string Status { get; set; } = null!;
     public decimal RepurchasePrice { get; set; }
