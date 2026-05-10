@@ -1,6 +1,6 @@
 using LibraryPlus.Models.User;
 
-namespace LibraryPlus.Requests;
+namespace LibraryPlus.Requests.User;
 
 public record UpdateAddressRequest(
     string? Country,

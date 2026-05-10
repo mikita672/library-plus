@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 using LibraryPlus.Models.User;
-using LibraryPlus.Requests;
+using LibraryPlus.Requests.User;
 
 namespace LibraryPlus.Services.User;
 
@@ -68,7 +68,7 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     public async Task<bool> UpdatePassword(string userId, string oldPassword, string newPassword)
     {
         var user = await (await _users.FindAsync(u => u.Id == userId)).FirstAsync();
-    
+
         if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
         {
             return false;
