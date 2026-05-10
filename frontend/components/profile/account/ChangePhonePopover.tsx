@@ -10,6 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { z } from "zod";
+import { toast } from "sonner";
 
 const phoneSchema = z
   .string()
@@ -74,6 +75,7 @@ export default function ChangePhonePopover({ phoneNumber, onSuccess }: Props) {
       }
 
       setOpen(false);
+      toast.success("Phone number changed successfully");
       onSuccess();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Network error";

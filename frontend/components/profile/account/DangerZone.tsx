@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 function DangerZone() {
   const [open, setOpen] = useState(false);
@@ -39,6 +40,7 @@ function DangerZone() {
       }
 
       setOpen(false);
+      toast.success("Account deleted successfully");
       await logout();
       router.push("/login");
     } catch {

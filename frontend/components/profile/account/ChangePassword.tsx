@@ -19,6 +19,7 @@ import { EyeClosedIcon, EyeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { toast } from "sonner";
 
 const changePasswordSchema = z
   .object({
@@ -88,6 +89,7 @@ function ChangePassword() {
       }
 
       form.reset();
+      toast.success("Password changed successfully");
     } catch {
       setServerError("Network error");
     } finally {
