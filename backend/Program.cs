@@ -7,6 +7,7 @@ using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using LibraryPlus.Services.Book;
+using LibraryPlus.Endpoints.Book;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -55,5 +56,6 @@ app.MapHealthChecks("/healthz");
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapNotificationEndpoints();
+app.MapAuthorEndpoints();
 
 app.Run();

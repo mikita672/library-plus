@@ -44,7 +44,5 @@ public static class NotificationEndpoints
             }
             return Results.Ok();
         });
-
     }
-
 }

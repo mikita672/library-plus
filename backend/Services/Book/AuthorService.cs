@@ -36,6 +36,11 @@ public class AuthorService(IMongoDatabase db)
             .ToListAsync();
     }
 
+    public async Task<IList<AuthorModel>> GetAllAuthors()
+    {
+        return await _authors.AsQueryable().ToListAsync();
+    }
+
     public async Task DeleteAuthor(string id)
     {
         await _authors.FindOneAndDeleteAsync(
