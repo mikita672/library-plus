@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { BellIcon, ShoppingBagIcon, UserIcon } from "@phosphor-icons/react";
 
 const links = [
-  { href: "/profile/account", label: "Account", icon: UserIcon },
+  { href: "/profile", label: "Account", icon: UserIcon },
   { href: "/profile/rentals", label: "My rentals", icon: ShoppingBagIcon },
   { href: "/profile/notifications", label: "Notifications", icon: BellIcon },
 ];
