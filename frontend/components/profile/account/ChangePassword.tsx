@@ -8,7 +8,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeClosedIcon, EyeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,6 +59,9 @@ function ChangePassword() {
 
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const onSubmit = async (data: ChangePasswordFormSchema) => {
     setLoading(true);
@@ -97,13 +107,24 @@ function ChangePassword() {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>Current password</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="password"
-                  autoComplete="current-password"
-                  aria-invalid={fieldState.invalid}
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    {...field}
+                    id={field.name}
+                    type={showCurrentPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-sm"
+                      className="cursor-pointer"
+                      onClick={() => setShowCurrentPassword((prev) => !prev)}
+                    >
+                      {showCurrentPassword ? <EyeClosedIcon /> : <EyeIcon />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
@@ -117,13 +138,24 @@ function ChangePassword() {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>New password</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="password"
-                  autoComplete="new-password"
-                  aria-invalid={fieldState.invalid}
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    {...field}
+                    id={field.name}
+                    type={showNewPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-sm"
+                      className="cursor-pointer"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                    >
+                      {showNewPassword ? <EyeClosedIcon /> : <EyeIcon />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
@@ -139,13 +171,24 @@ function ChangePassword() {
                 <FieldLabel htmlFor={field.name}>
                   Confirm new password
                 </FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="password"
-                  autoComplete="new-password"
-                  aria-invalid={fieldState.invalid}
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    {...field}
+                    id={field.name}
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-sm"
+                      className="cursor-pointer"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <EyeClosedIcon /> : <EyeIcon />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
