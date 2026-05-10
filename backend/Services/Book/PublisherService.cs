@@ -9,7 +9,7 @@ public class PublisherService(IMongoDatabase db)
 {
     private readonly IMongoCollection<PublisherModel> _publishers = db.GetCollection<PublisherModel>("publishers");
 
-    public async Task<PublisherModel> CreatedPublisher(CreatePublisherRequest createPublisherRequest)
+    public async Task<PublisherModel> CreatePublisher(CreatePublisherRequest createPublisherRequest)
     {
         var publisher = new PublisherModel
         {
@@ -19,7 +19,7 @@ public class PublisherService(IMongoDatabase db)
         return publisher;
     }
 
-    public async Task<bool> EditdPublisher(string id, UpdatePublisherRequest updatePublisherRequest)
+    public async Task<bool> EditPublisher(string id, UpdatePublisherRequest updatePublisherRequest)
     {
         var res = await _publishers.UpdateOneAsync(
             Builders<PublisherModel>.Filter.Eq(p => p.Id, id),
@@ -28,7 +28,7 @@ public class PublisherService(IMongoDatabase db)
         return res.MatchedCount == 1;
     }
 
-    public async Task<IList<PublisherModel>> GetdPublishers(int page)
+    public async Task<IList<PublisherModel>> GetPublishers(int page)
     {
         return await _publishers.AsQueryable()
             .Skip(8 * (page - 1))
@@ -36,7 +36,12 @@ public class PublisherService(IMongoDatabase db)
             .ToListAsync();
     }
 
-    public async Task DeletedPublisher(string id)
+    public async Task<IList<PublisherModel>> GetAllPublishers()
+    {
+        return await _publishers.AsQueryable().ToListAsync();
+    }
+
+    public async Task DeletePublisher(string id)
     {
         await _publishers.FindOneAndDeleteAsync(
             Builders<PublisherModel>.Filter.Eq(p => p.Id, id)

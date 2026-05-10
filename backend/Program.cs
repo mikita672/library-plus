@@ -57,5 +57,6 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapNotificationEndpoints();
 app.MapAuthorEndpoints();
+app.MapPublisherEndpoints();
 
 app.Run();
