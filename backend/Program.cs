@@ -6,6 +6,7 @@ using LibraryPlus.Services.Auth;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
+using LibraryPlus.Services.Book;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -36,6 +37,10 @@ builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<AuthService>();
 builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddSingleton<AuthorService>();
+builder.Services.AddSingleton<PublisherService>();
+builder.Services.AddSingleton<CategoryService>();
+builder.Services.AddSingleton<BookService>();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
