@@ -1,3 +1,5 @@
+using LibraryPlus.Models.Book;
+
 namespace LibraryPlus.Requests.Book;
 
 public record CreateBookRequest(
@@ -7,6 +9,7 @@ public record CreateBookRequest(
     uint PublicationYear,
     uint PagesCount,
     decimal RepurchasePrice,
+    IList<CategoryModel> Categories,
     string? AuthorId,
     string? PublisherId,
     string? OriginalTitle,
@@ -22,6 +25,7 @@ public record UpdateBookRequest(
     uint NewPublicationYear,
     uint NewPagesCount,
     decimal NewRepurchasePrice,
+    IList<CategoryModel> NewCategories,
     string? NewAuthorId,
     string? NewPublisherId,
     string? NewOriginalTitle,
