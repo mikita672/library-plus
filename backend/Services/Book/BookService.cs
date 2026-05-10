@@ -16,8 +16,6 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
     {
-        var categories = await _categoryService.GetCategoriesByIds(createBookRequest.CategoryIds);
-
         var book = new BookModel
         {
             Title = createBookRequest.Title,
@@ -27,7 +25,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             Language = createBookRequest.Language,
             PublicationYear = createBookRequest.PublicationYear,
             PagesCount = createBookRequest.PagesCount,
-            Categories = categories,
+            CategoryIds = createBookRequest.CategoryIds,
             RepurchasePrice = createBookRequest.RepurchasePrice,
             OriginalTitle = createBookRequest.OriginalTitle,
             OriginalLanguage = createBookRequest.OriginalLanguage,
@@ -40,8 +38,6 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
 
     public async Task<bool> EditBook(string id, UpdateBookRequest updateBookRequest)
     {
-        var newCategories = await _categoryService.GetCategoriesByIds(updateBookRequest.NewCategoryIds);
-
         var res = await _books.UpdateOneAsync(
             Builders<BookModel>.Filter.Eq(b => b.Id, id),
             Builders<BookModel>.Update
@@ -50,7 +46,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
                 .Set(b => b.Language, updateBookRequest.NewLanguage)
                 .Set(b => b.PublicationYear, updateBookRequest.NewPublicationYear)
                 .Set(b => b.PagesCount, updateBookRequest.NewPagesCount)
-                .Set(b => b.Categories, newCategories)
+                .Set(b => b.CategoryIds, updateBookRequest.NewCategoryIds)
                 .Set(b => b.RepurchasePrice, updateBookRequest.NewRepurchasePrice)
                 .Set(b => b.AuthorId, updateBookRequest.NewAuthorId)
                 .Set(b => b.PublisherId, updateBookRequest.NewPublisherId)
@@ -93,7 +89,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         if (categoryIds != null && categoryIds.Count != 0)
         {
             query = query.Where(b =>
-                categoryIds.All(id => b.Categories.Any(c => c.Id == id)));
+                categoryIds.All(id => b.CategoryIds.Any(c => c == id)));
         }
         string normalizedSortBy = sortBy?.ToLower() ?? "title";
         if (sortDescending)
@@ -144,19 +140,18 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
 
     public async Task<BookUnitModel?> GetAvailableBookUnit(string bookId)
     {
-        var reservedBookUnitIds = await _reservations.AsQueryable()
+        var reservedBookUnitIds = _reservations.AsQueryable()
             .Where(r => r.ReturnedDate == null)
             .Join(
-                _bookUnits.AsQueryable().Where(bu => bu.BookId == bookId),
+                _bookUnits.AsQueryable(),
                 r => r.BookUnitId,
                 bu => bu.Id,
-                (r, bu) => bu
-            )
-            .Select(bu => bu.Id)
-            .ToListAsync();
+                (r, bu) => bu.Id
+            );
 
         return await _bookUnits.AsQueryable()
-            .Where(bu => bu.BookId == bookId && !reservedBookUnitIds.Contains(bu.Id))
+            .Where(bu => bu.BookId == bookId)
+            .Where(bu => !reservedBookUnitIds.Contains(bu.Id))
             .FirstOrDefaultAsync();
     }
 

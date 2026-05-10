@@ -5,3 +5,7 @@ public record CreateReservationRequest(
     DateTime StartDate,
     DateTime EndDate
 );
+
+public record HandleReturnRequest(
+    string BookConditionUponReturn
+);

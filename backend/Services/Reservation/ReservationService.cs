@@ -2,6 +2,7 @@ using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Reservation;
 using LibraryPlus.Services.Book;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace LibraryPlus.Services.Reservation;
 
@@ -37,6 +38,37 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         };
         await _reservations.InsertOneAsync(reservation);
         return reservation;
+    }
+
+    public async Task<IList<ReservationModel>> GetUserReservations(string userId, int page)
+    {
+        return await _reservations.AsQueryable()
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip(8 * (page - 1))
+            .Take(8)
+            .ToListAsync();
+    }
+
+    public async Task<bool> HandleTaken(string id)
+    {
+        var res = await _reservations.UpdateOneAsync(
+            Builders<ReservationModel>.Filter.Eq(r => r.Id, id),
+            Builders<ReservationModel>.Update.Set(r => r.Status, "Taken")
+        );
+        return res.MatchedCount == 1;
+    }
+
+    public async Task<bool> HandleReturned(string id, HandleReturnRequest handleReturnRequest)
+    {
+        var res = await _reservations.UpdateOneAsync(
+            Builders<ReservationModel>.Filter.Eq(r => r.Id, id),
+            Builders<ReservationModel>.Update
+                .Set(r => r.Status, "Returned")
+                .Set(r => r.ReturnedDate, DateTime.UtcNow)
+                .Set(r => r.BookConditionUponReturn, handleReturnRequest.BookConditionUponReturn)
+        );
+        return res.MatchedCount == 1;
     }
 
 }

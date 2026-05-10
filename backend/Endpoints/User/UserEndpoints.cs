@@ -63,14 +63,14 @@ public static class UserEndpoints
             return Results.Ok();
         });
 
-        group.MapGet("/getNotifications/{page:int}", [Authorize] async (
+        group.MapGet("/notifications", [Authorize] async (
             ClaimsPrincipal claims,
             NotificationService notificationService,
-            int page
+            [FromQuery] int pageNumber
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
-            return await notificationService.GetUserNotifications(userId, page);
+            return await notificationService.GetUserNotifications(userId, pageNumber);
         });
 
     }

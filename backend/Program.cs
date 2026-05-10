@@ -8,6 +8,8 @@ using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using LibraryPlus.Services.Book;
 using LibraryPlus.Endpoints.Book;
+using LibraryPlus.Endpoints.Reservation;
+using LibraryPlus.Services.Reservation;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -42,6 +44,7 @@ builder.Services.AddSingleton<AuthorService>();
 builder.Services.AddSingleton<PublisherService>();
 builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<BookService>();
+builder.Services.AddSingleton<ReservationService>();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -60,5 +63,6 @@ app.MapAuthorEndpoints();
 app.MapPublisherEndpoints();
 app.MapCategoryEndpoints();
 app.MapBookEndpoints();
+app.MapReservationEndpoints();
 
 app.Run();

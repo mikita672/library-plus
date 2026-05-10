@@ -17,7 +17,7 @@ public class BookModel
     public string Language { get; set; } = null!;
     public uint PublicationYear { get; set; }
     public uint PagesCount { get; set; }
-    public IList<CategoryModel> Categories { get; set; } = null!;
+    public IList<string> CategoryIds { get; set; } = null!;
     public decimal RepurchasePrice { get; set; }
     public string? OriginalTitle { get; set; }
     public string? OriginalLanguage { get; set; }
