@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using LibraryPlus.DTO;
 using LibraryPlus.Filters;
-using LibraryPlus.Requests;
+using LibraryPlus.Requests.User;
 using LibraryPlus.Services.Auth;
 using LibraryPlus.Services.User;
 using Microsoft.AspNetCore.Authorization;
@@ -35,8 +35,6 @@ public static class UserEndpoints
             ClaimsPrincipal claims,
             UserService userService,
             [FromBody] UpdateAddressRequest updateAddressRequest
-        ) =>
-        {
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
