@@ -34,7 +34,6 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
             PhoneNumber = request.PhoneNumber,
             AvatarUrl = request.AvatarUrl,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            DeliveryAddress = new(),
             JoinedAt = DateTime.UtcNow,
             IsDeleted = false,
         };
@@ -52,14 +51,6 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         }
 
         return user;
-    }
-
-    public async Task UpdateAddress(string userId, UpdateAddressRequest updateAddressRequest)
-    {
-        await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
-            Builders<UserModel>.Update.Set(u => u.DeliveryAddress, updateAddressRequest.ToModel())
-        );
     }
 
     public async Task UpdatePhoneNumber(string userId, string newPhoneNumber)

@@ -31,16 +31,6 @@ public static class UserEndpoints
             return MeDTO.FromModel(user);
         });
 
-        group.MapPatch("/updateAddress", [Authorize] async (
-            ClaimsPrincipal claims,
-            UserService userService,
-            [FromBody] UpdateAddressRequest updateAddressRequest
-        ) =>
-        {
-            var userId = claims.FindFirstValue("sub")!;
-            await userService.UpdateAddress(userId, updateAddressRequest);
-        });
-
         group.MapPatch("/updatePhoneNumber", [Authorize] async (
             ClaimsPrincipal claims,
             UserService userService,

@@ -13,7 +13,6 @@ public class UserModel
     public string? PhoneNumber { get; set; }
     public string? Name { get; set; }
     public string? AvatarUrl { get; set; }
-    public AddressModel DeliveryAddress { get; set; } = null!; 
     public DateTime JoinedAt { get; set; }
     public bool IsDeleted { get; set; }
     public bool IsAdmin { get; set; } = false;
