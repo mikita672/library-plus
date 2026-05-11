@@ -56,7 +56,13 @@ public class NotificationService(IMongoDatabase db)
                 _notifications.AsQueryable(),
                 un => un.NotificationId,
                 n => n.Id,
-                (un, n) => new UserNotificationDTO(un.Id, n.Subject, n.Text, un.IsRead)
+                (un, n) => new UserNotificationDTO(
+                    un.Id,
+                    n.Subject,
+                    n.Text,
+                    un.IsRead,
+                    un.CreatedAt
+                )
             )
             .ToListAsync();
     }

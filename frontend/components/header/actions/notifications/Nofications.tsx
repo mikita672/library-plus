@@ -60,9 +60,13 @@ function HeaderNotifications() {
             <PopoverTrigger asChild>
                 <div className="relative cursor-pointer" title="Notifications">
                     <BellIcon className="w-6 h-6 text-foreground transition-colors hover:text-gray-400" />
-                    <div className="select-none text-light absolute -bottom-1 -right-2 bg-destructive rounded-full w-4 h-4 text-xs text-center">
-                        {Math.min(notReadCount, 99)}
-                    </div>
+                    {
+                        notReadCount === 0 ?
+                            <></> :
+                            <div className="select-none text-light absolute -bottom-1 -right-2 bg-destructive rounded-full w-4 h-4 text-xs text-center">
+                                {Math.min(notReadCount, 99)}
+                            </div>
+                    }
                 </div>
             </PopoverTrigger>
             <PopoverContent align="center" sideOffset={10} className="w-60">
