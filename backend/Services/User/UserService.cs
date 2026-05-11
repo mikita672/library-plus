@@ -94,4 +94,10 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return user.IsAdmin;
     }
 
+    public async Task<bool> SoftDeleteUser(string userId)
+    {
+        var result = await _users.UpdateOneAsync(u => u.Id == userId && !u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, true));
+
+        return result.ModifiedCount == 1;
+    }
 }
