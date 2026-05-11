@@ -13,7 +13,7 @@ function NotificationsFooter({ pagesCount, page, setPage }: Props) {
     return <div className="w-full flex justify-center p-2">
         <Pagination>
             <PaginationContent>
-                <PaginationItem className={page === 1 ? 'opacity-30' : ''}>
+                <PaginationItem className={page === 1 ? 'opacity-30' : 'cursor-pointer'}>
                     <PaginationPrevious onClick={() => {
                         if (page === 1) {
                             return;
@@ -26,7 +26,7 @@ function NotificationsFooter({ pagesCount, page, setPage }: Props) {
                         {page} / {pagesCount}
                     </PaginationLink>
                 </PaginationItem>
-                <PaginationItem className={page === pagesCount ? 'opacity-30' : ''}>
+                <PaginationItem className={page === pagesCount ? 'opacity-30' : 'cursor-pointer'}>
                     <PaginationNext onClick={() => {
                         if (page === pagesCount) {
                             return;

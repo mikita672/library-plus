@@ -11,18 +11,20 @@ function layout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${rubik.variable} h-full antialiased`}
+      className={`${rubik.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col gap-10 px-6 pb-10 text-sm">
+      <body className="min-h-full! min-w-full! text-sm">
         <Providers>
-          <Header />
+          <div className="flex flex-col gap-10 px-6 pb-10 min-h-screen">
+            <Header />
 
-          {children}
+            {children}
 
-          <Footer />
+            <Footer />
 
-          <CustomToaster />
+            <CustomToaster />
+          </div>
         </Providers>
       </body>
     </html>
