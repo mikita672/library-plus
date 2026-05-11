@@ -1,22 +1,25 @@
 import { LoginFormSchema, SignUpFormSchema } from "@/forms/auth";
 import { AuthResponseDTO } from "@/types/auth/dto";
-import { UserData } from "@/types/user/UserData";
+import { FullUserData, UserData } from "@/types/user/UserData";
 import React, { createContext, useEffect, useState } from "react";
 
 export interface IUserContext {
   userData: UserData | null;
+  fullUserData: FullUserData | null;
   isLoading: boolean;
   login: ({ email, password }: LoginFormSchema) => Promise<string | null>;
   signup: ({ email, password }: SignUpFormSchema) => Promise<string | null>;
   logout: () => Promise<string | null>;
   refreshUser: () => Promise<void>;
+  refreshFullUser: () => Promise<void>;
 }
 
 export const userContext = createContext({} as IUserContext);
 
-export const UserProvider = ({ children } : { children: React.ReactNode }) => {
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [fullUserData, setFullUserData] = useState<FullUserData | null>(null);
 
   const refreshUser = async () => {
     setIsLoading(true);
@@ -32,32 +35,50 @@ export const UserProvider = ({ children } : { children: React.ReactNode }) => {
     setIsLoading(false);
   };
 
+  const refreshFullUser = async () => {
+    setIsLoading(true);
+    const response = await fetch("/api/user/me", { method: "GET" });
+
+    if (response.ok) {
+      setFullUserData(await response.json());
+    } else {
+      setFullUserData(null);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     refreshUser();
   }, []);
 
-  const login = async ({ email, password }: LoginFormSchema): Promise<string | null> => {
+  const login = async ({
+    email,
+    password,
+  }: LoginFormSchema): Promise<string | null> => {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ email, password }),
     });
-  
+
     if (!response.ok) {
       return "Bad credentials";
     }
     return null;
   };
 
-  const signup = async ({ email, password }: SignUpFormSchema): Promise<string | null> => {
+  const signup = async ({
+    email,
+    password,
+  }: SignUpFormSchema): Promise<string | null> => {
     const response = await fetch("/api/auth/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ email, password }),
     });
@@ -73,10 +94,10 @@ export const UserProvider = ({ children } : { children: React.ReactNode }) => {
     const response = await fetch("/api/auth/logout", {
       method: "POST",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
-  
+
     if (!response.ok) {
       const data: AuthResponseDTO = await response.json().catch(() => {});
       return data.message ?? "something went wrong";
@@ -86,5 +107,20 @@ export const UserProvider = ({ children } : { children: React.ReactNode }) => {
     return null;
   };
 
-  return <userContext.Provider value={{ userData, isLoading, login, signup, logout, refreshUser }}>{children}</userContext.Provider>
-}
+  return (
+    <userContext.Provider
+      value={{
+        userData,
+        fullUserData,
+        isLoading,
+        login,
+        signup,
+        logout,
+        refreshUser,
+        refreshFullUser,
+      }}
+    >
+      {children}
+    </userContext.Provider>
+  );
+};
