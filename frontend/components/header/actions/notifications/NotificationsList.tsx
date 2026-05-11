@@ -11,6 +11,15 @@ interface Params {
 function NotificationsList({ notifications }: Params) {
     const [activeNotification, setActiveNotification] = useState<Notification | null>(null);
 
+    const readNotification = async (notification: Notification) => {
+        setActiveNotification(notification);
+        if (!notification.isRead) {
+            await fetch(`/api/notification/read/${notification.id}`, {
+                method: "PATCH",
+            });
+        }
+    }
+
     return (
         <>
             {notifications.map((n, i) => {
@@ -19,7 +28,7 @@ function NotificationsList({ notifications }: Params) {
                 return (
                     <div
                         key={i}
-                        onClick={() => setActiveNotification(n)}
+                        onClick={() => readNotification(n)}
                         className="w-full flex items-center cursor-pointer relative p-2 hover:bg-background"
                     >
                         <div>{text}</div>
