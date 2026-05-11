@@ -1,5 +1,6 @@
 namespace LibraryPlus.Requests.User;
 
-public record SendAllNotificationRequest(
+public record NotificationBody(
+    string Subject,
     string Text
 );

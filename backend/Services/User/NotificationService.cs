@@ -1,5 +1,6 @@
 using LibraryPlus.DTO;
 using LibraryPlus.Models.User;
+using LibraryPlus.Requests.User;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -10,19 +11,20 @@ public class NotificationService(IMongoDatabase db)
     private readonly IMongoCollection<NotificationModel> _notifications = db.GetCollection<NotificationModel>("notifications");
     private readonly IMongoCollection<UserNotificationModel> _userNotifications = db.GetCollection<UserNotificationModel>("userNotifications");
 
-    public async Task<NotificationModel> CreateNotification(string text)
+    public async Task<NotificationModel> CreateNotification(NotificationBody notificationBody)
     {
         var notification = new NotificationModel
         {
-            Text = text
+            Subject = notificationBody.Subject,
+            Text = notificationBody.Text,
         };
         await _notifications.InsertOneAsync(notification);
         return notification;
     }
 
-    public async Task SendOneUserNotification(string userId, string text)
+    public async Task SendOneUserNotification(string userId, NotificationBody notificationBody)
     {
-        var notification = await CreateNotification(text);
+        var notification = await CreateNotification(notificationBody);
         await _userNotifications.InsertOneAsync(new UserNotificationModel
         {
             UserId = userId,
@@ -31,9 +33,9 @@ public class NotificationService(IMongoDatabase db)
         });
     }
 
-    public async Task SendAllUsersNotification(IEnumerable<string> userIds, string text)
+    public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationBody notificationBody)
     {
-        var notification = await CreateNotification(text);
+        var notification = await CreateNotification(notificationBody);
         var userNotifications = userIds.Select(id => new UserNotificationModel
         {
             UserId = id,
@@ -54,7 +56,7 @@ public class NotificationService(IMongoDatabase db)
                 _notifications.AsQueryable(),
                 un => un.NotificationId,
                 n => n.Id,
-                (un, n) => new UserNotificationDTO(un.Id, n.Text, un.IsRead)
+                (un, n) => new UserNotificationDTO(un.Id, n.Subject, n.Text, un.IsRead)
             )
             .ToListAsync();
     }

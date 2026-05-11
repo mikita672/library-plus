@@ -81,11 +81,11 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return true;
     }
 
-    public async Task SendAllUsersNotification(string text)
+    public async Task SendAllUsersNotification(NotificationBody notificationBody)
     {
         var allUsers = _users.Find(Builders<UserModel>.Filter.Empty);
         var allUserIds = allUsers.ToEnumerable().Select(u => u.Id);
-        await _notificationService.SendAllUsersNotification(allUserIds, text);
+        await _notificationService.SendAllUsersNotification(allUserIds, notificationBody);
     }
 
     public async Task<bool> IsAdmin(string userId)
