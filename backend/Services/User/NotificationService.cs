@@ -59,6 +59,21 @@ public class NotificationService(IMongoDatabase db)
             .ToListAsync();
     }
 
+    public async Task<UserNotificationCountDTO> GetUserNotificationsCount(string userId)
+    {
+        var totalCount = await _userNotifications.AsQueryable()
+            .Where(un => un.UserId == userId)
+            .CountAsync();
+        var notReadCount = await _userNotifications.AsQueryable()
+            .Where(un => un.UserId == userId)
+            .Where(un => !un.IsRead)
+            .CountAsync();
+        return new UserNotificationCountDTO(
+            (int)Math.Ceiling(totalCount / 4.0),
+            notReadCount
+        );
+    }
+
     public async Task<bool> MarkNotificationAsRead(string userId, string id)
     {
         var res = await _userNotifications.UpdateOneAsync(

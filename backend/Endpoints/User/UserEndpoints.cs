@@ -73,5 +73,14 @@ public static class UserEndpoints
             return await notificationService.GetUserNotifications(userId, pageNumber);
         });
 
+        group.MapGet("/notifications/count", [Authorize] async (
+            ClaimsPrincipal claims,
+            NotificationService notificationService
+        ) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            return await notificationService.GetUserNotificationsCount(userId);
+        });
+
     }
 }
