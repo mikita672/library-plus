@@ -10,6 +10,8 @@ using LibraryPlus.Services.Book;
 using LibraryPlus.Endpoints.Book;
 using LibraryPlus.Endpoints.Reservation;
 using LibraryPlus.Services.Reservation;
+using Resend;
+using LibraryPlus.Services.Mail;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -31,6 +33,10 @@ if (string.IsNullOrWhiteSpace(connectionString))
 var mongoClient = new MongoClient(connectionString);
 var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
 
+var mailApiKey = builder.Configuration["Mail:ApiKey"] ?? throw new NullReferenceException("No mail api key");
+IResend resend = ResendClient.Create(mailApiKey);
+MailService mailService = new(resend);
+
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -45,6 +51,7 @@ builder.Services.AddSingleton<PublisherService>();
 builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<ReservationService>();
+builder.Services.AddSingleton(mailService);
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
