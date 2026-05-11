@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
-using LibraryPlus.Requests.User;
+using LibraryPlus.Requests.Auth;
+using LibraryPlus.Responses.Auth;
 using LibraryPlus.Services.User;
 
 namespace LibraryPlus.Services.Auth;

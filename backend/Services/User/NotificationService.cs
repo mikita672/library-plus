@@ -1,6 +1,6 @@
-using LibraryPlus.DTO;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
+using LibraryPlus.Responses.User;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -11,7 +11,7 @@ public class NotificationService(IMongoDatabase db)
     private readonly IMongoCollection<NotificationModel> _notifications = db.GetCollection<NotificationModel>("notifications");
     private readonly IMongoCollection<UserNotificationModel> _userNotifications = db.GetCollection<UserNotificationModel>("userNotifications");
 
-    public async Task<NotificationModel> CreateNotification(NotificationBody notificationBody)
+    public async Task<NotificationModel> CreateNotification(NotificationRequest notificationBody)
     {
         var notification = new NotificationModel
         {
@@ -22,7 +22,7 @@ public class NotificationService(IMongoDatabase db)
         return notification;
     }
 
-    public async Task SendOneUserNotification(string userId, NotificationBody notificationBody)
+    public async Task SendOneUserNotification(string userId, NotificationRequest notificationBody)
     {
         var notification = await CreateNotification(notificationBody);
         await _userNotifications.InsertOneAsync(new UserNotificationModel
@@ -33,7 +33,7 @@ public class NotificationService(IMongoDatabase db)
         });
     }
 
-    public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationBody notificationBody)
+    public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationRequest notificationBody)
     {
         var notification = await CreateNotification(notificationBody);
         var userNotifications = userIds.Select(id => new UserNotificationModel
@@ -45,7 +45,7 @@ public class NotificationService(IMongoDatabase db)
         await _userNotifications.InsertManyAsync(userNotifications);
     }
 
-    public async Task<IList<UserNotificationDTO>> GetUserNotifications(string userId, int page)
+    public async Task<IList<UserNotificationResponse>> GetUserNotifications(string userId, int page)
     {
         return await _userNotifications.AsQueryable()
             .Where(n => n.UserId == userId)
@@ -56,7 +56,7 @@ public class NotificationService(IMongoDatabase db)
                 _notifications.AsQueryable(),
                 un => un.NotificationId,
                 n => n.Id,
-                (un, n) => new UserNotificationDTO(
+                (un, n) => new UserNotificationResponse(
                     un.Id,
                     n.Subject,
                     n.Text,
@@ -67,7 +67,7 @@ public class NotificationService(IMongoDatabase db)
             .ToListAsync();
     }
 
-    public async Task<UserNotificationCountDTO> GetUserNotificationsCount(string userId)
+    public async Task<UserNotificationCountResponse> GetUserNotificationsCount(string userId)
     {
         var totalCount = await _userNotifications.AsQueryable()
             .Where(un => un.UserId == userId)
@@ -76,7 +76,7 @@ public class NotificationService(IMongoDatabase db)
             .Where(un => un.UserId == userId)
             .Where(un => !un.IsRead)
             .CountAsync();
-        return new UserNotificationCountDTO(
+        return new UserNotificationCountResponse(
             (int)Math.Ceiling(totalCount / 4.0),
             notReadCount
         );

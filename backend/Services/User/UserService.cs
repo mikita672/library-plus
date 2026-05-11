@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
+using LibraryPlus.Requests.Auth;
 
 namespace LibraryPlus.Services.User;
 
@@ -74,7 +75,7 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         );
     }
 
-    public async Task SendAllUsersNotification(NotificationBody notificationBody)
+    public async Task SendAllUsersNotification(NotificationRequest notificationBody)
     {
         var allUsers = _users.Find(Builders<UserModel>.Filter.Empty);
         var allUserIds = allUsers.ToEnumerable().Select(u => u.Id);

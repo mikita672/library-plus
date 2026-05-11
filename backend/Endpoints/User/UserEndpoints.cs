@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using LibraryPlus.DTO;
 using LibraryPlus.Filters;
 using LibraryPlus.Requests.User;
+using LibraryPlus.Responses.User;
 using LibraryPlus.Services.Auth;
 using LibraryPlus.Services.User;
 using Microsoft.AspNetCore.Authorization;
@@ -21,14 +21,14 @@ public static class UserEndpoints
         {
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
-            return new MeShortDTO(user.Email, user.Name, user.AvatarUrl);
+            return new MeShortResponse(user.Email, user.Name, user.AvatarUrl);
         });
 
         group.MapGet("/me", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
-            return MeDTO.FromModel(user);
+            return MeResponse.FromModel(user);
         });
 
         group.MapPatch("/updatePhoneNumber", [Authorize] async (

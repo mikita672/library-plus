@@ -1,7 +1,7 @@
 using LibraryPlus.Services.Auth;
-using LibraryPlus.Requests.User;
 using Microsoft.AspNetCore.Mvc;
 using LibraryPlus.Services.Mail;
+using LibraryPlus.Requests.Auth;
 
 namespace LibraryPlus.Endpoints;
 
