@@ -20,15 +20,15 @@ public static class NotificationEndpoints
             [FromBody] SendOneNotificationRequest sendOneNotificationRequest
         ) =>
         {
-            await notificationService.SendOneUserNotification(sendOneNotificationRequest.UserId, sendOneNotificationRequest.Text);
+            await notificationService.SendOneUserNotification(sendOneNotificationRequest.UserId, sendOneNotificationRequest.NotificationBody);
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPost("/sendAll", [Authorize] async (
             UserService userService,
-            [FromBody] SendAllNotificationRequest sendOneNotificationRequest
+            [FromBody] NotificationBody sendNotificationRequest
         ) =>
         {
-            await userService.SendAllUsersNotification(sendOneNotificationRequest.Text);
+            await userService.SendAllUsersNotification(sendNotificationRequest);
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPatch("/read/{id}", [Authorize] async (

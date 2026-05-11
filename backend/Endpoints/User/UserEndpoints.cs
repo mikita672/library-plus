@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using LibraryPlus.DTO;
 using LibraryPlus.Filters;
-using LibraryPlus.Requests;
+using LibraryPlus.Requests.User;
 using LibraryPlus.Services.Auth;
 using LibraryPlus.Services.User;
 using Microsoft.AspNetCore.Authorization;
@@ -35,8 +35,6 @@ public static class UserEndpoints
             ClaimsPrincipal claims,
             UserService userService,
             [FromBody] UpdateAddressRequest updateAddressRequest
-        ) =>
-        {
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
@@ -75,6 +73,15 @@ public static class UserEndpoints
         {
             var userId = claims.FindFirstValue("sub")!;
             return await notificationService.GetUserNotifications(userId, pageNumber);
+        });
+
+        group.MapGet("/notifications/count", [Authorize] async (
+            ClaimsPrincipal claims,
+            NotificationService notificationService
+        ) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            return await notificationService.GetUserNotificationsCount(userId);
         });
 
         group.MapDelete("/me", [Authorize] async (
