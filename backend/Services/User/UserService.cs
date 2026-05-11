@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 using LibraryPlus.Models.User;
-using LibraryPlus.Requests;
+using LibraryPlus.Requests.User;
 
 namespace LibraryPlus.Services.User;
 

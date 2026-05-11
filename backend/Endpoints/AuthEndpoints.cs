@@ -1,5 +1,5 @@
 using LibraryPlus.Services.Auth;
-using LibraryPlus.Requests;
+using LibraryPlus.Requests.User;
 
 namespace LibraryPlus.Endpoints;
 
@@ -26,11 +26,12 @@ public static class UserEndpoints
             {
                 return Results.Unauthorized();
             }
-            
+
             context.Response.Cookies.Append(
                 "accessToken",
                 tokens.AccessToken,
-                new CookieOptions {
+                new CookieOptions
+                {
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
@@ -41,7 +42,8 @@ public static class UserEndpoints
             context.Response.Cookies.Append(
                 "refreshToken",
                 tokens.RefreshToken,
-                new CookieOptions {
+                new CookieOptions
+                {
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,

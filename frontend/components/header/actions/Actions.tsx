@@ -2,7 +2,7 @@
 
 import { BasketIcon, BellIcon } from '@phosphor-icons/react'
 import React from 'react'
-import HeaderActionThemeToggle from './theme-toggle';
+import HeaderActionThemeToggle from './ThemeToggle';
 
 function HeaderActions() {
   return (
@@ -10,11 +10,11 @@ function HeaderActions() {
       <div title="Notifications">
         <BellIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
       </div>
-    
+
       <div title="Your cart">
         <BasketIcon className="w-6 h-6 text-foreground cursor-pointer transition-colors hover:text-gray-400" />
       </div>
-    
+
       <HeaderActionThemeToggle />
     </div>
   )

@@ -1,7 +1,8 @@
 import React from 'react'
-import HeaderActions from './actions/actions'
-import Logo from './logo'
-import HeaderUser from './user/user'
+import HeaderActions from './actions/Actions'
+import Logo from './Logo'
+import HeaderUser from './user/User'
+import HeaderLinks from './HeaderLinks'
 
 function Header() {
   return (
@@ -9,6 +10,8 @@ function Header() {
       <Logo />
 
       <div className="flex items-center justify-center gap-12">
+        <HeaderLinks />
+
         <HeaderActions />
 
         <HeaderUser />
