@@ -76,20 +76,29 @@ public static class UserEndpoints
             [FromBody] ResetPasswordRequest resetPasswordRequest
         ) =>
         {
-            var newPassword = authService.ResetPassword(resetPasswordRequest.Email);
+            var newPassword = await authService.ResetPassword(resetPasswordRequest.Email);
             if (newPassword == null)
             {
                 return Results.BadRequest();
             }
-            var res = await mailService.SendMail(
-                resetPasswordRequest.Email,
-                "Password reset",
-                $"Your password is set to {newPassword}. Please log in and change it."
-            );
-            if (!res)
+
+            try
             {
-                return Results.Ok(newPassword);
+                var res = await mailService.SendMail(
+                    resetPasswordRequest.Email,
+                    "Password reset",
+                    $"Your password is set to {newPassword}. Please log in and change it."
+                );
+                if (!res)
+                {
+                    return Results.InternalServerError();
+                }
             }
+            catch
+            {
+                return Results.InternalServerError();
+            }
+
             return Results.NoContent();
         });
     }
