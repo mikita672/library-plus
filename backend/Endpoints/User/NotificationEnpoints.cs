@@ -25,7 +25,7 @@ public static class NotificationEndpoints
 
         group.MapPost("/sendAll", [Authorize] async (
             UserService userService,
-            [FromBody] NotificationBody sendNotificationRequest
+            [FromBody] NotificationRequest sendNotificationRequest
         ) =>
         {
             await userService.SendAllUsersNotification(sendNotificationRequest);

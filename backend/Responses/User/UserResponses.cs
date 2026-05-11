@@ -1,23 +1,23 @@
 using LibraryPlus.Models.User;
 
-namespace LibraryPlus.DTO;
+namespace LibraryPlus.Responses.User;
 
-public record MeDTO(
+public record MeResponse(
     string Email,
     string? PhoneNumber,
     string? AvatarUrl,
-    AddressDTO Address,
     DateTime JoinedAt
 )
 {
-    public static MeDTO FromModel(UserModel user)
+    public static MeResponse FromModel(UserModel user)
     {
-        return new MeDTO(
+        return new MeResponse(
             user.Email,
             user.PhoneNumber,
             user.AvatarUrl,
-            AddressDTO.FromModel(user.DeliveryAddress),
             user.JoinedAt
         );
     }
 };
+
+public record MeShortResponse(string Email, string? Name, string? AvatarUrl);

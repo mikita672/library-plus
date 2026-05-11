@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
+using LibraryPlus.Requests.Auth;
 
 namespace LibraryPlus.Services.User;
 
@@ -12,6 +13,11 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     public async Task<UserModel?> GetUserById(string id)
     {
         return await (await _users.FindAsync(u => u.Id == id)).FirstOrDefaultAsync();
+    }
+
+    public async Task<UserModel?> GetUserByEmail(string email)
+    {
+        return await (await _users.FindAsync(u => u.Email == email)).FirstOrDefaultAsync();
     }
 
     public async Task<bool> IsEmailTaken(string email)
@@ -29,7 +35,6 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
             PhoneNumber = request.PhoneNumber,
             AvatarUrl = request.AvatarUrl,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            DeliveryAddress = new(),
             JoinedAt = DateTime.UtcNow,
             IsDeleted = false,
         };
@@ -49,14 +54,6 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return user;
     }
 
-    public async Task UpdateAddress(string userId, UpdateAddressRequest updateAddressRequest)
-    {
-        await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
-            Builders<UserModel>.Update.Set(u => u.DeliveryAddress, updateAddressRequest.ToModel())
-        );
-    }
-
     public async Task UpdatePhoneNumber(string userId, string newPhoneNumber)
     {
         await _users.UpdateOneAsync(
@@ -65,32 +62,20 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         );
     }
 
-    public async Task<bool> UpdatePassword(string userId, string oldPassword, string newPassword)
+    public async Task<bool> VerifyUserPassword(UserModel user, string password)
     {
-        var user = await (await _users.FindAsync(u => u.Id == userId)).FirstAsync();
+        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+    }
 
-        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
-        {
-            return false;
-        }
-
+    public async Task ChangePassword(string userId, string newPassword)
+    {
         await _users.UpdateOneAsync(
             Builders<UserModel>.Filter.Eq(u => u.Id, userId),
             Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
         );
-        return true;
     }
 
-    public async Task<bool> ResetPassword(string email, string newPassword)
-    {
-        var res = await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Email, email),
-            Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
-        );
-        return res.MatchedCount == 1;
-    }
-
-    public async Task SendAllUsersNotification(NotificationBody notificationBody)
+    public async Task SendAllUsersNotification(NotificationRequest notificationBody)
     {
         var allUsers = _users.Find(Builders<UserModel>.Filter.Empty);
         var allUserIds = allUsers.ToEnumerable().Select(u => u.Id);

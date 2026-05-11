@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
-using LibraryPlus.Requests.User;
+using LibraryPlus.Requests.Auth;
+using LibraryPlus.Responses.Auth;
 using LibraryPlus.Services.User;
 
 namespace LibraryPlus.Services.Auth;
@@ -51,13 +52,35 @@ public class AuthService(
 
     public async Task<string?> ResetPassword(string email)
     {
-        const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*";
-        string newPassword = RandomNumberGenerator.GetString(validChars, 12);
-        if (!await _userService.ResetPassword(email, newPassword))
+        var user = await _userService.GetUserByEmail(email);
+        if (user == null)
         {
             return null;
         }
+        const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*";
+        string newPassword = RandomNumberGenerator.GetString(validChars, 12);
+
+        await _userService.ChangePassword(user.Id, newPassword);
+        await _refreshTokenService.RemoveRefreshTokensForUser(user.Id);
         return newPassword;
+    }
+
+    public async Task<bool> ChangePassword(string userId, string oldPassword, string newPassword)
+    {
+        var user = await _userService.GetUserById(userId);
+        if (user == null)
+        {
+            return false;
+        }
+
+        if (!await _userService.VerifyUserPassword(user, oldPassword))
+        {
+            return false;
+        }
+
+        await _userService.ChangePassword(user.Id, newPassword);
+        await _refreshTokenService.RemoveRefreshTokensForUser(user.Id);
+        return true;
     }
 
     public async Task<bool> LogoutAsync(string refreshTokenPlain)
