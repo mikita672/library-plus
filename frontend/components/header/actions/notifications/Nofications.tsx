@@ -58,7 +58,7 @@ function HeaderNotifications() {
                 <div className="relative cursor-pointer" title="Notifications">
                     <BellIcon className="w-6 h-6 text-foreground transition-colors hover:text-gray-400" />
                     <div className="select-none text-light absolute -bottom-1 -right-2 bg-destructive rounded-full w-4 h-4 text-xs text-center">
-                        {notReadCount}
+                        {Math.min(notReadCount, 99)}
                     </div>
                 </div>
             </PopoverTrigger>
@@ -75,7 +75,7 @@ function HeaderNotifications() {
                             <>
                                 <NotificationsList notifications={notifications} />
                                 <Separator />
-                                <NotificationsFooter page={page} pagesCount={pagesCount} />
+                                <NotificationsFooter page={page} pagesCount={pagesCount} setPage={setPage} />
                             </>
                     )
                 }
