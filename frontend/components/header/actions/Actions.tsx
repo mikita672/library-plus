@@ -2,7 +2,7 @@
 
 import { BasketIcon } from '@phosphor-icons/react'
 import HeaderActionThemeToggle from './ThemeToggle';
-import HeaderNotifications from './Nofications';
+import HeaderNotifications from './notifications/Nofications';
 import { useContext } from 'react';
 import { userContext } from '@/context/userContext';
 

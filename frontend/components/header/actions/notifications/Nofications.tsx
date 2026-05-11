@@ -1,11 +1,12 @@
 "use client"
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { BellIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react';
 import NotificationsList from './NotificationsList';
 import { Notification } from '@/types/user/Notification';
+import NotificationsFooter from './NotificationsFooter';
 
 function HeaderNotifications() {
     const [notifications, setNotifications] = useState<Notification[] | null>(null);
@@ -60,13 +61,18 @@ function HeaderNotifications() {
                     </div>
                 </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={10} className="w-50">
+            <DropdownMenuContent align="center" sideOffset={10} className="w-60">
                 {isLoading ? <div className="p-4 w-full flex justify-center align-center"><Spinner /></div> :
                     (
                         (notifications === null || pagesCount === 0) ?
                             <div className="p-4 w-full flex justify-center align-center">
                                 No notifications
-                            </div> : <NotificationsList notifications={notifications} />
+                            </div> :
+                            <>
+                                <NotificationsList notifications={notifications} />
+                                <DropdownMenuSeparator />
+                                <NotificationsFooter page={page} pagesCount={pagesCount} />
+                            </>
                     )
                 }
             </DropdownMenuContent>
