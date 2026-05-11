@@ -1,8 +1,6 @@
 "use client"
 
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import React from 'react'
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 interface Props {
     pagesCount: number;
@@ -10,10 +8,10 @@ interface Props {
 }
 
 function NotificationsFooter({ pagesCount, page }: Props) {
-    return <DropdownMenuItem className="w-full flex justify-between p-2">
+    return <div className="w-full flex justify-center p-2">
         <Pagination>
             <PaginationContent>
-                <PaginationItem>
+                <PaginationItem className={page === 1 ? 'opacity-30' : ''}>
                     <PaginationPrevious />
                 </PaginationItem>
                 <PaginationItem>
@@ -21,12 +19,12 @@ function NotificationsFooter({ pagesCount, page }: Props) {
                         {page} / {pagesCount}
                     </PaginationLink>
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className={page === pagesCount ? 'opacity-30' : ''}>
                     <PaginationNext />
                 </PaginationItem>
             </PaginationContent>
         </Pagination>
-    </DropdownMenuItem>
+    </div>
 }
 
 export default NotificationsFooter
