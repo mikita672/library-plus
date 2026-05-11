@@ -52,12 +52,12 @@ public static class UserEndpoints
 
         group.MapPatch("/updatePassword", [Authorize] async (
             ClaimsPrincipal claims,
-            UserService userService,
+            AuthService authService,
             [FromBody] UpdatePasswordRequest updatePasswordDto
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
-            var res = await userService.UpdatePassword(userId, updatePasswordDto.OldPassword, updatePasswordDto.NewPassword);
+            var res = await authService.ChangePassword(userId, updatePasswordDto.OldPassword, updatePasswordDto.NewPassword);
             if (!res)
             {
                 return Results.BadRequest();

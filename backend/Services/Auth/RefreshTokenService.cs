@@ -21,7 +21,6 @@ public class RefreshTokenService
         _refreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshTokenModel>(indexKeys, indexOptions));
     }
 
-
     public async Task<UserModel?> GetUserByRefreshToken(string refreshTokenPlain)
     {
         string refreshTokenHash = HashToken(refreshTokenPlain);
@@ -61,10 +60,9 @@ public class RefreshTokenService
         return result.DeletedCount == 1;
     }
 
-    public async Task<long> RemoveRefreshTokensForUser(string userId)
+    public async Task RemoveRefreshTokensForUser(string userId)
     {
-        var result = await _refreshTokens.DeleteManyAsync(t => t.UserId == userId);
-        return result.DeletedCount;
+        await _refreshTokens.DeleteManyAsync(t => t.UserId == userId);
     }
 
     private static string HashToken(string token)

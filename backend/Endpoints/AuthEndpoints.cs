@@ -99,7 +99,7 @@ public static class UserEndpoints
                 return Results.InternalServerError();
             }
 
-            return Results.NoContent();
+            return Results.Ok();
         });
     }
 }

@@ -14,6 +14,11 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return await (await _users.FindAsync(u => u.Id == id)).FirstOrDefaultAsync();
     }
 
+    public async Task<UserModel?> GetUserByEmail(string email)
+    {
+        return await (await _users.FindAsync(u => u.Email == email)).FirstOrDefaultAsync();
+    }
+
     public async Task<bool> IsEmailTaken(string email)
     {
         var existingUser = await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
@@ -65,29 +70,17 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         );
     }
 
-    public async Task<bool> UpdatePassword(string userId, string oldPassword, string newPassword)
+    public async Task<bool> VerifyUserPassword(UserModel user, string password)
     {
-        var user = await (await _users.FindAsync(u => u.Id == userId)).FirstAsync();
+        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+    }
 
-        if (!BCrypt.Net.BCrypt.Verify(oldPassword, user.PasswordHash))
-        {
-            return false;
-        }
-
+    public async Task ChangePassword(string userId, string newPassword)
+    {
         await _users.UpdateOneAsync(
             Builders<UserModel>.Filter.Eq(u => u.Id, userId),
             Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
         );
-        return true;
-    }
-
-    public async Task<bool> ResetPassword(string email, string newPassword)
-    {
-        var res = await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Email, email),
-            Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
-        );
-        return res.MatchedCount == 1;
     }
 
     public async Task SendAllUsersNotification(NotificationBody notificationBody)
