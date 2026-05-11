@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using LibraryPlus.Requests.User;
 using LibraryPlus.Services.User;
 
@@ -46,6 +47,17 @@ public class AuthService(
         string accessToken = _jwtService.GenerateJwtToken(user);
         string newRefreshTokenPlain = await _refreshTokenService.AddRefreshToken(user.Id);
         return new TokenResponse(accessToken, newRefreshTokenPlain);
+    }
+
+    public async Task<string?> ResetPassword(string email)
+    {
+        const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*";
+        string newPassword = RandomNumberGenerator.GetString(validChars, 12);
+        if (!await _userService.ResetPassword(email, newPassword))
+        {
+            return null;
+        }
+        return newPassword;
     }
 
     public async Task<bool> LogoutAsync(string refreshTokenPlain)

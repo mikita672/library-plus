@@ -16,4 +16,7 @@ public record LoginRequest(
 public record RefreshRequest(string RefreshToken);
 
 public record TokenResponse(string AccessToken, string RefreshToken);
+
 public record AccessTokenResponse(string AccessToken);
+
+public record ResetPasswordRequest(string Email);

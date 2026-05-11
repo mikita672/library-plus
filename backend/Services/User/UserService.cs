@@ -81,6 +81,15 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return true;
     }
 
+    public async Task<bool> ResetPassword(string email, string newPassword)
+    {
+        var res = await _users.UpdateOneAsync(
+            Builders<UserModel>.Filter.Eq(u => u.Email, email),
+            Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
+        );
+        return res.MatchedCount == 1;
+    }
+
     public async Task SendAllUsersNotification(NotificationBody notificationBody)
     {
         var allUsers = _users.Find(Builders<UserModel>.Filter.Empty);

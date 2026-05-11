@@ -1,5 +1,7 @@
 using LibraryPlus.Services.Auth;
 using LibraryPlus.Requests.User;
+using Microsoft.AspNetCore.Mvc;
+using LibraryPlus.Services.Mail;
 
 namespace LibraryPlus.Endpoints;
 
@@ -66,6 +68,38 @@ public static class UserEndpoints
             context.Response.Cookies.Delete("refreshToken");
 
             return Results.Ok(new { Message = "Logged out successfully" });
+        });
+
+        group.MapPatch("/reset-password", async (
+            AuthService authService,
+            MailService mailService,
+            [FromBody] ResetPasswordRequest resetPasswordRequest
+        ) =>
+        {
+            var newPassword = await authService.ResetPassword(resetPasswordRequest.Email);
+            if (newPassword == null)
+            {
+                return Results.BadRequest();
+            }
+
+            try
+            {
+                var res = await mailService.SendMail(
+                    resetPasswordRequest.Email,
+                    "Password reset",
+                    $"Your password is set to {newPassword}. Please log in and change it."
+                );
+                if (!res)
+                {
+                    return Results.InternalServerError();
+                }
+            }
+            catch
+            {
+                return Results.InternalServerError();
+            }
+
+            return Results.NoContent();
         });
     }
 }

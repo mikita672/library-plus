@@ -13,7 +13,7 @@ import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/component
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { userContext } from "@/context/userContext"
-import { formSchema, SignUpFormSchema } from "@/forms/auth"
+import { signUpformSchema, SignUpFormSchema } from "@/forms/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { EyeClosedIcon, EyeIcon } from "@phosphor-icons/react"
 import Link from "next/link"
@@ -24,7 +24,7 @@ import { toast } from "sonner"
 
 export default function page() {
   const form = useForm<SignUpFormSchema>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(signUpformSchema),
     mode: "onChange",
     defaultValues: {
       email: "",
@@ -41,7 +41,7 @@ export default function page() {
     if (data.password !== data.passwordConfirmation) {
       return;
     }
-    
+
     const error = await signup(data);
     if (error === null) {
       const loginError = await login(data);
@@ -79,7 +79,7 @@ export default function page() {
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                     <Input
-                      { ...field }
+                      {...field}
                       id={field.name}
                       aria-invalid={fieldState.invalid}
                       placeholder="example@mail.com"
@@ -104,7 +104,7 @@ export default function page() {
                       className="bg-background"
                     >
                       <InputGroupInput
-                        { ...field }
+                        {...field}
                         id={field.name}
                         aria-invalid={fieldState.invalid}
                         placeholder="Your password goes here"
@@ -138,7 +138,7 @@ export default function page() {
                       className="bg-background"
                     >
                       <InputGroupInput
-                        { ...field }
+                        {...field}
                         id={field.name}
                         aria-invalid={fieldState.invalid}
                         placeholder="Enter the password again"
@@ -173,7 +173,7 @@ export default function page() {
           cursor-pointer"
         >Sign up</Button>
 
-        
+
         <div className="flex flex-col gap-2 items-center">
           <Link href="/login" className="underline">Already have an account?</Link>
         </div>

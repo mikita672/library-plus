@@ -9,7 +9,7 @@ export const loginFormSchema = z.object({
 
 export type LoginFormSchema = z.infer<typeof loginFormSchema>;
 
-export const formSchema = z.object({
+export const signUpformSchema = z.object({
   email: z.email("Must be a valid email"),
   password: z
     .string()
@@ -31,4 +31,10 @@ export const formSchema = z.object({
   }
 });
 
-export type SignUpFormSchema = z.infer<typeof formSchema>;
+export type SignUpFormSchema = z.infer<typeof signUpformSchema>;
+
+export const passwordResetFormSchema = z.object({
+  email: z.email("Must be a valid email")
+});
+
+export type PasswordResetFormSchema = z.infer<typeof passwordResetFormSchema>;

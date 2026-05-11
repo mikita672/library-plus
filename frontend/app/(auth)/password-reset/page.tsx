@@ -11,28 +11,37 @@ import {
 } from "@/components/ui/card"
 import { Field, FieldError, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { userContext } from "@/context/userContext"
+import { passwordResetFormSchema, PasswordResetFormSchema } from "@/forms/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useContext } from "react"
 import { Controller, useForm } from "react-hook-form"
-import * as z from 'zod'
-
-const formSchema = z.object({
-  email: z.email("Must be a valid email")
-});
-
-type PasswordResetFormSchema = z.infer<typeof formSchema>;
+import { toast } from "sonner"
 
 export default function page() {
   const form = useForm<PasswordResetFormSchema>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(passwordResetFormSchema),
     mode: "onChange",
     defaultValues: {
       email: "",
     },
   });
+  const { resetPassword } = useContext(userContext);
+  const router = useRouter();
 
-  const onSubmit = (data: PasswordResetFormSchema) => {
-    console.log({ data })
+  const onSubmit = async (data: PasswordResetFormSchema) => {
+    console.log(data);
+    const error = await resetPassword(data);
+    if (error === null) {
+      toast.success("Check your email");
+      router.push("/login");
+      return;
+    }
+    toast.error("Failed to reset password", {
+      description: `Reason: ${error}`,
+    });
   }
 
   return (
@@ -44,34 +53,35 @@ export default function page() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form id="password-reset-form" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldSet className="flex flex-col gap-6">
-              <Controller
-                name="email"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                    <Input
-                      { ...field }
-                      id={field.name}
-                      aria-invalid={fieldState.invalid}
-                      placeholder="example@mail.com"
-                      className="bg-background"
-                      autoComplete="off"
-                      type="email"
-                      required
-                      autoFocus
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="example@mail.com"
+                    className="bg-background"
+                    autoComplete="off"
+                    type="email"
+                    required
+                    autoFocus
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
           </FieldSet>
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-4">
         <Button
+          form="password-reset-form"
           type="submit"
           className="w-full
           cursor-pointer"

@@ -10,6 +10,7 @@ using LibraryPlus.Services.Book;
 using LibraryPlus.Endpoints.Book;
 using LibraryPlus.Endpoints.Reservation;
 using LibraryPlus.Services.Reservation;
+using LibraryPlus.Services.Mail;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -31,6 +32,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
 var mongoClient = new MongoClient(connectionString);
 var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
 
+MailService mailService = new(builder.Configuration);
+
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -45,6 +48,7 @@ builder.Services.AddSingleton<PublisherService>();
 builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<ReservationService>();
+builder.Services.AddSingleton(mailService);
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
