@@ -51,7 +51,7 @@ function DangerZone() {
   };
 
   return (
-    <section>
+    <section className="p-2">
       <h2 className="mb-4 text-xl font-semibold">Danger zone</h2>
 
       <Popover open={open} onOpenChange={setOpen}>

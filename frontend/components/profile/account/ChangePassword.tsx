@@ -98,7 +98,7 @@ function ChangePassword() {
   };
 
   return (
-    <section>
+    <section className="p-2">
       <h2 className="mb-4 text-xl font-semibold">Change password</h2>
 
       <form onSubmit={form.handleSubmit(onSubmit)}>
