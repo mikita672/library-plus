@@ -1,6 +1,5 @@
 "use client"
 
-import { Spinner } from '@/components/ui/spinner';
 import { BellIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react';
 import NotificationsList from './NotificationsList';
@@ -8,6 +7,7 @@ import { Notification } from '@/types/user/Notification';
 import NotificationsFooter from './NotificationsFooter';
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import NotificationsListSkeleton from './NotificationsListSkeleton';
 
 function HeaderNotifications() {
     const [notifications, setNotifications] = useState<Notification[] | null>(null);
@@ -15,9 +15,11 @@ function HeaderNotifications() {
     const [notReadCount, setNotReadCount] = useState(0);
     const [page, setPage] = useState(-1);
     const [isLoading, setIsLoading] = useState(true);
+    const [isChangingPage, setIsChangingPage] = useState(false);
 
     useEffect(() => {
         (async () => {
+            setIsLoading(true);
             const response = await fetch("/api/user/notifications/count");
             if (!response.ok) {
                 return;
@@ -28,6 +30,7 @@ function HeaderNotifications() {
             if (pagesCount > 0) {
                 setPage(1);
             }
+            setIsLoading(false);
         })()
     }, []);
 
@@ -40,7 +43,7 @@ function HeaderNotifications() {
         });
 
         (async () => {
-            setIsLoading(true);
+            setIsChangingPage(true);
             const response = await fetch(`/api/user/notifications?${params}`);
             if (!response.ok) {
                 setIsLoading(false);
@@ -48,7 +51,7 @@ function HeaderNotifications() {
             }
             const data = await response.json();
             setNotifications(data);
-            setIsLoading(false);
+            setIsChangingPage(false);
         })()
     }, [page]);
 
@@ -66,14 +69,18 @@ function HeaderNotifications() {
                 <PopoverHeader>
                     <PopoverTitle>Notifications</PopoverTitle>
                 </PopoverHeader>
-                {isLoading ? <div className="p-4 w-full flex justify-center align-center"><Spinner /></div> :
+                {isLoading ? <NotificationsListSkeleton /> :
                     (
                         (notifications === null || pagesCount === 0) ?
                             <div className="p-4 w-full flex justify-center align-center">
                                 No notifications
                             </div> :
                             <>
-                                <NotificationsList notifications={notifications} />
+                                {
+                                    isChangingPage ?
+                                        <NotificationsListSkeleton /> :
+                                        <NotificationsList notifications={notifications} />
+                                }
                                 <Separator />
                                 <NotificationsFooter page={page} pagesCount={pagesCount} setPage={setPage} />
                             </>
