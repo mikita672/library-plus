@@ -24,10 +24,10 @@ function PublisherFilterRadioGroup({ publishers }: Props) {
         setPublisherId(id);
 
         const params = new URLSearchParams(searchParams);
-        if (publisherId.length === 0) {
+        if (id.length === 0) {
             params.delete("publisherId");
         } else {
-            params.set("publisherId", publisherId);
+            params.set("publisherId", id);
         }
         router.replace(`${pathname}?${params.toString()}`);
     }

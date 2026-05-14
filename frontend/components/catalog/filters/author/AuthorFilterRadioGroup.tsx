@@ -24,10 +24,10 @@ function AuthorFilterRadioGroup({ authors }: Props) {
         setAuthorId(id);
 
         const params = new URLSearchParams(searchParams);
-        if (authorId.length === 0) {
+        if (id.length === 0) {
             params.delete("authorId");
         } else {
-            params.set("authorId", authorId);
+            params.set("authorId", id);
         }
         router.replace(`${pathname}?${params.toString()}`);
     }
