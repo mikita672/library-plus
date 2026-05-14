@@ -16,7 +16,7 @@ function layout({ children }: { children: React.ReactNode }) {
     >
       <body className="min-h-full! min-w-full! text-sm">
         <Providers>
-          <div className="flex flex-col gap-10 px-6 pb-10 min-h-screen">
+          <div className="flex flex-col gap-4 px-6 pb-10 min-h-screen">
             <Header />
 
             {children}

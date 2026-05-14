@@ -13,7 +13,7 @@ function SearchBar() {
 
     const [searchToken, setSearchToken] = useState(searchParams.get("searchToken") ?? "");
 
-    const handleSearch = async () => {
+    const handleSearch = () => {
         const params = new URLSearchParams(searchParams);
 
         if (searchToken.length === 0) {
@@ -26,7 +26,7 @@ function SearchBar() {
     }
 
     return (
-        <InputGroup className="py-5">
+        <InputGroup className="py-5 bg-background">
             <InputGroupInput
                 placeholder="Search books by name"
                 value={searchToken}
