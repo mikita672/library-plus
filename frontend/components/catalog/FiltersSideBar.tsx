@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import AuthorFilter from './filters/author/AuthorFilter';
-import FilterLoading from './filters/Loading';
+import FilterLoading from './filters/FilterLoading';
+import PublisherFilter from './filters/publisher/PublisherFilter';
 
 function FiltersSideBar() {
     return (
@@ -9,6 +10,10 @@ function FiltersSideBar() {
 
             <Suspense fallback={<FilterLoading name="authors" />}>
                 <AuthorFilter />
+            </Suspense>
+
+            <Suspense fallback={<FilterLoading name="publishers" />}>
+                <PublisherFilter />
             </Suspense>
         </div>
     )

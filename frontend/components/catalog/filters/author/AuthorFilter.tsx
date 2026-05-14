@@ -12,6 +12,10 @@ async function AuthorFilter() {
 
     const authors: Author[] = await response.json();
 
+    if (authors.length === 0) {
+        return <></>;
+    }
+
     return (
         <div className="flex flex-col gap-1">
             <p>Author</p>
