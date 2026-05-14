@@ -10,7 +10,7 @@ interface Props {
     publishers: Publisher[],
 }
 
-function PublisherFilterRadioGroup({ publishers }: Props) {
+function PublisherFilterSelection({ publishers }: Props) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const router = useRouter();
@@ -63,4 +63,4 @@ function PublisherFilterRadioGroup({ publishers }: Props) {
     )
 }
 
-export default PublisherFilterRadioGroup
+export default PublisherFilterSelection

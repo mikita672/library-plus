@@ -1,5 +1,5 @@
 import { Author } from '@/types/book/Author';
-import AuthorFilterRadioGroup from './AuthorFilterRadioGroup';
+import AuthorFilterRadioGroup from './AuthorFilterSelection';
 
 async function AuthorFilter() {
     const response = await fetch(`${process.env.API_URL}/author`, {

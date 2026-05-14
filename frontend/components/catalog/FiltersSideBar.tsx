@@ -3,6 +3,7 @@ import AuthorFilter from './filters/author/AuthorFilter';
 import FilterLoading from './filters/FilterLoading';
 import PublisherFilter from './filters/publisher/PublisherFilter';
 import PublicationYearFilter from './filters/PublicationYearFilter';
+import CategoryFilter from './filters/category/CategoryFilter';
 
 function FiltersSideBar() {
     return (
@@ -18,6 +19,10 @@ function FiltersSideBar() {
             </Suspense>
 
             <PublicationYearFilter />
+
+            <Suspense fallback={<FilterLoading name="categories" />}>
+                <CategoryFilter />
+            </Suspense>
         </div>
     )
 }

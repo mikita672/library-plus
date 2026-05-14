@@ -10,7 +10,7 @@ interface Props {
     authors: Author[],
 }
 
-function AuthorFilterRadioGroup({ authors }: Props) {
+function AuthorFilterSelection({ authors }: Props) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const router = useRouter();
@@ -63,4 +63,4 @@ function AuthorFilterRadioGroup({ authors }: Props) {
     )
 }
 
-export default AuthorFilterRadioGroup
+export default AuthorFilterSelection
