@@ -20,9 +20,9 @@ public static class BookEndpoints
             [FromQuery] string[]? categoryIds,
             [FromQuery] uint? minPublicationYear,
             [FromQuery] uint? maxPublicationYear,
-            [FromQuery] int pageNumber,
+            [FromQuery] int? pageNumber,
             [FromQuery] string? sortBy,
-            [FromQuery] bool sortDescending,
+            [FromQuery] bool? sortDescending,
             BookService bookService
         ) =>
         {
@@ -33,9 +33,9 @@ public static class BookEndpoints
                 categoryIds?.ToList(),
                 minPublicationYear,
                 maxPublicationYear,
-                pageNumber,
+                pageNumber ?? 1,
                 sortBy,
-                sortDescending
+                sortDescending ?? false
             );
         });
 

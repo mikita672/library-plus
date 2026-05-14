@@ -1,5 +1,5 @@
-import { Rubik } from "next/font/google";
 import './globals.css';
+import { Rubik } from "next/font/google";
 import Header from "@/components/header/Header";
 import { CustomToaster } from "@/components/Toaster/CustomToaster";
 import { Providers } from "@/components/providers";

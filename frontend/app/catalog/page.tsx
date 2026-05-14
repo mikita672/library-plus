@@ -1,5 +1,5 @@
 import BookResults from '@/components/catalog/BookResults'
-import FiltersSideBar from '@/components/catalog/filters/FiltersSideBar'
+import FiltersSideBar from '@/components/catalog/FiltersSideBar'
 import SearchBar from '@/components/catalog/SearchBar'
 import React from 'react'
 
