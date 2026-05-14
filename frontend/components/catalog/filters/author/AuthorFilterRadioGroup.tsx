@@ -16,6 +16,10 @@ function AuthorFilterRadioGroup({ authors }: Props) {
     const router = useRouter();
 
     const [authorId, setAuthorId] = useState(searchParams.get("authorId") ?? "");
+    const [isExtended, setIsExtended] = useState(false);
+
+    const displayedAuthors = isExtended ? authors : authors.slice(0, 4);
+
     const handleChange = (id: string) => {
         setAuthorId(id);
 
@@ -29,23 +33,33 @@ function AuthorFilterRadioGroup({ authors }: Props) {
     }
 
     return (
-        <RadioGroup value={authorId} onValueChange={handleChange}>
-            <Field orientation="horizontal">
-                <RadioGroupItem value="" id="author-none" />
-                <FieldContent>
-                    <FieldLabel htmlFor="author-none">Any author</FieldLabel>
-                </FieldContent>
-            </Field>
-
-            {authors.map((a) => (
-                <Field key={a.id} orientation="horizontal">
-                    <RadioGroupItem value={a.id} id={`author-${a.id}`} />
+        <div className="flex flex-col gap-2">
+            <RadioGroup value={authorId} onValueChange={handleChange}>
+                <Field orientation="horizontal">
+                    <RadioGroupItem value="" id="author-none" />
                     <FieldContent>
-                        <FieldLabel htmlFor={`author-${a.id}`}>{a.name}</FieldLabel>
+                        <FieldLabel htmlFor="author-none">Any author</FieldLabel>
                     </FieldContent>
                 </Field>
-            ))}
-        </RadioGroup>
+
+                {displayedAuthors.map((a) => (
+                    <Field key={a.id} orientation="horizontal">
+                        <RadioGroupItem value={a.id} id={`author-${a.id}`} />
+                        <FieldContent>
+                            <FieldLabel htmlFor={`author-${a.id}`}>{a.name}</FieldLabel>
+                        </FieldContent>
+                    </Field>
+                ))}
+            </RadioGroup>
+
+            {
+                authors.length > 4 ?
+                    <p
+                        className="underline text-primary cursor-pointer"
+                        onClick={() => setIsExtended(prev => !prev)}
+                    >{isExtended ? "Collapse" : "Show all"}</p> : <></>
+            }
+        </div>
     )
 }
 
