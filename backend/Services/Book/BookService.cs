@@ -88,8 +88,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         }
         if (categoryIds != null && categoryIds.Count != 0)
         {
-            query = query.Where(b =>
-                categoryIds.All(id => b.CategoryIds.Any(c => c == id)));
+            query = query.Where(b => b.CategoryIds.Any(c => categoryIds.Contains(c)));
         }
         string normalizedSortBy = sortBy?.ToLower() ?? "title";
         if (sortDescending)

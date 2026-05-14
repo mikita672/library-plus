@@ -30,7 +30,7 @@ function SearchBar() {
             <InputGroupInput
                 placeholder="Search books by name"
                 value={searchToken}
-                onChange={(e) => setSearchToken(e.target.value.trim())}
+                onChange={(e) => setSearchToken(e.target.value)}
             />
 
             <InputGroupAddon>

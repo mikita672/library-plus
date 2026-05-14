@@ -37,7 +37,7 @@ function CategoryFilterSelection({ categories }: Props) {
 
     return (
         <div className="flex flex-col gap-2">
-            {displayedCategories.map((c, i) => (
+            {displayedCategories.map((c) => (
                 <FieldGroup key={c.id} className="max-w-sm">
                     <Field orientation="horizontal">
                         <Checkbox
