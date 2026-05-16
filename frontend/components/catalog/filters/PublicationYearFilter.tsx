@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ChangeEvent, useState } from 'react'
+import { useState } from 'react'
 
 const currentYear = new Date().getFullYear();
 

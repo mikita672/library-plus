@@ -2,6 +2,7 @@ import BookResults from '@/components/catalog/BookResults'
 import FiltersSideBar from '@/components/catalog/FiltersSideBar'
 import ResultsPagination from '@/components/catalog/results-pagination/ResultsPagination';
 import SearchBar from '@/components/catalog/SearchBar'
+import SortSelection from '@/components/catalog/SortSelection';
 
 interface Props {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -27,6 +28,13 @@ async function Catalog({ searchParams }: Props) {
                 </div>
 
                 <div className="col-span-10 flex flex-col gap-4 justify-center">
+                    <div className="w-full grid grid-cols-12 items-center">
+                        <div className="col-span-4 flex items-center gap-2">
+                            <span>Sort by</span>
+                            <SortSelection />
+                        </div>
+                    </div>
+
                     <BookResults params={params} />
 
                     <ResultsPagination params={params} />

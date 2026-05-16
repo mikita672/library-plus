@@ -98,7 +98,8 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         {
             query = normalizedSortBy switch
             {
-                "publicationyear" => query.OrderByDescending(b => b.PublicationYear),
+                "publicationyear" => query
+                    .OrderByDescending(b => b.OriginalPublicationYear ?? b.PublicationYear),
                 _ => query.OrderByDescending(b => b.Title)
             };
         }
@@ -106,7 +107,8 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         {
             query = normalizedSortBy switch
             {
-                "publicationyear" => query.OrderBy(b => b.PublicationYear),
+                "publicationyear" => query
+                    .OrderBy(b => b.OriginalPublicationYear ?? b.PublicationYear),
                 _ => query.OrderBy(b => b.Title)
             };
         }
