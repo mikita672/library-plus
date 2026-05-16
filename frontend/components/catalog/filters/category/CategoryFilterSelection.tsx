@@ -16,23 +16,26 @@ function CategoryFilterSelection({ categories }: Props) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const [categoryIds, setCategoryIds] = useState(searchParams.getAll("categoryIds") ?? []);
+    const categoryIds = searchParams.getAll("categoryIds") ?? [];
     const [isExtended, setIsExtended] = useState(false);
 
     const displayedCategories = isExtended ? categories : categories.slice(0, 4);
 
     const handleSelect = (id: string) => {
-        setCategoryIds(prev => [...prev, id]);
         const params = new URLSearchParams(searchParams);
         params.append("categoryIds", id);
-        router.replace(`${pathname}?${params.toString()}`);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
 
     const handleUnselect = (id: string) => {
-        setCategoryIds(prev => prev.filter(_id => _id !== id));
-        const params = new URLSearchParams(searchParams);
-        params.delete("categoryIds", id);
-        router.replace(`${pathname}?${params.toString()}`);
+        const newCategoryIds = categoryIds.filter(_id => _id !== id);
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("categoryIds");
+        for (const categoryId of newCategoryIds) {
+            params.append("categoryIds", categoryId);
+        }
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.refresh();
     }
 
     return (

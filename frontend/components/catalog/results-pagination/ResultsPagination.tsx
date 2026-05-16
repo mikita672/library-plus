@@ -16,7 +16,7 @@ async function ResultsPagination({ params }: Props) {
 
     const pagesCount: number = await response.json();
 
-    return <PageSelection page={parseInt(params.get("page") ?? "1")} pagesCount={pagesCount} />
+    return <PageSelection pageNumber={parseInt(params.get("pageNumber") ?? "1")} pagesCount={pagesCount} />
 }
 
 export default ResultsPagination

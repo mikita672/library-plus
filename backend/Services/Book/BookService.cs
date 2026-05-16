@@ -78,7 +78,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         maxPublicationYear ??= (uint)DateTime.Now.Year;
 
         var query = _books.AsQueryable()
-            .Where(b => b.Title.StartsWith(searchToken))
+            .Where(b => b.Title.StartsWith(searchToken, StringComparison.CurrentCultureIgnoreCase))
             .Where(b => b.PublicationYear >= minPublicationYear)
             .Where(b => b.PublicationYear <= maxPublicationYear);
         if (authorId != null)
@@ -150,7 +150,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         maxPublicationYear ??= (uint)DateTime.Now.Year;
 
         var query = _books.AsQueryable()
-            .Where(b => b.Title.StartsWith(searchToken))
+            .Where(b => b.Title.StartsWith(searchToken, StringComparison.CurrentCultureIgnoreCase))
             .Where(b => b.PublicationYear >= minPublicationYear)
             .Where(b => b.PublicationYear <= maxPublicationYear);
         if (authorId != null)

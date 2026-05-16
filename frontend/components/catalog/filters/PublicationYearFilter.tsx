@@ -13,7 +13,7 @@ function PublicationYearFilter() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const minYear = searchParams.get("minPublicationYear") ?? "1970"
+    const minYear = searchParams.get("minPublicationYear") ?? "0"
     const maxYear = searchParams.get("maxPublicationYear") ?? currentYear.toString();
 
     const [minPublicationYear, setMinPublicationYear] = useState(minYear);
