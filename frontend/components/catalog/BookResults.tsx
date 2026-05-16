@@ -16,8 +16,6 @@ async function BookResults({ params }: Props) {
 
     const books: BookCard[] = await response.json();
 
-    console.dir(books);
-
     if (books.length === 0) {
         return <div>No books found</div>
     }

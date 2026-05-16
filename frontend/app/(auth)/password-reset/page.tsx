@@ -32,7 +32,6 @@ export default function page() {
   const router = useRouter();
 
   const onSubmit = async (data: PasswordResetFormSchema) => {
-    console.log(data);
     const error = await resetPassword(data);
     if (error === null) {
       toast.success("Check your email");

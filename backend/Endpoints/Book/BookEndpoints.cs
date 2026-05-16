@@ -20,6 +20,7 @@ public static class BookEndpoints
             [FromQuery] string[]? categoryIds,
             [FromQuery] uint? minPublicationYear,
             [FromQuery] uint? maxPublicationYear,
+            [FromQuery] bool? isAvailable,
             [FromQuery] int? pageNumber,
             [FromQuery] string? sortBy,
             [FromQuery] bool? sortDescending,
@@ -33,6 +34,7 @@ public static class BookEndpoints
                 categoryIds?.ToList(),
                 minPublicationYear,
                 maxPublicationYear,
+                isAvailable,
                 pageNumber ?? 1,
                 sortBy,
                 sortDescending ?? false
@@ -46,6 +48,7 @@ public static class BookEndpoints
             [FromQuery] string[]? categoryIds,
             [FromQuery] uint? minPublicationYear,
             [FromQuery] uint? maxPublicationYear,
+            [FromQuery] bool? isAvailable,
             BookService bookService
         ) =>
         {

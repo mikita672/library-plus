@@ -61,17 +61,14 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         return res.MatchedCount == 1;
     }
 
-    public async Task<IList<BookCardResponse>> SearchBooks(
-        string? searchToken = null,
-        string? authorId = null,
-        string? publisherId = null,
-        List<string>? categoryIds = null,
-        uint? minPublicationYear = null,
-        uint? maxPublicationYear = null,
-        int pageNumber = 1,
-        string? sortBy = null,
-        bool sortDescending = false
-    )
+    private async Task<IQueryable<BookModel>> BuildBookFilterQueryAsync(
+            string? searchToken,
+            string? authorId,
+            string? publisherId,
+            List<string>? categoryIds,
+            uint? minPublicationYear,
+            uint? maxPublicationYear,
+            bool? isAvailable)
     {
         searchToken ??= "";
         minPublicationYear ??= 0;
@@ -81,19 +78,67 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             .Where(b => b.Title.StartsWith(searchToken, StringComparison.CurrentCultureIgnoreCase))
             .Where(b => b.PublicationYear >= minPublicationYear)
             .Where(b => b.PublicationYear <= maxPublicationYear);
+
         if (authorId != null)
         {
             query = query.Where(b => b.AuthorId == authorId);
         }
+
         if (publisherId != null)
         {
             query = query.Where(b => b.PublisherId == publisherId);
         }
+
         if (categoryIds != null && categoryIds.Count != 0)
         {
             query = query.Where(b => b.CategoryIds.Any(c => categoryIds.Contains(c)));
         }
+
+        if (isAvailable != null)
+        {
+            var reservedBookUnitIds = await _reservations.AsQueryable()
+                .Where(r => r.ReturnedDate == null)
+                .Select(r => r.BookUnitId)
+                .ToListAsync();
+
+            var availableBookIds = await _bookUnits.AsQueryable()
+                .Where(bu => !reservedBookUnitIds.Contains(bu.Id))
+                .Select(bu => bu.BookId)
+                .Distinct()
+                .ToListAsync();
+
+            if (isAvailable == true)
+            {
+                query = query.Where(b => availableBookIds.Contains(b.Id));
+            }
+            else
+            {
+                query = query.Where(b => !availableBookIds.Contains(b.Id));
+            }
+        }
+
+        return query;
+    }
+
+    public async Task<IList<BookCardResponse>> SearchBooks(
+        string? searchToken = null,
+        string? authorId = null,
+        string? publisherId = null,
+        List<string>? categoryIds = null,
+        uint? minPublicationYear = null,
+        uint? maxPublicationYear = null,
+        bool? isAvailable = null,
+        int pageNumber = 1,
+        string? sortBy = null,
+        bool sortDescending = false
+    )
+    {
+        var query = await BuildBookFilterQueryAsync(
+            searchToken, authorId, publisherId, categoryIds,
+            minPublicationYear, maxPublicationYear, isAvailable);
+
         string normalizedSortBy = sortBy?.ToLower() ?? "title";
+
         if (sortDescending)
         {
             query = normalizedSortBy switch
@@ -120,9 +165,11 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             .Where(id => id != null)
             .Distinct()
             .ToList();
+
         var authors = await _authors.AsQueryable()
             .Where(a => authorIds.Contains(a.Id))
             .ToListAsync();
+
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
 
         return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
@@ -144,52 +191,18 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         List<string>? categoryIds = null,
         uint? minPublicationYear = null,
         uint? maxPublicationYear = null,
+        bool? isAvailable = null,
         string? sortBy = null,
         bool sortDescending = false
     )
     {
-        searchToken ??= "";
-        minPublicationYear ??= 0;
-        maxPublicationYear ??= (uint)DateTime.Now.Year;
-
-        var query = _books.AsQueryable()
-            .Where(b => b.Title.StartsWith(searchToken, StringComparison.CurrentCultureIgnoreCase))
-            .Where(b => b.PublicationYear >= minPublicationYear)
-            .Where(b => b.PublicationYear <= maxPublicationYear);
-        if (authorId != null)
-        {
-            query = query.Where(b => b.AuthorId == authorId);
-        }
-        if (publisherId != null)
-        {
-            query = query.Where(b => b.PublisherId == publisherId);
-        }
-        if (categoryIds != null && categoryIds.Count != 0)
-        {
-            query = query.Where(b => b.CategoryIds.Any(c => categoryIds.Contains(c)));
-        }
-        string normalizedSortBy = sortBy?.ToLower() ?? "title";
-        if (sortDescending)
-        {
-            query = normalizedSortBy switch
-            {
-                "publicationyear" => query.OrderByDescending(b => b.PublicationYear),
-                _ => query.OrderByDescending(b => b.Title)
-            };
-        }
-        else
-        {
-            query = normalizedSortBy switch
-            {
-                "publicationyear" => query.OrderBy(b => b.PublicationYear),
-                _ => query.OrderBy(b => b.Title)
-            };
-        }
+        var query = await BuildBookFilterQueryAsync(
+            searchToken, authorId, publisherId, categoryIds,
+            minPublicationYear, maxPublicationYear, isAvailable);
 
         var totalBooks = await query.CountAsync();
         return (uint)Math.Ceiling((double)totalBooks / SEARCH_PAGE_SIZE);
     }
-
 
     public async Task DeleteBook(string id)
     {
