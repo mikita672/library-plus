@@ -1,23 +1,12 @@
-import { Book, BookCard } from '@/types/book/Book';
-import Image from 'next/image';
-import React from 'react'
+import { BookCard } from '@/types/book/Book';
 import { Button } from '../ui/button';
 
 interface Props {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+    params: URLSearchParams;
 }
 
-async function BookResults({ searchParams }: Props) {
-    const params = new URLSearchParams();
-    Object.entries(await searchParams).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-            value.forEach(v => params.append(key, v));
-        } else if (value) {
-            params.append(key, value);
-        }
-    });
-
-    const response = await fetch(`${process.env.API_URL}/book?${params.toString()}`, {
+async function BookResults({ params }: Props) {
+    const response = await fetch(`${process.env.API_URL}/books?${params.toString()}`, {
         method: "GET",
     });
 
@@ -27,14 +16,12 @@ async function BookResults({ searchParams }: Props) {
 
     const books: BookCard[] = await response.json();
 
-    console.dir({ books });
-
     if (books.length === 0) {
         return <div>No books found</div>
     }
 
     return (
-        <div className="col-span-10 grid grid-cols-4 gap-x-12 gap-y-4">
+        <div className="w-full grid grid-cols-4 gap-x-12 gap-y-4">
             {books.map((b) => (
                 <div key={b.id} className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
                     <img

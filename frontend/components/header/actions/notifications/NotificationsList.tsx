@@ -15,7 +15,7 @@ function NotificationsList({ notifications }: Params) {
     const readNotification = async (notification: Notification) => {
         setActiveNotification(notification);
         if (!notification.isRead) {
-            await fetch(`/api/notification/read/${notification.id}`, {
+            await fetch(`/api/notifications/read/${notification.id}`, {
                 method: "PATCH",
             });
         }

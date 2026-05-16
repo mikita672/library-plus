@@ -11,7 +11,7 @@ public static class CategoryEndpoints
     public static void MapCategoryEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/category");
+            .MapGroup("/api/v1/categories");
 
         group.MapGet("/", async (CategoryService categoryService) =>
         {
@@ -28,7 +28,7 @@ public static class CategoryEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapPut("/{id}", [Authorize] async (
+        group.MapPut("/category/{id}", [Authorize] async (
             CategoryService categoryService,
             [FromBody] UpdateCategoryRequest updateCategoryRequest,
             string id
@@ -43,7 +43,7 @@ public static class CategoryEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapDelete("/{id}", [Authorize] async (
+        group.MapDelete("/category/{id}", [Authorize] async (
             CategoryService categoryService,
             string id
         ) =>

@@ -25,7 +25,7 @@ function DangerZone() {
     setError(null);
 
     try {
-      const response = await fetch("/api/user/me", {
+      const response = await fetch("/api/users/me", {
         method: "DELETE",
         headers: {
           Accept: "application/json",

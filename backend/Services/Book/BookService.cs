@@ -15,6 +15,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
     private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
     private readonly CategoryService _categoryService = categoryService;
+    private const int SEARCH_PAGE_SIZE = 12;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
     {
@@ -110,7 +111,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             };
         }
 
-        var books = await query.Skip(9 * (pageNumber - 1)).Take(9).ToListAsync();
+        var books = await query.Skip(SEARCH_PAGE_SIZE * (pageNumber - 1)).Take(SEARCH_PAGE_SIZE).ToListAsync();
         var authorIds = books
             .Select(b => b.AuthorId)
             .Where(id => id != null)
@@ -132,6 +133,60 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
                 b.CoverURI
             ))];
     }
+
+    public async Task<uint> GetPagesCount(
+        string? searchToken = null,
+        string? authorId = null,
+        string? publisherId = null,
+        List<string>? categoryIds = null,
+        uint? minPublicationYear = null,
+        uint? maxPublicationYear = null,
+        string? sortBy = null,
+        bool sortDescending = false
+    )
+    {
+        searchToken ??= "";
+        minPublicationYear ??= 0;
+        maxPublicationYear ??= (uint)DateTime.Now.Year;
+
+        var query = _books.AsQueryable()
+            .Where(b => b.Title.StartsWith(searchToken))
+            .Where(b => b.PublicationYear >= minPublicationYear)
+            .Where(b => b.PublicationYear <= maxPublicationYear);
+        if (authorId != null)
+        {
+            query = query.Where(b => b.AuthorId == authorId);
+        }
+        if (publisherId != null)
+        {
+            query = query.Where(b => b.PublisherId == publisherId);
+        }
+        if (categoryIds != null && categoryIds.Count != 0)
+        {
+            query = query.Where(b => b.CategoryIds.Any(c => categoryIds.Contains(c)));
+        }
+        string normalizedSortBy = sortBy?.ToLower() ?? "title";
+        if (sortDescending)
+        {
+            query = normalizedSortBy switch
+            {
+                "publicationyear" => query.OrderByDescending(b => b.PublicationYear),
+                _ => query.OrderByDescending(b => b.Title)
+            };
+        }
+        else
+        {
+            query = normalizedSortBy switch
+            {
+                "publicationyear" => query.OrderBy(b => b.PublicationYear),
+                _ => query.OrderBy(b => b.Title)
+            };
+        }
+
+        var totalBooks = await query.CountAsync();
+        return (uint)Math.Ceiling((double)totalBooks / SEARCH_PAGE_SIZE);
+    }
+
 
     public async Task DeleteBook(string id)
     {

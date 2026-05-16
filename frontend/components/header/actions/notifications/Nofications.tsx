@@ -20,7 +20,7 @@ function HeaderNotifications() {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
-            const response = await fetch("/api/user/notifications/count");
+            const response = await fetch("/api/users/notifications/count");
             if (!response.ok) {
                 return;
             }
@@ -44,7 +44,7 @@ function HeaderNotifications() {
 
         (async () => {
             setIsChangingPage(true);
-            const response = await fetch(`/api/user/notifications?${params}`);
+            const response = await fetch(`/api/users/notifications?${params}`);
             if (!response.ok) {
                 setIsLoading(false);
                 return;

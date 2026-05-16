@@ -11,7 +11,7 @@ public static class PublisherEndpoints
     public static void MapPublisherEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/publisher");
+            .MapGroup("/api/v1/publishers");
 
         group.MapGet("/", async (PublisherService publisherService) =>
         {
@@ -28,7 +28,7 @@ public static class PublisherEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapPut("/{id}", [Authorize] async (
+        group.MapPut("/publisher/{id}", [Authorize] async (
             PublisherService publisherService,
             [FromBody] UpdatePublisherRequest updatePublisherRequest,
             string id
@@ -43,7 +43,7 @@ public static class PublisherEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapDelete("/{id}", [Authorize] async (
+        group.MapDelete("/publisher/{id}", [Authorize] async (
             PublisherService publisherService,
             string id
         ) =>

@@ -2,7 +2,7 @@ import { Category } from '@/types/book/Category';
 import CategoryFilterSelection from './CategoryFilterSelection';
 
 async function CategoryFilter() {
-    const response = await fetch(`${process.env.API_URL}/category`, {
+    const response = await fetch(`${process.env.API_URL}/categories`, {
         method: "GET",
     });
 

@@ -2,7 +2,7 @@ import { Publisher } from "@/types/book/Publisher";
 import PublisherFilterRadioGroup from "./PublisherFilterSelection";
 
 async function PublisherFilter() {
-    const response = await fetch(`${process.env.API_URL}/publisher`, {
+    const response = await fetch(`${process.env.API_URL}/publishers`, {
         method: "GET",
     });
 
