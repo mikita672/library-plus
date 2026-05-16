@@ -1,4 +1,5 @@
 "use client"
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../../ui/pagination'
 
 interface Props {
@@ -7,30 +8,54 @@ interface Props {
 }
 
 function PageSelection({ page, pagesCount }: Props) {
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
+
     const startPage = page === 1 ? 1 : page - 1;
     const length = Math.min(pagesCount - startPage + 1, 3);
+
+    const changePage = (nextPage: number) => {
+        const params = new URLSearchParams(searchParams);
+        params.set("pageNumber", nextPage.toString());
+        router.replace(`${pathname}?${params.toString()}`);
+    }
 
     return (
         <Pagination>
             <PaginationContent>
-                <PaginationItem>
-                    <PaginationPrevious href="#" />
+                <PaginationItem className={page === 1 ? 'opacity-30' : 'cursor-pointer'}>
+                    <PaginationPrevious onClick={() => {
+                        if (page === 1) {
+                            return;
+                        }
+                        changePage(page - 1);
+                    }} />
                 </PaginationItem>
                 {Array.from({ length }).map((_, i) => (
                     <PaginationItem key={i}>
-                        <PaginationLink href="#">{startPage + i}</PaginationLink>
+                        <PaginationLink onClick={() => {
+                            changePage(startPage + i);
+                        }}>{startPage + i}</PaginationLink>
                     </PaginationItem>
                 ))}
-                {startPage + 2 === pagesCount ? <></> : <>
+                {startPage + 2 >= pagesCount ? <></> : <>
                     <PaginationItem>
                         <PaginationEllipsis />
                     </PaginationItem>
                     <PaginationItem>
-                        <PaginationLink href="#">{pagesCount}</PaginationLink>
+                        <PaginationLink onClick={() => {
+                            changePage(pagesCount);
+                        }}>{pagesCount}</PaginationLink>
                     </PaginationItem>
                 </>}
-                <PaginationItem>
-                    <PaginationNext href="#" />
+                <PaginationItem className={page === pagesCount ? 'opacity-30' : 'cursor-pointer'}>
+                    <PaginationNext onClick={() => {
+                        if (page === pagesCount) {
+                            return;
+                        }
+                        changePage(page + 1);
+                    }} />
                 </PaginationItem>
             </PaginationContent>
         </Pagination>
