@@ -24,4 +24,5 @@ export interface BookCard {
     publicationYear: number;
     originalPublicationYear?: number | null;
     coverURI?: string | null;
+    isAvailable: boolean;
 }

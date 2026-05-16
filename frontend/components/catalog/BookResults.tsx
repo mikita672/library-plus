@@ -16,6 +16,8 @@ async function BookResults({ params }: Props) {
 
     const books: BookCard[] = await response.json();
 
+    console.dir(books);
+
     if (books.length === 0) {
         return <div>No books found</div>
     }
@@ -35,6 +37,8 @@ async function BookResults({ params }: Props) {
                         <p className="opacity-50">Language: {b.language}</p>
                         {b.authorName === null ? <></> : <p className="opacity-50">Author: {b.authorName}</p>}
                         <p className="opacity-50">Publication year: {b.originalPublicationYear ?? b.publicationYear}</p>
+                        {b.isAvailable ?
+                            <p>Available now</p> : <p className="text-destructive">Not Available</p>}
                     </div>
 
                     <div className="w-full grid grid-cols-2 gap-2">

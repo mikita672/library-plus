@@ -7,5 +7,6 @@ public record BookCardResponse(
     string? AuthorName,
     uint PublicationYear,
     uint? OriginalPublicationYear,
-    string? CoverURI
+    string? CoverURI,
+    bool IsAvailable
 );

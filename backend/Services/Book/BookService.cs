@@ -11,7 +11,7 @@ namespace LibraryPlus.Services.Book;
 public class BookService(IMongoDatabase db, CategoryService categoryService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
-    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("booksUnits");
+    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
     private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
     private readonly CategoryService _categoryService = categoryService;
@@ -114,26 +114,27 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         }
 
         var books = await query.Skip(SEARCH_PAGE_SIZE * (pageNumber - 1)).Take(SEARCH_PAGE_SIZE).ToListAsync();
+
         var authorIds = books
             .Select(b => b.AuthorId)
             .Where(id => id != null)
             .Distinct()
             .ToList();
-
         var authors = await _authors.AsQueryable()
             .Where(a => authorIds.Contains(a.Id))
             .ToListAsync();
-
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
-        return [.. books.Select(b => new BookCardResponse(
-                b.Id,
-                b.Title,
-                b.Language,
-                b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
-                b.PublicationYear,
-                b.OriginalPublicationYear,
-                b.CoverURI
-            ))];
+
+        return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
+            b.Id,
+            b.Title,
+            b.Language,
+            b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
+            b.PublicationYear,
+            b.OriginalPublicationYear,
+            b.CoverURI,
+            (await GetAvailableBookUnitForBook(b.Id)) != null
+        ))]);
     }
 
     public async Task<uint> GetPagesCount(
@@ -215,16 +216,12 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         return await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<BookUnitModel?> GetAvailableBookUnit(string bookId)
+    public async Task<BookUnitModel?> GetAvailableBookUnitForBook(string bookId)
     {
-        var reservedBookUnitIds = _reservations.AsQueryable()
+        var reservedBookUnitIds = await _reservations.AsQueryable()
             .Where(r => r.ReturnedDate == null)
-            .Join(
-                _bookUnits.AsQueryable(),
-                r => r.BookUnitId,
-                bu => bu.Id,
-                (r, bu) => bu.Id
-            );
+            .Select(r => r.BookUnitId)
+            .ToListAsync();
 
         return await _bookUnits.AsQueryable()
             .Where(bu => bu.BookId == bookId)

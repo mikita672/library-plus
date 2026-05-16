@@ -64,7 +64,7 @@ public static class BookEndpoints
             string id
         ) =>
         {
-            return await bookService.GetAvailableBookUnit(id) != null;
+            return await bookService.GetAvailableBookUnitForBook(id) != null;
         });
 
         group.MapGet("/book/{id}", async (
