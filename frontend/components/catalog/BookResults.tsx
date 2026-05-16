@@ -1,4 +1,4 @@
-import { Book } from '@/types/book/Book';
+import { Book, BookCard } from '@/types/book/Book';
 import Image from 'next/image';
 import React from 'react'
 import { Button } from '../ui/button';
@@ -25,7 +25,7 @@ async function BookResults({ searchParams }: Props) {
         return <div className="text-destructive">Failed to fetch books</div>
     }
 
-    const books: Book[] = await response.json();
+    const books: BookCard[] = await response.json();
 
     console.dir({ books });
 
@@ -39,14 +39,15 @@ async function BookResults({ searchParams }: Props) {
                 <div key={b.id} className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
                     <img
                         src={b.coverURI ?? "/images/book-placeholder.png"}
-                        className="w-[235px] h-[235px]"
+                        className="w-full max-w-[235px] h-[235px] object-contain"
                         alt="Book cover"
                     />
 
                     <div className="w-full">
                         <p>{b.title}</p>
-                        <p className="opacity-50">{b.language}</p>
-                        <p className="opacity-50">{b.publicationYear}</p>
+                        <p className="opacity-50">Language: {b.language}</p>
+                        {b.authorName === null ? <></> : <p className="opacity-50">Author: {b.authorName}</p>}
+                        <p className="opacity-50">Publication year: {b.originalPublicationYear ?? b.publicationYear}</p>
                     </div>
 
                     <div className="w-full grid grid-cols-2 gap-2">

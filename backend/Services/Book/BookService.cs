@@ -1,6 +1,7 @@
 using LibraryPlus.Models.Book;
 using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Book;
+using LibraryPlus.Responses.Book;
 using LibraryPlus.Services.Reservation;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
@@ -12,6 +13,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("booksUnits");
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
+    private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
     private readonly CategoryService _categoryService = categoryService;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
@@ -58,7 +60,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         return res.MatchedCount == 1;
     }
 
-    public async Task<IList<BookModel>> SearchBooks(
+    public async Task<IList<BookCardResponse>> SearchBooks(
         string? searchToken = null,
         string? authorId = null,
         string? publisherId = null,
@@ -108,8 +110,27 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             };
         }
 
-        query = query.Skip(9 * (pageNumber - 1)).Take(9);
-        return await query.ToListAsync();
+        var books = await query.Skip(9 * (pageNumber - 1)).Take(9).ToListAsync();
+        var authorIds = books
+            .Select(b => b.AuthorId)
+            .Where(id => id != null)
+            .Distinct()
+            .ToList();
+
+        var authors = await _authors.AsQueryable()
+            .Where(a => authorIds.Contains(a.Id))
+            .ToListAsync();
+
+        var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
+        return [.. books.Select(b => new BookCardResponse(
+                b.Id,
+                b.Title,
+                b.Language,
+                b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
+                b.PublicationYear,
+                b.OriginalPublicationYear,
+                b.CoverURI
+            ))];
     }
 
     public async Task DeleteBook(string id)

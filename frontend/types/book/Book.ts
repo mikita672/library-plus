@@ -15,3 +15,13 @@ export interface Book {
     originalPublisherId?: string | null;
     coverURI?: string | null;
 }
+
+export interface BookCard {
+    id: string;
+    title: string;
+    authorName?: string | null;
+    language: string;
+    publicationYear: number;
+    originalPublicationYear?: number | null;
+    coverURI?: string | null;
+}
