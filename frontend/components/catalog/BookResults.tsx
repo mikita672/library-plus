@@ -1,52 +1,69 @@
-import { BookCard } from '@/types/book/Book';
-import { Button } from '../ui/button';
+import { BookCard } from "@/types/book/Book";
+import { Button } from "../ui/button";
 
 interface Props {
-    params: URLSearchParams;
+  params: URLSearchParams;
 }
 
 async function BookResults({ params }: Props) {
-    const response = await fetch(`${process.env.API_URL}/books?${params.toString()}`, {
-        method: "GET",
-    });
+  const response = await fetch(
+    `${process.env.API_URL}/books?${params.toString()}`,
+    {
+      method: "GET",
+    },
+  );
 
-    if (!response.ok) {
-        return <div className="text-destructive">Failed to fetch books</div>
-    }
+  if (!response.ok) {
+    return <div className="text-destructive">Failed to fetch books</div>;
+  }
 
-    const books: BookCard[] = await response.json();
+  const books: BookCard[] = await response.json();
 
-    if (books.length === 0) {
-        return <div>No books found</div>
-    }
+  if (books.length === 0) {
+    return <div>No books found</div>;
+  }
 
-    return (
-        <div className="w-full grid grid-cols-4 gap-x-12 gap-y-4">
-            {books.map((b) => (
-                <div key={b.id} className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
-                    <img
-                        src={b.coverURI ?? "/images/book-placeholder.png"}
-                        className="w-full max-w-[235px] h-[235px] object-contain"
-                        alt="Book cover"
-                    />
+  return (
+    <div className="w-full grid grid-cols-4 gap-x-12 gap-y-4">
+      {books.map((b) => (
+        <div
+          key={b.id}
+          className="col-span-1 bg-background flex flex-col items-center p-2 gap-2"
+        >
+          <img
+            src={b.coverURI ?? "/images/book-placeholder.png"}
+            className="w-full max-w-58.75 h-58.75 object-contain"
+            alt="Book cover"
+          />
 
-                    <div className="w-full">
-                        <p>{b.title}</p>
-                        <p className="opacity-50">Language: {b.language}</p>
-                        {b.authorName === null ? <></> : <p className="opacity-50">Author: {b.authorName}</p>}
-                        <p className="opacity-50">Publication year: {b.originalPublicationYear ?? b.publicationYear}</p>
-                        {b.isAvailable ?
-                            <p>Available now</p> : <p className="text-destructive">Not Available</p>}
-                    </div>
+          <div className="w-full">
+            <p>{b.title}</p>
+            <p className="opacity-50">Language: {b.language}</p>
+            {b.authorName === null ? (
+              <></>
+            ) : (
+              <p className="opacity-50">Author: {b.authorName}</p>
+            )}
+            <p className="opacity-50">
+              Publication year: {b.originalPublicationYear ?? b.publicationYear}
+            </p>
+            {b.isAvailable ? (
+              <p>Available now</p>
+            ) : (
+              <p className="text-destructive">Not Available</p>
+            )}
+          </div>
 
-                    <div className="w-full grid grid-cols-2 gap-2">
-                        <Button className="cols-span-1 cursor-pointer">Rent now</Button>
-                        <Button className="cols-span-1 bg-accent text-foreground cursor-pointer">Learn more</Button>
-                    </div>
-                </div>
-            ))}
+          <div className="w-full grid grid-cols-2 gap-2">
+            <Button className="cols-span-1 cursor-pointer">Rent now</Button>
+            <Button className="cols-span-1 bg-accent text-foreground cursor-pointer">
+              Learn more
+            </Button>
+          </div>
         </div>
-    )
+      ))}
+    </div>
+  );
 }
 
-export default BookResults
+export default BookResults;
