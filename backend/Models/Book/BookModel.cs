@@ -17,6 +17,7 @@ public class BookModel
     public string Language { get; set; } = null!;
     public uint PublicationYear { get; set; }
     public uint PagesCount { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
     public IList<string> CategoryIds { get; set; } = null!;
     public decimal RepurchasePrice { get; set; }
     public string? OriginalTitle { get; set; }

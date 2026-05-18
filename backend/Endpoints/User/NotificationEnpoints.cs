@@ -12,7 +12,7 @@ public static class NotificationEndpoints
     public static void MapNotificationEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/notification")
+            .MapGroup("/api/v1/notifications")
             .AddEndpointFilter<ActiveUserFilter>();
 
         group.MapPost("/sendOne", [Authorize] async (

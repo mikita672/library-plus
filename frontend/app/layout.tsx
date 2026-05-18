@@ -1,5 +1,5 @@
-import { Rubik } from "next/font/google";
 import './globals.css';
+import { Rubik } from "next/font/google";
 import Header from "@/components/header/Header";
 import { CustomToaster } from "@/components/Toaster/CustomToaster";
 import { Providers } from "@/components/providers";
@@ -16,7 +16,7 @@ function layout({ children }: { children: React.ReactNode }) {
     >
       <body className="min-h-full! min-w-full! text-sm">
         <Providers>
-          <div className="flex flex-col gap-10 px-6 pb-10 min-h-screen">
+          <div className="flex flex-col gap-4 px-6 pb-10 min-h-screen">
             <Header />
 
             {children}

@@ -11,7 +11,7 @@ public static class BookEndpoints
     public static void MapBookEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/book");
+            .MapGroup("/api/v1/books");
 
         group.MapGet("/", async (
             [FromQuery] string? searchToken,
@@ -20,9 +20,10 @@ public static class BookEndpoints
             [FromQuery] string[]? categoryIds,
             [FromQuery] uint? minPublicationYear,
             [FromQuery] uint? maxPublicationYear,
-            [FromQuery] int pageNumber,
+            [FromQuery] bool? isAvailable,
+            [FromQuery] int? pageNumber,
             [FromQuery] string? sortBy,
-            [FromQuery] bool sortDescending,
+            [FromQuery] bool? sortDescending,
             BookService bookService
         ) =>
         {
@@ -33,21 +34,43 @@ public static class BookEndpoints
                 categoryIds?.ToList(),
                 minPublicationYear,
                 maxPublicationYear,
-                pageNumber,
+                isAvailable,
+                pageNumber ?? 1,
                 sortBy,
-                sortDescending
+                sortDescending ?? false
             );
         });
 
-        group.MapGet("/{id}/checkAvailable", async (
+        group.MapGet("/pages", async (
+            [FromQuery] string? searchToken,
+            [FromQuery] string? authorId,
+            [FromQuery] string? publisherId,
+            [FromQuery] string[]? categoryIds,
+            [FromQuery] uint? minPublicationYear,
+            [FromQuery] uint? maxPublicationYear,
+            [FromQuery] bool? isAvailable,
+            BookService bookService
+        ) =>
+        {
+            return await bookService.GetPagesCount(
+                searchToken,
+                authorId,
+                publisherId,
+                categoryIds?.ToList(),
+                minPublicationYear,
+                maxPublicationYear
+            );
+        });
+
+        group.MapGet("/book/{id}/checkAvailable", async (
             BookService bookService,
             string id
         ) =>
         {
-            return await bookService.GetAvailableBookUnit(id) != null;
+            return await bookService.GetAvailableBookUnitForBook(id) != null;
         });
 
-        group.MapGet("/{id}", async (
+        group.MapGet("/book/{id}", async (
             BookService bookService,
             string id
         ) =>
@@ -65,7 +88,7 @@ public static class BookEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapPut("/{id}", [Authorize] async (
+        group.MapPut("/book/{id}", [Authorize] async (
             BookService bookService,
             [FromBody] UpdateBookRequest updateBookRequest,
             string id
@@ -80,7 +103,7 @@ public static class BookEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapDelete("/{id}", [Authorize] async (
+        group.MapDelete("/book/{id}", [Authorize] async (
             BookService bookService,
             string id
         ) =>

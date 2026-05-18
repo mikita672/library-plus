@@ -24,7 +24,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     setIsLoading(true);
-    const response = await fetch("/api/user/meShort", {
+    const response = await fetch("/api/users/meShort", {
       method: "GET",
     });
 
@@ -38,7 +38,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshFullUser = async () => {
     setIsLoading(true);
-    const response = await fetch("/api/user/me", { method: "GET" });
+    const response = await fetch("/api/users/me", { method: "GET" });
 
     if (response.ok) {
       setFullUserData(await response.json());

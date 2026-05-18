@@ -13,7 +13,7 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
 
     public async Task<ReservationModel?> CreateReservation(string userId, CreateReservationRequest createReservationRequest)
     {
-        var bookUnit = await _bookService.GetAvailableBookUnit(createReservationRequest.BookId);
+        var bookUnit = await _bookService.GetAvailableBookUnitForBook(createReservationRequest.BookId);
         if (bookUnit == null)
         {
             return null;

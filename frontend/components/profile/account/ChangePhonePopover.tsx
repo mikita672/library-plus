@@ -51,7 +51,7 @@ export default function ChangePhonePopover({ phoneNumber, onSuccess }: Props) {
     setError(null);
 
     try {
-      const response = await fetch("/api/user/updatePhoneNumber", {
+      const response = await fetch("/api/users/updatePhoneNumber", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

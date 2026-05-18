@@ -69,7 +69,7 @@ function ChangePassword() {
     setServerError(null);
 
     try {
-      const response = await fetch("/api/user/updatePassword", {
+      const response = await fetch("/api/users/updatePassword", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

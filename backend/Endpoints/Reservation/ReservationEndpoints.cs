@@ -12,7 +12,7 @@ public static class ReservationEndpoints
     public static void MapReservationEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/reservation")
+            .MapGroup("/api/v1/reservations")
             .AddEndpointFilter<ActiveUserFilter>();
 
         group.MapPost("/", [Authorize] async (
@@ -41,7 +41,7 @@ public static class ReservationEndpoints
             return await reservationService.GetUserReservations(userId, pageNumber);
         });
 
-        group.MapPatch("/{id}/take", [Authorize] async (
+        group.MapPatch("/reservation/{id}/take", [Authorize] async (
             ReservationService reservationService,
             string id
         ) =>
@@ -49,7 +49,7 @@ public static class ReservationEndpoints
             await reservationService.HandleTaken(id);
         }).AddEndpointFilter<AdminUserFilter>();
 
-        group.MapPatch("/{id}/return", [Authorize] async (
+        group.MapPatch("/reservation/{id}/return", [Authorize] async (
             ReservationService reservationService,
             HandleReturnRequest handleReturnRequest,
             string id

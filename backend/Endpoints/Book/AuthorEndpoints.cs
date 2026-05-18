@@ -11,7 +11,7 @@ public static class AuthorEndpoints
     public static void MapAuthorEndpoints(this WebApplication app)
     {
         var group = app
-            .MapGroup("/api/v1/author");
+            .MapGroup("/api/v1/authors");
 
         group.MapGet("/", async (AuthorService authorService) =>
         {
@@ -28,7 +28,7 @@ public static class AuthorEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapPut("/{id}", [Authorize] async (
+        group.MapPut("/author/{id}", [Authorize] async (
             AuthorService authorService,
             [FromBody] UpdateAuthorRequest updateAuthorRequest,
             string id
@@ -43,7 +43,7 @@ public static class AuthorEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
-        group.MapDelete("/{id}", [Authorize] async (
+        group.MapDelete("/author/{id}", [Authorize] async (
             AuthorService authorService,
             string id
         ) =>
