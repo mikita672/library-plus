@@ -72,7 +72,7 @@ public static class UserEndpoints
 
         group.MapPatch("/reset-password", async (
             AuthService authService,
-            MailService mailService,
+            IMailService mailService,
             [FromBody] ResetPasswordRequest resetPasswordRequest
         ) =>
         {
@@ -91,12 +91,12 @@ public static class UserEndpoints
                 );
                 if (!res)
                 {
-                    return Results.InternalServerError();
+                    return Results.NoContent();
                 }
             }
             catch
             {
-                return Results.InternalServerError();
+                return Results.NoContent();
             }
 
             return Results.Ok();

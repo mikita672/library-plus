@@ -16,12 +16,13 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
 var pack = new ConventionPack { new CamelCaseElementNameConvention() };
 ConventionRegistry.Register("camel case", pack, t => true);
 var connectionString =
-    builder.Configuration.GetConnectionString("MongoDb")
-    ?? builder.Configuration["MongoDbSettings:ConnectionString"];
+    config.GetConnectionString("MongoDb")
+    ?? config["MongoDbSettings:ConnectionString"];
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
@@ -30,9 +31,22 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 var mongoClient = new MongoClient(connectionString);
-var db = mongoClient.GetDatabase(builder.Configuration["MongoDbSettings:DatabaseName"]);
+var db = mongoClient.GetDatabase(config["MongoDbSettings:DatabaseName"]);
 
-MailService mailService = new(builder.Configuration);
+IMailService mailService;
+try
+{
+    mailService = new GoogleMailService(
+        config["Mail:SmtpServer"]!,
+        int.Parse(config["Mail:Port"]!),
+        config["Mail:Username"]!,
+        config["Mail:Password"]!
+    );
+}
+catch
+{
+    mailService = new DummyMailService();
+}
 
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
@@ -50,7 +64,7 @@ builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<ReservationService>();
 builder.Services.AddSingleton(mailService);
 
-builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
 

@@ -118,8 +118,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
     if (response.status === 400) {
       return "Bad request";
-    } else if (response.status === 500) {
-      return "Internal server error";
+    } else if (response.status === 204) {
+      return "Password was reset, email was not sent";
     }
     if (!response.ok) {
       return "Unknown error";

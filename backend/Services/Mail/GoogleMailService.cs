@@ -3,26 +3,26 @@ using MailKit.Security;
 using MimeKit;
 namespace LibraryPlus.Services.Mail;
 
-public class MailService(IConfiguration config)
+public class GoogleMailService(string smtpServer, int port, string fromMail, string password) : IMailService
 {
-    private readonly string smtpServer = config["Mail:SmtpServer"]!;
-    private readonly int port = int.Parse(config["Mail:Port"]!);
-    private readonly string fromMail = config["Mail:Username"]!;
-    private readonly string password = config["Mail:Password"]!;
+    private readonly string _smtpServer = smtpServer;
+    private readonly int _port = port;
+    private readonly string _fromMail = fromMail;
+    private readonly string _password = password;
 
     public async Task<bool> SendMail(string to, string subject, string body)
     {
         try
         {
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress("LibraryPlus", fromMail));
+            email.From.Add(new MailboxAddress("LibraryPlus", _fromMail));
             email.To.Add(new MailboxAddress("To Name", to));
             email.Subject = subject;
             email.Body = new TextPart("plain") { Text = body };
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(smtpServer, port, SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(fromMail, password);
+            await smtp.ConnectAsync(_smtpServer, _port, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(_fromMail, _password);
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
             return true;
