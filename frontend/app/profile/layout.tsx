@@ -1,11 +1,23 @@
+"use client";
+
 import Sidebar from "@/components/profile/sidebar";
+import { userContext } from "@/context/userContext";
+import { usePathname } from "next/navigation";
 import React from "react";
+import { useContext, useEffect } from "react";
 
 export default function ProfileLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const { refreshFullUser } = useContext(userContext);
+
+  useEffect(() => {
+    void refreshFullUser();
+  }, [pathname]);
+
   return (
     <section className="flex  bg-card py-4">
       <div className="flex w-full gap-8 px-6">

@@ -10,4 +10,5 @@ export interface FullUserData {
     avatarUrl: string | null;
     phoneNumber: string | null;
     joinedAt: string;
+    isAdmin?: boolean;
 }

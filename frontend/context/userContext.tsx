@@ -1,4 +1,8 @@
-import { LoginFormSchema, PasswordResetFormSchema, SignUpFormSchema } from "@/forms/auth";
+import {
+  LoginFormSchema,
+  PasswordResetFormSchema,
+  SignUpFormSchema,
+} from "@/forms/auth";
 import { AuthResponseDTO } from "@/types/auth/dto";
 import { FullUserData, UserData } from "@/types/user/UserData";
 import React, { createContext, useEffect, useState } from "react";
@@ -85,7 +89,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!response.ok) {
-      const data: AuthResponseDTO = await response.json().catch(() => { });
+      const data: AuthResponseDTO = await response.json().catch(() => {});
       return data.message ?? "something went wrong";
     }
     return null;
@@ -100,15 +104,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!response.ok) {
-      const data: AuthResponseDTO = await response.json().catch(() => { });
+      const data: AuthResponseDTO = await response.json().catch(() => {});
       return data.message ?? "something went wrong";
     }
 
     setUserData(null);
+    setFullUserData(null);
     return null;
   };
 
-  const resetPassword = async ({ email }: PasswordResetFormSchema): Promise<string | null> => {
+  const resetPassword = async ({
+    email,
+  }: PasswordResetFormSchema): Promise<string | null> => {
     const response = await fetch("/api/auth/reset-password", {
       method: "PATCH",
       headers: {
@@ -125,7 +132,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return "Unknown error";
     }
     return null;
-  }
+  };
 
   return (
     <userContext.Provider

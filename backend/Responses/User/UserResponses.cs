@@ -6,7 +6,8 @@ public record MeResponse(
     string Email,
     string? PhoneNumber,
     string? AvatarUrl,
-    DateTime JoinedAt
+    DateTime JoinedAt,
+    bool IsAdmin
 )
 {
     public static MeResponse FromModel(UserModel user)
@@ -15,7 +16,8 @@ public record MeResponse(
             user.Email,
             user.PhoneNumber,
             user.AvatarUrl,
-            user.JoinedAt
+            user.JoinedAt,
+            user.IsAdmin
         );
     }
 };
