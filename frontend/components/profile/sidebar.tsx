@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BellIcon, ShoppingBagIcon, UserIcon } from "@phosphor-icons/react";
+import {
+  BellIcon,
+  CirclesFourIcon,
+  HouseIcon,
+  ShoppingBagIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 
 const links = [
   { href: "/profile", label: "Account", icon: UserIcon },
   { href: "/profile/rentals", label: "My rentals", icon: ShoppingBagIcon },
   { href: "/profile/notifications", label: "Notifications", icon: BellIcon },
+  { href: "/profile/dashboard", label: "Dashboard", icon: CirclesFourIcon },
 ];
 
 export default function Sidebar() {
