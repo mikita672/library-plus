@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import {
   BellIcon,
   CirclesFourIcon,
+  HandCoinsIcon,
+  BooksIcon,
   ShoppingBagIcon,
   UserIcon,
 } from "@phosphor-icons/react";
@@ -15,42 +17,91 @@ const links = [
   { href: "/profile", label: "Account", icon: UserIcon },
   { href: "/profile/rentals", label: "My rentals", icon: ShoppingBagIcon },
   { href: "/profile/notifications", label: "Notifications", icon: BellIcon },
+];
+
+const dashboardLinks = [
   {
-    href: "/profile/dashboard",
-    label: "Dashboard",
-    icon: CirclesFourIcon,
-    requiresAdmin: true,
+    href: "/profile/dashboard/book-catalog",
+    label: "Book Catalog",
+    icon: BooksIcon,
+  },
+  {
+    href: "/profile/dashboard/rentals",
+    label: "Rentals and fines",
+    icon: HandCoinsIcon,
   },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { fullUserData } = useContext(userContext);
+  const isAdmin = fullUserData?.isAdmin;
+  const isDashboardActive = pathname.startsWith("/profile/dashboard");
 
   return (
     <aside className="w-full max-w-60 bg-background">
-      <nav className="flex flex-col divide-y deivide-contrast">
-        {links
-          .filter((link) => !link.requiresAdmin || fullUserData?.isAdmin)
-          .map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={[
-                  "flex h-12 items-center gap-3 text-[15px] transition-colors px-6",
-                  active
-                    ? "font-semibold text-primary hover:text-sidebar-foreground underline"
-                    : "text-sidebar-foreground hover:text-primary",
-                ].join(" ")}
-              >
-                <Icon size={20} weight={active ? "fill" : "regular"} />
-                <span className="underline-offset-2">{label}</span>
-              </Link>
-            );
-          })}
+      <nav className="flex flex-col">
+        {links.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={[
+                  "flex h-12 items-center gap-3 border-b border-black px-6 text-[15px] transition-colors last:border-b-0",
+                active
+                  ? "font-semibold text-primary hover:text-sidebar-foreground underline"
+                  : "text-sidebar-foreground hover:text-primary",
+              ].join(" ")}
+            >
+              <Icon size={20} weight={active ? "fill" : "regular"} />
+              <span className="underline-offset-2">{label}</span>
+            </Link>
+          );
+        })}
+
+        {isAdmin ? (
+          <div className="flex flex-col">
+            <div
+              aria-current={isDashboardActive ? "page" : undefined}
+              className={[
+                "flex h-12 items-center gap-3 border-b border-black px-6 text-[15px] transition-colors",
+                isDashboardActive
+                  ? "font-semibold text-primary"
+                  : "text-sidebar-foreground",
+              ].join(" ")}
+            >
+              <CirclesFourIcon
+                size={20}
+                weight={isDashboardActive ? "fill" : "regular"}
+              />
+              <span>Dashboard</span>
+            </div>
+
+            <div className="flex flex-col">
+              {dashboardLinks.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href;
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={[
+                      "flex h-12 items-center gap-3 border-b border-black pl-12 pr-6 text-[15px] transition-colors last:border-b-0",
+                      active
+                        ? "font-semibold text-primary"
+                        : "text-sidebar-foreground hover:text-primary",
+                    ].join(" ")}
+                  >
+                    <Icon size={20} weight={active ? "fill" : "regular"} />
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
       </nav>
     </aside>
   );
