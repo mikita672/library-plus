@@ -27,7 +27,7 @@ async function BookResults({ params }: Props) {
                 <div key={b.id} className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
                     <img
                         src={b.coverURI ?? "/images/book-placeholder.png"}
-                        className="w-full max-w-[235px] h-[235px] object-contain"
+                        className="h-[235px] shadow-sm"
                         alt="Book cover"
                     />
 

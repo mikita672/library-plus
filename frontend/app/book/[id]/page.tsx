@@ -1,3 +1,4 @@
+import BookInformation from '@/components/bookPage/BookInformation';
 import { Book } from '@/types/book/Book';
 import { notFound } from 'next/navigation';
 
@@ -16,8 +17,8 @@ async function BookPage({ params }: { params: Promise<{ id: string }> }) {
     const book: Book = await response.json();
 
     return (
-        <div className="w-full min-h-[90vh] bg-card">
-            {book.title}
+        <div className="w-full bg-card p-6">
+            <BookInformation book={book} />
         </div>
     )
 }
