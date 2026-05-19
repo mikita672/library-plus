@@ -26,8 +26,8 @@ function SortSelection() {
                     <SelectLabel>Sort by</SelectLabel>
                     <SelectItem value="title-asc">Title (A-Z)</SelectItem>
                     <SelectItem value="title-desc">Title (Z-A)</SelectItem>
-                    <SelectItem value="relevancy-asc">Relevancy (most popular first)</SelectItem>
-                    <SelectItem value="relevancy-desc">Relevancy (most popular last)</SelectItem>
+                    <SelectItem value="relevancy-desc">Relevancy (most popular first)</SelectItem>
+                    <SelectItem value="relevancy-asc">Relevancy (most popular last)</SelectItem>
                     <SelectItem value="publicationyear-asc">Publication Year (older first)</SelectItem>
                     <SelectItem value="publicationyear-desc">Publication Year (older last)</SelectItem>
                 </SelectGroup>

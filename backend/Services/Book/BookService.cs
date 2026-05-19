@@ -2,7 +2,6 @@ using LibraryPlus.Models.Book;
 using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Book;
 using LibraryPlus.Responses.Book;
-using LibraryPlus.Services.Reservation;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -193,9 +192,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         List<string>? categoryIds = null,
         uint? minPublicationYear = null,
         uint? maxPublicationYear = null,
-        bool? isAvailable = null,
-        string? sortBy = null,
-        bool sortDescending = false
+        bool? isAvailable = null
     )
     {
         var query = await BuildBookFilterQueryAsync(
@@ -282,6 +279,36 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             .Where(bu => bu.BookId == bookId)
             .Where(bu => !reservedBookUnitIds.Contains(bu.Id))
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<IList<BookCardResponse>> GetBooksByAuthor(string authorId, string? excludedBookId)
+    {
+        var authorTask = _authorService.GetAuthor(authorId);
+        var booksQuery = _books.AsQueryable();
+        if (excludedBookId != null)
+        {
+            booksQuery = booksQuery.Where(b => b.Id != excludedBookId);
+        }
+        booksQuery = booksQuery
+            .Where(b => b.AuthorId == authorId)
+            .OrderByDescending(b => b.Popularity)
+            .Take(12);
+        var booksTask = booksQuery.ToListAsync();
+
+        await Task.WhenAll(booksTask, authorTask);
+        var books = await booksTask;
+        var author = await authorTask;
+
+        return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
+            b.Id,
+            b.Title,
+            b.Language,
+            author?.Name,
+            b.PublicationYear,
+            b.OriginalPublicationYear,
+            b.CoverURI,
+            (await GetAvailableBookUnitForBook(b.Id)) != null
+        ))]);
     }
 
 }
