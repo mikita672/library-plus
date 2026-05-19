@@ -18,10 +18,10 @@ function SortSelection() {
 
     return (
         <Select onValueChange={handleChange} defaultValue="title-asc">
-            <SelectTrigger className="w-full max-w-48">
+            <SelectTrigger className="w-full max-w-48 bg-background">
                 <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
                 <SelectGroup>
                     <SelectLabel>Sort by</SelectLabel>
                     <SelectItem value="title-asc">Title (A-Z)</SelectItem>
