@@ -16,7 +16,7 @@ function BookInformation({ book }: Props) {
                 />
             </div>
 
-            <div className="col-span-1 flex flex-col">
+            <div className="col-span-1 flex flex-col pl-24">
                 <p className="font-bold text-2xl">{book.title}</p>
             </div>
         </div>
