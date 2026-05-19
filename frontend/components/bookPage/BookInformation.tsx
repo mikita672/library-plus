@@ -1,7 +1,7 @@
 import { BookPreview } from '@/types/book/Book'
 import Link from 'next/link';
 import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
+import AddToCardButton from './AddToCardButton';
 
 interface Props {
     book: BookPreview;
@@ -49,12 +49,7 @@ function BookInformation({ book }: Props) {
                     <p className="text-primary underline cursor-pointer">More information</p>
                 </div>
 
-                <div className="w-full">
-                    {book.isAvailable ? <></> : <p className="text-destructive">Not available</p>}
-                    <Button className={`py-6 px-12 font-bold text-2xl ${book.isAvailable ? "bg-primary cursor-pointer" : "bg-accent cursor-not-allowed text-foreground opacity-50"}`}>Add to your cart!</Button>
-
-
-                </div>
+                <AddToCardButton isAvailable={book.isAvailable} />
             </div>
         </div>
     )
