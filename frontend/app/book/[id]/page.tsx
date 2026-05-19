@@ -1,4 +1,5 @@
 import BookInformation from '@/components/bookPage/BookInformation';
+import OtherBooksByAuthor from '@/components/bookPage/otherBooksByAuthor/OtherBooksByAuthor';
 import { BookPreview } from '@/types/book/Book';
 import { notFound } from 'next/navigation';
 
@@ -19,6 +20,8 @@ async function BookPage({ params }: { params: Promise<{ id: string }> }) {
     return (
         <div className="w-full bg-card p-6">
             <BookInformation book={book} />
+
+            <OtherBooksByAuthor book={book} />
         </div>
     )
 }
