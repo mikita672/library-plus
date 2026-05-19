@@ -1,5 +1,5 @@
 import BookInformation from '@/components/bookPage/BookInformation';
-import { Book } from '@/types/book/Book';
+import { BookPreview } from '@/types/book/Book';
 import { notFound } from 'next/navigation';
 
 async function BookPage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +14,7 @@ async function BookPage({ params }: { params: Promise<{ id: string }> }) {
         notFound();
     }
 
-    const book: Book = await response.json();
+    const book: BookPreview = await response.json();
 
     return (
         <div className="w-full bg-card p-6">

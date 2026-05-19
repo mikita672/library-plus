@@ -47,4 +47,9 @@ public class PublisherService(IMongoDatabase db)
             Builders<PublisherModel>.Filter.Eq(p => p.Id, id)
         );
     }
+
+    public async Task<PublisherModel?> GetPublisher(string id)
+    {
+        return await _publishers.AsQueryable().Where(p => p.Id == id).FirstOrDefaultAsync();
+    }
 }

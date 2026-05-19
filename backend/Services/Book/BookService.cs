@@ -8,12 +8,13 @@ using MongoDB.Driver.Linq;
 
 namespace LibraryPlus.Services.Book;
 
-public class BookService(IMongoDatabase db, CategoryService categoryService)
+public class BookService(IMongoDatabase db, CategoryService categoryService, AuthorService authorService, PublisherService publisherService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
-    private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
+    private readonly AuthorService _authorService = authorService;
+    private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
     private const int SEARCH_PAGE_SIZE = 12;
 
@@ -166,9 +167,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             .Distinct()
             .ToList();
 
-        var authors = await _authors.AsQueryable()
-            .Where(a => authorIds.Contains(a.Id))
-            .ToListAsync();
+        var authors = await _authorService.GetAuthorsByIds(authorIds);
 
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
 
@@ -227,6 +226,35 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
     public async Task<BookModel?> GetBookById(string id)
     {
         return await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<BookPreviewResponse?> GetBookPreviewById(string id)
+    {
+        var book = await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
+        if (book == null)
+        {
+            return null;
+        }
+        var authorTask = book.AuthorId != null ? _authorService.GetAuthor(book.AuthorId) : Task.FromResult<AuthorModel?>(null);
+        var publisherTask = book.PublisherId != null ? _publisherService.GetPublisher(book.PublisherId) : Task.FromResult<PublisherModel?>(null);
+        var categoriesTask = _categoryService.GetCategoriesByIds(book.CategoryIds);
+        await Task.WhenAll(authorTask, publisherTask, categoriesTask);
+        return new BookPreviewResponse(
+            book.Id,
+            book.Title,
+            book.Description,
+            await authorTask,
+            await publisherTask,
+            book.Language,
+            book.PublicationYear,
+            book.PagesCount,
+            await categoriesTask,
+            book.OriginalTitle,
+            book.OriginalLanguage,
+            book.OriginalPublicationYear,
+            book.OriginalPublisherId,
+            book.CoverURI
+        );
     }
 
     public async Task<BookUnitModel?> GetAvailableBookUnitForBook(string bookId)

@@ -75,7 +75,7 @@ public static class BookEndpoints
             string id
         ) =>
         {
-            return await bookService.GetBookById(id);
+            return await bookService.GetBookPreviewById(id);
         });
 
         group.MapPost("/", [Authorize] async (

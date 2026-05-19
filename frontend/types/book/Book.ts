@@ -1,19 +1,22 @@
-export interface Book {
+import { Author } from "./Author";
+import { Category } from "./Category";
+import { Publisher } from "./Publisher";
+
+export interface BookPreview {
     id: string;
     title: string;
     description: string;
-    authorId?: string | null;
-    publisherId?: string | null;
+    author?: Author;
+    publisher?: Publisher;
     language: string;
     publicationYear: number;
     pagesCount: number;
-    categoryIds: string[];
-    repurchasePrice: number;
-    originalTitle?: string | null;
-    originalLanguage?: string | null;
-    originalPublicationYear?: number | null;
-    originalPublisherId?: string | null;
-    coverURI?: string | null;
+    categories: Category[];
+    originalTitle?: string;
+    originalLanguage?: string;
+    originalPublicationYear?: number;
+    originalPublisherId?: string;
+    coverURI?: string;
 }
 
 export interface BookCard {
