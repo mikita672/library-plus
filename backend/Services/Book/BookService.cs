@@ -35,6 +35,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             OriginalLanguage = createBookRequest.OriginalLanguage,
             OriginalPublicationYear = createBookRequest.OriginalPublicationYear,
             OriginalPublisherId = createBookRequest.OriginalPublisherId,
+            Popularity = 0,
         };
         await _books.InsertOneAsync(book);
         return book;
@@ -257,6 +258,14 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             await originalPublisherTask,
             book.CoverURI,
             (await bookUnitTask) != null
+        );
+    }
+
+    public async Task IncreasePopularity(BookModel book)
+    {
+        await _books.UpdateOneAsync(
+            Builders<BookModel>.Filter.Eq(b => b.Id, book.Id),
+            Builders<BookModel>.Update.Set(b => b.Popularity, book.Popularity + 1)
         );
     }
 
