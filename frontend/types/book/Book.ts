@@ -17,6 +17,7 @@ export interface BookPreview {
     originalPublicationYear?: number;
     originalPublisherId?: string;
     coverURI?: string;
+    isAvailable: boolean;
 }
 
 export interface BookCard {
