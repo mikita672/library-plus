@@ -7,7 +7,7 @@ interface Props {
 
 function BookExtendedInformation({ book }: Props) {
     return (
-        <div className="w-full grid grid-cols-2 px-12 gap-24">
+        <div id="book-extended-information" className="w-full grid grid-cols-2 px-12 gap-24">
             <div className="col-span-1">
                 <p className="text-lg font-bold">Book description</p>
                 <p>{book.description}</p>

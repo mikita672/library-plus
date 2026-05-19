@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
 import { InfoIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 

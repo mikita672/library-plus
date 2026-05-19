@@ -1,6 +1,6 @@
 import { BookPreview } from '@/types/book/Book'
 import Link from 'next/link';
-import { Badge } from '../ui/badge';
+import { Badge } from '../../ui/badge';
 import AddToCardButton from './AddToCardButton';
 import BookMainInformation from './BookMainInformation';
 import BookExtendedInformation from './BookExtendedInformation';
