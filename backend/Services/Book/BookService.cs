@@ -237,9 +237,10 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         }
         var authorTask = book.AuthorId != null ? _authorService.GetAuthor(book.AuthorId) : Task.FromResult<AuthorModel?>(null);
         var publisherTask = book.PublisherId != null ? _publisherService.GetPublisher(book.PublisherId) : Task.FromResult<PublisherModel?>(null);
+        var originalPublisherTask = book.OriginalPublisherId != null ? _publisherService.GetPublisher(book.OriginalPublisherId) : Task.FromResult<PublisherModel?>(null);
         var categoriesTask = _categoryService.GetCategoriesByIds(book.CategoryIds);
         var bookUnitTask = GetAvailableBookUnitForBook(book.Id);
-        await Task.WhenAll(authorTask, publisherTask, categoriesTask, bookUnitTask);
+        await Task.WhenAll(authorTask, publisherTask, originalPublisherTask, categoriesTask, bookUnitTask);
         return new BookPreviewResponse(
             book.Id,
             book.Title,
@@ -253,7 +254,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             book.OriginalTitle,
             book.OriginalLanguage,
             book.OriginalPublicationYear,
-            book.OriginalPublisherId,
+            await originalPublisherTask,
             book.CoverURI,
             (await bookUnitTask) != null
         );

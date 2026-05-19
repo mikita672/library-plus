@@ -9,7 +9,7 @@ interface Props {
 
 function BookMainInformation({ book }: Props) {
     return (
-        <div className="w-full bg-background p-6 grid grid-cols-2">
+        <div className="w-full grid grid-cols-2">
             <div className="col-span-1 flex justify-center">
                 <img
                     src={book.coverURI ?? "/images/book-placeholder.png"}

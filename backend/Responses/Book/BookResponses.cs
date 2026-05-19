@@ -15,7 +15,7 @@ public record BookPreviewResponse(
     string? OriginalTitle,
     string? OriginalLanguage,
     uint? OriginalPublicationYear,
-    string? OriginalPublisherId,
+    PublisherModel? OriginalPublisherId,
     string? CoverURI,
     bool IsAvailable
 );

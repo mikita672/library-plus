@@ -15,7 +15,7 @@ export interface BookPreview {
     originalTitle?: string;
     originalLanguage?: string;
     originalPublicationYear?: number;
-    originalPublisherId?: string;
+    originalPublisher?: Publisher;
     coverURI?: string;
     isAvailable: boolean;
 }
