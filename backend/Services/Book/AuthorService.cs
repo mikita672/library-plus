@@ -36,9 +36,21 @@ public class AuthorService(IMongoDatabase db)
             .ToListAsync();
     }
 
+    public async Task<IList<AuthorModel>> GetAuthorsByIds(IList<string?> ids)
+    {
+        return await _authors.AsQueryable()
+            .Where(a => ids.Contains(a.Id))
+            .ToListAsync();
+    }
+
     public async Task<IList<AuthorModel>> GetAllAuthors()
     {
         return await _authors.AsQueryable().ToListAsync();
+    }
+
+    public async Task<AuthorModel?> GetAuthor(string id)
+    {
+        return await _authors.AsQueryable().Where(a => a.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task DeleteAuthor(string id)

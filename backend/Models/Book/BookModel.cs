@@ -25,5 +25,6 @@ public class BookModel
     public uint? OriginalPublicationYear { get; set; }
     [BsonRepresentation(BsonType.ObjectId)]
     public string? OriginalPublisherId { get; set; }
+    public uint Popularity { get; set; }
     public string? CoverURI { get; set; }
 }

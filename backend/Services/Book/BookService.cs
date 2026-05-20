@@ -2,18 +2,18 @@ using LibraryPlus.Models.Book;
 using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Book;
 using LibraryPlus.Responses.Book;
-using LibraryPlus.Services.Reservation;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
 namespace LibraryPlus.Services.Book;
 
-public class BookService(IMongoDatabase db, CategoryService categoryService)
+public class BookService(IMongoDatabase db, CategoryService categoryService, AuthorService authorService, PublisherService publisherService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
-    private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
+    private readonly AuthorService _authorService = authorService;
+    private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
     private const int SEARCH_PAGE_SIZE = 12;
 
@@ -34,6 +34,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             OriginalLanguage = createBookRequest.OriginalLanguage,
             OriginalPublicationYear = createBookRequest.OriginalPublicationYear,
             OriginalPublisherId = createBookRequest.OriginalPublisherId,
+            Popularity = 0,
         };
         await _books.InsertOneAsync(book);
         return book;
@@ -145,6 +146,8 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             {
                 "publicationyear" => query
                     .OrderByDescending(b => b.OriginalPublicationYear ?? b.PublicationYear),
+                "relevancy" => query
+                    .OrderByDescending(b => b.Popularity),
                 _ => query.OrderByDescending(b => b.Title)
             };
         }
@@ -152,8 +155,8 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         {
             query = normalizedSortBy switch
             {
-                "publicationyear" => query
-                    .OrderBy(b => b.OriginalPublicationYear ?? b.PublicationYear),
+                "publicationyear" => query.OrderBy(b => b.OriginalPublicationYear ?? b.PublicationYear),
+                "relevancy" => query.OrderBy(b => b.Popularity),
                 _ => query.OrderBy(b => b.Title)
             };
         }
@@ -166,9 +169,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             .Distinct()
             .ToList();
 
-        var authors = await _authors.AsQueryable()
-            .Where(a => authorIds.Contains(a.Id))
-            .ToListAsync();
+        var authors = await _authorService.GetAuthorsByIds(authorIds);
 
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
 
@@ -191,9 +192,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         List<string>? categoryIds = null,
         uint? minPublicationYear = null,
         uint? maxPublicationYear = null,
-        bool? isAvailable = null,
-        string? sortBy = null,
-        bool sortDescending = false
+        bool? isAvailable = null
     )
     {
         var query = await BuildBookFilterQueryAsync(
@@ -229,6 +228,46 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
         return await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
     }
 
+    public async Task<BookPreviewResponse?> GetBookPreviewById(string id)
+    {
+        var book = await _books.AsQueryable().Where(b => b.Id == id).FirstOrDefaultAsync();
+        if (book == null)
+        {
+            return null;
+        }
+        var authorTask = book.AuthorId != null ? _authorService.GetAuthor(book.AuthorId) : Task.FromResult<AuthorModel?>(null);
+        var publisherTask = book.PublisherId != null ? _publisherService.GetPublisher(book.PublisherId) : Task.FromResult<PublisherModel?>(null);
+        var originalPublisherTask = book.OriginalPublisherId != null ? _publisherService.GetPublisher(book.OriginalPublisherId) : Task.FromResult<PublisherModel?>(null);
+        var categoriesTask = _categoryService.GetCategoriesByIds(book.CategoryIds);
+        var bookUnitTask = GetAvailableBookUnitForBook(book.Id);
+        await Task.WhenAll(authorTask, publisherTask, originalPublisherTask, categoriesTask, bookUnitTask);
+        return new BookPreviewResponse(
+            book.Id,
+            book.Title,
+            book.Description,
+            await authorTask,
+            await publisherTask,
+            book.Language,
+            book.PublicationYear,
+            book.PagesCount,
+            await categoriesTask,
+            book.OriginalTitle,
+            book.OriginalLanguage,
+            book.OriginalPublicationYear,
+            await originalPublisherTask,
+            book.CoverURI,
+            (await bookUnitTask) != null
+        );
+    }
+
+    public async Task IncreasePopularity(BookModel book)
+    {
+        await _books.UpdateOneAsync(
+            Builders<BookModel>.Filter.Eq(b => b.Id, book.Id),
+            Builders<BookModel>.Update.Set(b => b.Popularity, book.Popularity + 1)
+        );
+    }
+
     public async Task<BookUnitModel?> GetAvailableBookUnitForBook(string bookId)
     {
         var reservedBookUnitIds = await _reservations.AsQueryable()
@@ -240,6 +279,36 @@ public class BookService(IMongoDatabase db, CategoryService categoryService)
             .Where(bu => bu.BookId == bookId)
             .Where(bu => !reservedBookUnitIds.Contains(bu.Id))
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<IList<BookCardResponse>> GetBooksByAuthor(string authorId, string? excludedBookId)
+    {
+        var authorTask = _authorService.GetAuthor(authorId);
+        var booksQuery = _books.AsQueryable();
+        if (excludedBookId != null)
+        {
+            booksQuery = booksQuery.Where(b => b.Id != excludedBookId);
+        }
+        booksQuery = booksQuery
+            .Where(b => b.AuthorId == authorId)
+            .OrderByDescending(b => b.Popularity)
+            .Take(12);
+        var booksTask = booksQuery.ToListAsync();
+
+        await Task.WhenAll(booksTask, authorTask);
+        var books = await booksTask;
+        var author = await authorTask;
+
+        return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
+            b.Id,
+            b.Title,
+            b.Language,
+            author?.Name,
+            b.PublicationYear,
+            b.OriginalPublicationYear,
+            b.CoverURI,
+            (await GetAvailableBookUnitForBook(b.Id)) != null
+        ))]);
     }
 
 }

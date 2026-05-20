@@ -75,7 +75,7 @@ public static class BookEndpoints
             string id
         ) =>
         {
-            return await bookService.GetBookById(id);
+            return await bookService.GetBookPreviewById(id);
         });
 
         group.MapPost("/", [Authorize] async (
@@ -132,6 +132,15 @@ public static class BookEndpoints
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/booksByAuthor/{authorId}", async (
+            BookService bookService,
+            [FromQuery] string? excludedBookId,
+            string authorId
+        ) =>
+        {
+            return await bookService.GetBooksByAuthor(authorId, excludedBookId);
+        });
 
     }
 }

@@ -37,6 +37,7 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
             CreatedAt = DateTime.UtcNow,
         };
         await _reservations.InsertOneAsync(reservation);
+        await _bookService.IncreasePopularity(book);
         return reservation;
     }
 

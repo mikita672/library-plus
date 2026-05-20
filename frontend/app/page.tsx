@@ -14,7 +14,6 @@ function page() {
       <HowDoWeOperateSecton />
 
       <FAQSection />
-
     </div>
   )
 }

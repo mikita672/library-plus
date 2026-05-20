@@ -1,5 +1,6 @@
 import { BookCard } from '@/types/book/Book';
 import { Button } from '../ui/button';
+import Link from 'next/link';
 
 interface Props {
     params: URLSearchParams;
@@ -40,8 +41,17 @@ async function BookResults({ params }: Props) {
                     </div>
 
                     <div className="w-full grid grid-cols-2 gap-2">
-                        <Button className="cols-span-1 cursor-pointer">Rent now</Button>
-                        <Button className="cols-span-1 bg-accent text-foreground cursor-pointer">Learn more</Button>
+                        <Link href="#" className="col-span-1">
+                            <Button className="w-full bg-primary cursor-pointer">
+                                Rent now
+                            </Button>
+                        </Link>
+
+                        <Link href={`/book/${b.id}`} className="col-span-1">
+                            <Button className="w-full bg-accent text-foreground cursor-pointer">
+                                Learn more
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             ))}
