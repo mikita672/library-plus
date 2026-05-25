@@ -142,5 +142,12 @@ public static class BookEndpoints
             return await bookService.GetBooksByAuthor(authorId, excludedBookId);
         });
 
+        group.MapGet("/popular", async (
+            BookService bookService
+        ) =>
+        {
+            return await bookService.GetPopularBooks();
+        });
+
     }
 }

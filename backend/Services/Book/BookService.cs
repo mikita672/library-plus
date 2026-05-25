@@ -311,4 +311,39 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         ))]);
     }
 
+    public async Task<IList<BookCardResponse>> GetPopularBooks()
+    {
+        var books = await _books.AsQueryable()
+            .OrderByDescending(b => b.Popularity)
+            .Take(12)
+            .ToListAsync();
+
+        var authorIds = books
+            .Select(b => b.AuthorId)
+            .Where(id => id != null)
+            .Distinct()
+            .ToList();
+
+        var authors = await _authorService.GetAuthorsByIds(authorIds);
+        var authorDict = authors.ToDictionary(a => a.Id);
+
+        var responseTasks = books.Select(async b =>
+        {
+            authorDict.TryGetValue(b.AuthorId ?? string.Empty, out var author);
+
+            return new BookCardResponse(
+                b.Id,
+                b.Title,
+                b.Language,
+                author?.Name,
+                b.PublicationYear,
+                b.OriginalPublicationYear,
+                b.CoverURI,
+                (await GetAvailableBookUnitForBook(b.Id)) != null
+            );
+        });
+
+        return [.. await Task.WhenAll(responseTasks)];
+    }
+
 }
