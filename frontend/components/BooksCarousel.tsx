@@ -9,9 +9,10 @@ import { useEffect, useState } from "react";
 
 interface Props {
     books: BookCard[];
+    includeAuthor?: boolean;
 }
 
-function BooksCarousel({ books }: Props) {
+function BooksCarousel({ books, includeAuthor }: Props) {
     const [api, setApi] = useState<CarouselApi>();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [booksPerSlide, setBooksPerSlide] = useState(3);
@@ -68,6 +69,7 @@ function BooksCarousel({ books }: Props) {
                                 <div className="w-full">
                                     <p className="text-lg font-bold">{book.title}</p>
                                     <p className="opacity-70">Language: {book.language}</p>
+                                    {includeAuthor === true ? <p className="opacity-70">Author: {book.authorName ?? "Unknown"}</p> : <></>}
                                     <p className="opacity-70">Publication year: {book.publicationYear}</p>
                                     <p>{book.isAvailable}</p>
                                 </div>

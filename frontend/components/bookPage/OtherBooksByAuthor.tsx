@@ -1,5 +1,5 @@
 import { BookCard, BookPreview } from "@/types/book/Book";
-import BooksCarousel from "./BooksCarousel";
+import BooksCarousel from "../BooksCarousel";
 
 interface Props {
     book: BookPreview,
@@ -30,8 +30,6 @@ async function OtherBooksByAuthor({ book }: Props) {
             <BooksCarousel books={books} />
         </div>
     );
-
-
 }
 
 export default OtherBooksByAuthor

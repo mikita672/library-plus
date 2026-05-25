@@ -1,5 +1,5 @@
 import BookInformation from '@/components/bookPage/bookInformation/BookInformation';
-import OtherBooksByAuthor from '@/components/bookPage/otherBooksByAuthor/OtherBooksByAuthor';
+import OtherBooksByAuthor from '@/components/bookPage/OtherBooksByAuthor';
 import { BookPreview } from '@/types/book/Book';
 import { notFound } from 'next/navigation';
 
