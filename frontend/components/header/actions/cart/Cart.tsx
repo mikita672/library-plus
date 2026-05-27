@@ -7,6 +7,8 @@ import { BasketIcon } from '@phosphor-icons/react';
 import { useContext, useState } from 'react'
 import CartList from './CartList';
 import CartFooter from './CartFooter';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function Cart() {
     const { bookIds } = useContext(cartContext);
@@ -34,7 +36,16 @@ function Cart() {
             </PopoverTrigger>
             <PopoverContent align="center" sideOffset={10} className="w-90">
                 <PopoverHeader>
-                    <PopoverTitle>Cart</PopoverTitle>
+                    <div className="w-full flex justify-between items-center">
+                        <PopoverTitle>Cart</PopoverTitle>
+
+                        {bookIds.length > 0 ?
+                            <Link href="/checkout">
+                                <Button className="cursor-pointer">Go to checkout</Button>
+                            </Link>
+                            : <></>
+                        }
+                    </div>
                 </PopoverHeader>
                 {bookIds.length === 0 ?
                     <div className="p-4 w-full flex justify-center align-center">
