@@ -11,12 +11,11 @@ interface Props {
 
 function CartList({ ids }: Props) {
     const { removeBook } = useContext(cartContext);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [books, setBooks] = useState<BookCard[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setIsLoading(true);
         (async () => {
             const response = await fetch('/api/books/multiple', {
                 method: "POST",
