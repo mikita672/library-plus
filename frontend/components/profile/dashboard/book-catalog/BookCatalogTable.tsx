@@ -27,6 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useFieldArray } from "react-hook-form";
+import EditBookModal from "./EditBookModal";
 
 const columns: ColumnDef<BookCard>[] = [
   {
@@ -177,6 +179,8 @@ interface Props {
 
 export default function BookCatalogTable({ books }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [editingBook, setEditingBook] = useState<BookCard | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const table = useReactTable({
     data: books,
@@ -190,11 +194,81 @@ export default function BookCatalogTable({ books }: Props) {
     },
   });
 
+  const handleEditClick = (book: BookCard) => {
+    setEditingBook(book);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveBook = async (updatedBook: BookCard) => {
+    // TODO: Call API to update book
+  };
+
+  const handleDeleteClick = (book: BookCard) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${book.title}"?`,
+    );
+    if (confirmed) {
+      // TODO: Call API to remove the book
+    }
+  };
+
+  const updatedColumns = columns.map((col) => {
+    if (col.id === "actions") {
+      return {
+        ...col,
+        cell: ({ row }: any) => {
+          const book = row.original;
+          return (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEditClick(book)}
+                aria-label={`Edit ${book.title}`}
+                className="h-8 w-8 p-0"
+              >
+                <PencilSimpleIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteClick(book)}
+                aria-label={`Delete ${book.title}`}
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        },
+      };
+    }
+    return col;
+  });
+
+  const tableWithUpdatedColumns = useReactTable({
+    data: books,
+    columns: updatedColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+  });
+
+  if (!books.length) {
+    return (
+      <div className="text-center text-muted-foreground">No books found.</div>
+    );
+  }
+
   return (
     <div className="w-full">
       <Table>
         <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
+          {tableWithUpdatedColumns.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
@@ -212,50 +286,43 @@ export default function BookCatalogTable({ books }: Props) {
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No books found.
-              </TableCell>
+          {tableWithUpdatedColumns.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => tableWithUpdatedColumns.previousPage()}
+          disabled={!tableWithUpdatedColumns.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => tableWithUpdatedColumns.nextPage()}
+          disabled={!tableWithUpdatedColumns.getCanNextPage()}
+        >
+          Next
+        </Button>
       </div>
+
+      <EditBookModal
+        book={editingBook}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSave={handleSaveBook}
+      />
     </div>
   );
 }
