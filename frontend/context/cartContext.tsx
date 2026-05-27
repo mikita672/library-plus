@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { createContext } from "vm"
+import { createContext, useEffect, useState } from "react";
 
-export interface Cart {
-    bookIds: string[],
+export interface ICartContext {
+    bookIds: string[] | null,
     addBook: (id: string) => void,
 }
 
 const cartKey = "cartKey";
 
-export const cartContext = createContext({} as Cart);
+export const cartContext = createContext({} as ICartContext);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     const [bookIds, setBookIds] = useState<string[] | null>(null);
@@ -20,7 +19,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
                 setBookIds([]);
                 return;
             }
-            const savedCart: Cart = await JSON.parse(savedCartString);
+            const savedCart: ICartContext = await JSON.parse(savedCartString);
             if (!savedCart.bookIds) {
                 setBookIds([]);
                 return;
@@ -30,16 +29,15 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const addBook = (id: string) => {
-        if (bookIds?.includes(id)) {
+        if (bookIds === null) {
             return;
         }
-        setBookIds(prev => {
-            if (prev === null) {
-                return prev;
-            }
-            return [...prev, id];
-        })
-        localStorage.setItem(cartKey, JSON.stringify({ bookIds }))
+        if (bookIds.includes(id)) {
+            return;
+        }
+        const newBookIds = [...bookIds, id];
+        setBookIds(newBookIds);
+        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }))
     }
 
     return (

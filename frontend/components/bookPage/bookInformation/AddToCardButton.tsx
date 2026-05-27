@@ -14,9 +14,14 @@ function AddToCardButton({ isAvailable }: Props) {
         <div className="w-full flex flex-col gap-2">
             {isAvailable ? <></> : <p className="text-destructive">Not available</p>}
 
-            <Button
-                className={`w-fit px-12 py-6 font-bold text-2xl ${isAvailable ? "bg-primary cursor-pointer" : "bg-accent cursor-not-allowed text-foreground opacity-50"}`}
-            >Add to your cart!</Button>
+            {isAvailable ?
+                <Button
+                    className="w-fit px-12 py-6 font-bold text-2xl bg-primary cursor-pointer"
+                >Add to your cart!</Button> :
+                <Button
+                    className="w-fit px-12 py-6 font-bold text-2xl bg-accent cursor-not-allowed text-foreground opacity-50"
+                >Add to your cart!</Button>
+            }
 
             <Link href="/return-policies">
                 <Badge variant="secondary" className="rounded-full">
