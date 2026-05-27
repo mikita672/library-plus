@@ -16,6 +16,7 @@ import {
   TrashIcon,
   PencilSimpleIcon,
 } from "@phosphor-icons/react";
+import { BookCard } from "@/types/book/Book";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,74 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export type Book = {
-  id: string;
-  title: string;
-  author: string;
-  language: string;
-  year: number;
-  available: number;
-  total: number;
-};
-
-const placeholderData: Book[] = [
-  {
-    id: "392",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    language: "English",
-    year: 1925,
-    available: 36,
-    total: 40,
-  },
-  {
-    id: "412",
-    title: "Little Prince",
-    author: "Antoine de Saint-Exupéry",
-    language: "French",
-    year: 1943,
-    available: 27,
-    total: 35,
-  },
-  {
-    id: "392",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    language: "English",
-    year: 1925,
-    available: 36,
-    total: 40,
-  },
-  {
-    id: "412",
-    title: "Little Prince",
-    author: "Antoine de Saint-Exupéry",
-    language: "French",
-    year: 1943,
-    available: 27,
-    total: 35,
-  },
-  {
-    id: "392",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    language: "English",
-    year: 1925,
-    available: 36,
-    total: 40,
-  },
-  {
-    id: "412",
-    title: "Little Prince",
-    author: "Antoine de Saint-Exupéry",
-    language: "French",
-    year: 1943,
-    available: 27,
-    total: 35,
-  },
-];
-
-const columns: ColumnDef<Book>[] = [
+const columns: ColumnDef<BookCard>[] = [
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -114,7 +48,7 @@ const columns: ColumnDef<Book>[] = [
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="font-mono text-sm">{row.getValue("id")}</div>
+      <div className="font-mono text-sm">{row.getValue("id") ?? "-"}</div>
     ),
   },
   {
@@ -138,7 +72,7 @@ const columns: ColumnDef<Book>[] = [
     cell: ({ row }) => <div>{row.getValue("title")}</div>,
   },
   {
-    accessorKey: "author",
+    accessorKey: "authorName",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -155,7 +89,9 @@ const columns: ColumnDef<Book>[] = [
         )}
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue("author")}</div>,
+    cell: ({ row }) => (
+      <div>{(row.getValue("authorName") as string | null) ?? "-"}</div>
+    ),
   },
   {
     accessorKey: "language",
@@ -178,7 +114,7 @@ const columns: ColumnDef<Book>[] = [
     cell: ({ row }) => <div>{row.getValue("language")}</div>,
   },
   {
-    accessorKey: "year",
+    accessorKey: "publicationYear",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -195,21 +131,22 @@ const columns: ColumnDef<Book>[] = [
         )}
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue("year")}</div>,
+    cell: ({ row }) => (
+      <div>
+        {row.original.originalPublicationYear ??
+          row.getValue("publicationYear")}
+      </div>
+    ),
   },
   {
-    accessorKey: "available",
+    accessorKey: "isAvailable",
     header: "Available",
-    cell: ({ row }) => {
-      const available = row.getValue("available") as number;
-      const total = row.original.total;
-      return <div>{`${available}/${total}`}</div>;
-    },
+    cell: ({ row }) => <div>{row.original.isAvailable ? "Yes" : "No"}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
+    cell: () => {
       return (
         <div className="flex gap-2">
           <Button
@@ -234,11 +171,15 @@ const columns: ColumnDef<Book>[] = [
   },
 ];
 
-export default function BookCatalogTable() {
+interface Props {
+  books: BookCard[];
+}
+
+export default function BookCatalogTable({ books }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
-    data: placeholderData,
+    data: books,
     columns,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -251,53 +192,45 @@ export default function BookCatalogTable() {
 
   return (
     <div className="w-full">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No books found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No books found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
