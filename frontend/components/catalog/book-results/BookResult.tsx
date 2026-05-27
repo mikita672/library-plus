@@ -11,7 +11,7 @@ interface Props {
 }
 
 function BookResult({ book }: Props) {
-    const { bookIds, addBook } = useContext(cartContext);
+    const { bookIds, addBook, removeBook } = useContext(cartContext);
 
     return (
         <div className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
@@ -33,7 +33,9 @@ function BookResult({ book }: Props) {
             <div className="w-full grid grid-cols-2 gap-2">
                 <Link href="#" className="col-span-1">
                     {bookIds?.includes(book.id) ?
-                        <Button className="w-full bg-primary cursor-pointer">
+                        <Button className="w-full bg-primary cursor-pointer" onClick={() => {
+                            removeBook(book.id);
+                        }}>
                             Added to cart
                         </Button> :
                         (

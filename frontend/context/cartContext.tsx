@@ -3,6 +3,7 @@ import { createContext, useEffect, useState } from "react";
 export interface ICartContext {
     bookIds: string[] | null,
     addBook: (id: string) => void,
+    removeBook: (id: string) => void,
 }
 
 const cartKey = "cartKey";
@@ -37,11 +38,20 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         }
         const newBookIds = [...bookIds, id];
         setBookIds(newBookIds);
-        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }))
+        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
+    }
+
+    const removeBook = (id: string) => {
+        if (bookIds === null) {
+            return;
+        }
+        const newBookIds = bookIds.filter(bookId => bookId !== id);
+        setBookIds(newBookIds);
+        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
     }
 
     return (
-        <cartContext.Provider value={{ bookIds, addBook }}>
+        <cartContext.Provider value={{ bookIds, addBook, removeBook }}>
             {children}
         </cartContext.Provider>
     )

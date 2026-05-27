@@ -1,8 +1,13 @@
+"use client"
+
 import { BookPreview } from '@/types/book/Book'
 import Link from 'next/link';
 import { Badge } from '../../ui/badge';
 import ScrollToExtendedInformation from './ScrollToExtendedInformation';
 import AddToCardButton from './AddToCardButton';
+import { useContext } from 'react';
+import { cartContext } from '@/context/cartContext';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     book: BookPreview;
@@ -50,7 +55,7 @@ function BookMainInformation({ book }: Props) {
                     <ScrollToExtendedInformation />
                 </div>
 
-                <AddToCardButton isAvailable={book.isAvailable} />
+                <AddToCardButton id={book.id} isAvailable={book.isAvailable} />
             </div>
         </div>
     )
