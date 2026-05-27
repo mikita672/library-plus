@@ -74,9 +74,11 @@ function BooksCarousel({ books, includeAuthor }: Props) {
                                     <p>{book.isAvailable}</p>
                                 </div>
 
-                                <Button className="w-full bg-primary text-light cursor-pointer hover:opacity-80 text-base py-3">
-                                    <Link href={`/book/someid`}>Learn more</Link>
-                                </Button>
+                                <Link className="w-full" href={`/book/${book.id}`}>
+                                    <Button className="w-full bg-primary text-light cursor-pointer hover:opacity-80 text-base py-3">
+                                        Learn more
+                                    </Button>
+                                </Link>
                             </div>
                         </CarouselItem>
                     ))}

@@ -15,7 +15,6 @@ interface Props {
 function AddToCardButton({ id, isAvailable }: Props) {
     const { bookIds, addBook, removeBook } = useContext(cartContext);
 
-
     return (
         <div className="w-full flex flex-col gap-2">
             {isAvailable ? <></> : <p className="text-destructive">Not available</p>}

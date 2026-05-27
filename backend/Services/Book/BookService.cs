@@ -121,6 +121,34 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         return query;
     }
 
+    public async Task<IList<BookCardResponse>> GetMultipleByIds(IList<string> ids)
+    {
+        var books = await _books.AsQueryable()
+            .Where(b => ids.Contains(b.Id))
+            .ToListAsync();
+
+        var authorIds = books
+            .Select(b => b.AuthorId)
+            .Where(id => id != null)
+            .Distinct()
+            .ToList();
+
+        var authors = await _authorService.GetAuthorsByIds(authorIds);
+        var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
+
+        return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
+            b.Id,
+            b.Title,
+            b.Language,
+            b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
+            b.PublicationYear,
+            b.OriginalPublicationYear,
+            b.CoverURI,
+            (await GetAvailableBookUnitForBook(b.Id)) != null
+        ))]);
+
+    }
+
     public async Task<IList<BookCardResponse>> SearchBooks(
         string? searchToken = null,
         string? authorId = null,
