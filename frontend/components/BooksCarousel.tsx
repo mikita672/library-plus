@@ -71,7 +71,8 @@ function BooksCarousel({ books, includeAuthor }: Props) {
                                     <p className="opacity-70">Language: {book.language}</p>
                                     {includeAuthor === true ? <p className="opacity-70">Author: {book.authorName ?? "Unknown"}</p> : <></>}
                                     <p className="opacity-70">Publication year: {book.publicationYear}</p>
-                                    <p>{book.isAvailable}</p>
+                                    {book.isAvailable ?
+                                        <p>Available now</p> : <p className="text-destructive">Not Available</p>}
                                 </div>
 
                                 <Link className="w-full" href={`/book/${book.id}`}>

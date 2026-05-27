@@ -6,10 +6,11 @@ import { cartContext } from '@/context/cartContext';
 import { BasketIcon } from '@phosphor-icons/react';
 import { useContext, useState } from 'react'
 import CartList from './CartList';
+import CartFooter from './CartFooter';
 
 function Cart() {
     const { bookIds } = useContext(cartContext);
-    const [page, setPage] = useState(0);
+    const [page, setPage] = useState(1);
 
     if (bookIds === null) {
         return <BasketIcon className="w-6 h-6 text-foreground transition-colors hover:text-gray-400" />;
@@ -31,7 +32,7 @@ function Cart() {
                     }
                 </div>
             </PopoverTrigger>
-            <PopoverContent align="center" sideOffset={10} className="w-60">
+            <PopoverContent align="center" sideOffset={10} className="w-90">
                 <PopoverHeader>
                     <PopoverTitle>Cart</PopoverTitle>
                 </PopoverHeader>
@@ -40,9 +41,9 @@ function Cart() {
                         No items
                     </div> :
                     <>
-                        <CartList ids={bookIds.slice(page * 3, (page + 1) * 3)} />
+                        <CartList ids={bookIds.slice((page - 1) * 3, page * 3)} />
                         <Separator />
-                        {/* <CartFooter page={page} pagesCount={pagesCount} setPage={setPage} /> */}
+                        <CartFooter page={page} pagesCount={pagesCount} setPage={setPage} />
                     </>
                 }
             </PopoverContent>
