@@ -108,14 +108,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
                 .Distinct()
                 .ToListAsync();
 
-            if (isAvailable == true)
-            {
-                query = query.Where(b => availableBookIds.Contains(b.Id));
-            }
-            else
-            {
-                query = query.Where(b => !availableBookIds.Contains(b.Id));
-            }
+            query = query.Where(b => availableBookIds.Contains(b.Id) == isAvailable);
         }
 
         return query;
