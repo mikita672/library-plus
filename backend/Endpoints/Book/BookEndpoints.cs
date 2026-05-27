@@ -67,7 +67,8 @@ public static class BookEndpoints
                 publisherId,
                 categoryIds?.ToList(),
                 minPublicationYear,
-                maxPublicationYear
+                maxPublicationYear,
+                isAvailable
             );
         });
 
