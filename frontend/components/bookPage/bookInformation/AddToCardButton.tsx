@@ -34,8 +34,11 @@ function AddToCardButton({ id, isAvailable }: Props) {
                                 }}
                             >Add to your cart!</Button> :
                             <Button
-                                className="w-fit px-12 py-6 font-bold text-2xl bg-accent cursor-not-allowed text-foreground opacity-50"
-                            >Add to your cart!</Button>
+                                className="w-fit px-12 py-6 font-bold text-2xl bg-accent cursor-pointer text-foreground"
+                                onClick={() => {
+                                    addBook(id);
+                                }}
+                            >Add to your cart</Button>
                     )
             }
 

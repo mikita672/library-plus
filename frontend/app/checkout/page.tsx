@@ -44,10 +44,12 @@ function CheckoutPage() {
     }
 
     return (
-        <div className="w-full min-h-[60vh] bg-card p-4 grid grid-cols-4">
-            {error === null ? <></> : <p className="col-span-4 h-full items-center justify-center">Error occured: {error}</p>}
+        <div className="w-full min-h-[60vh] bg-card p-4 grid grid-cols-3">
+            {error === null ? <></> : <p className="col-span-3 h-full items-center justify-center">Error occured: {error}</p>}
 
-            <div className="col-span-3 h-full flex flex-col gap-4">
+            <div className="col-span-2 h-full flex flex-col gap-4">
+                <p className="text-xl font-bold">Your cart</p>
+
                 {isLoading ? <BookEntriesSkeleton /> : <></>}
 
                 {books.map((book) => (
