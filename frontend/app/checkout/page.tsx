@@ -77,6 +77,9 @@ function CheckoutPage() {
         if (newRange?.from !== undefined && newRange.from < today) {
             newRange.from = today;
         }
+        if (newRange?.to !== undefined && newRange?.from !== undefined && newRange.to < newRange.from) {
+            newRange.to = new Date(newRange.from);
+        }
         const newDateRanges = { ...dateRanges };
         newDateRanges[id] = newRange;
         setDateRanges(newDateRanges);
@@ -117,31 +120,38 @@ function CheckoutPage() {
             <div className="col-span-1 flex flex-col gap-4">
                 <p className="text-xl font-bold text-center invisible">Hello</p>
 
-                <div className="p-4 bg-background">
+                <div className="p-4 bg-background flex flex-col gap-4">
                     <p className="text-lg">Checkout</p>
 
                     {booksThatCanBeReserved.length === 0 ?
                         <p>You do not have books that can be reserved right now</p> :
-
-                        <div className="w-full flex flex-col gap-1">
-                            <p>Books that can be reserved</p>
-                            {booksThatCanBeReserved.map(book => (
-                                <li key={book.id} className="ml-8"><b>{book.title}</b>: {
-                                    dateRanges[book.id]?.from ? (
-                                        dateRanges[book.id]?.to ? (
-                                            <>
-                                                {format(dateRanges[book.id]!.from!, "LLL dd, y")} -{" "}
-                                                {format(dateRanges[book.id]!.to!, "LLL dd, y")}
-                                            </>
+                        <div className="w-full flex flex-col gap-4">
+                            <div className="w-full flex flex-col gap-1">
+                                <p>Books that can be reserved:</p>
+                                {booksThatCanBeReserved.map(book => (
+                                    <li key={book.id} className="ml-8"><b>{book.title}</b>: {
+                                        dateRanges[book.id]?.from ? (
+                                            dateRanges[book.id]?.to ? (
+                                                <>
+                                                    {format(dateRanges[book.id]!.from!, "LLL dd, y")} -{" "}
+                                                    {format(dateRanges[book.id]!.to!, "LLL dd, y")}
+                                                </>
+                                            ) : (
+                                                format(dateRanges[book.id]!.from!, "LLL dd, y")
+                                            )
                                         ) : (
-                                            format(dateRanges[book.id]!.from!, "LLL dd, y")
+                                            <span>Pick a date</span>
                                         )
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )
-                                }
-                                </li>
-                            ))}
+                                    }
+                                    </li>
+                                ))}
+                            </div>
+
+                            <Button
+                                className="bg-primary text-lg font-bold cursor-pointer py-4"
+                            >
+                                Reserve
+                            </Button>
                         </div>
                     }
                 </div>
