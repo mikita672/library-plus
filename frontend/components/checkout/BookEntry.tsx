@@ -2,8 +2,14 @@
 
 import { cartContext } from "@/context/cartContext";
 import { BookCard } from "@/types/book/Book"
-import { TrashIcon } from "@phosphor-icons/react";
-import { useContext } from "react";
+import { CalendarIcon, TrashIcon } from "@phosphor-icons/react";
+import { useContext, useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
+import { Field, FieldLabel } from "../ui/field";
+import { DateRange } from "react-day-picker";
+import { addDays, format } from "date-fns";
 
 interface Props {
     book: BookCard,
@@ -11,9 +17,13 @@ interface Props {
 
 function BookEntry({ book }: Props) {
     const { removeBook } = useContext(cartContext);
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: new Date(),
+        to: addDays(new Date(), 21),
+    })
 
     return (
-        <div className="w-full grid grid-cols-4 items-center gap-24 bg-background p-4">
+        <div className="w-full grid grid-cols-5 items-center gap-24 bg-background p-4">
             <div className="col-span-3 flex items-center gap-4">
                 <img
                     src={book.coverURI ?? "/images/book-placeholder.png"}
@@ -33,7 +43,43 @@ function BookEntry({ book }: Props) {
                 </div>
             </div>
 
-            <div className="col-span-1 flex items-center justify-center gap-4">
+            <div className="col-span-2 flex items-center justify-between px-4">
+                <Field className="w-50 relative">
+                    <FieldLabel htmlFor="date-picker-range" className="absolute -top-5">Reservation time</FieldLabel>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                id="date-picker-range"
+                                className="justify-start cursor-pointer"
+                            >
+                                <CalendarIcon />
+                                {date?.from ? (
+                                    date.to ? (
+                                        <>
+                                            {format(date.from, "LLL dd, y")} -{" "}
+                                            {format(date.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(date.from, "LLL dd, y")
+                                    )
+                                ) : (
+                                    <span>Pick a date</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="range"
+                                defaultMonth={date?.from}
+                                selected={date}
+                                onSelect={setDate}
+                                numberOfMonths={2}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </Field>
+
                 <TrashIcon
                     className="text-destructive w-6 h-6 cursor-pointer"
                     onClick={() => {
