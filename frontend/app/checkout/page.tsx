@@ -5,7 +5,7 @@ import BookEntry from "@/components/checkout/BookEntry";
 import { Button } from "@/components/ui/button";
 import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
-import { addDays, setDate } from "date-fns";
+import { addDays, format, setDate } from "date-fns";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
@@ -16,6 +16,11 @@ function CheckoutPage() {
     const [books, setBooks] = useState<BookCard[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [dateRanges, setDateRanges] = useState<Record<string, DateRange | undefined>>({});
+    const booksThatCanBeReserved = books.filter(book =>
+        book.isAvailable &&
+        dateRanges[book.id]?.from !== undefined &&
+        dateRanges[book.id]?.to !== undefined
+    );
 
     useEffect(() => {
         if (bookIds === null) {
@@ -78,7 +83,7 @@ function CheckoutPage() {
     }
 
     return (
-        <div className="w-full min-h-[70vh] bg-card px-6 py-4 grid grid-cols-3">
+        <div className="w-full min-h-[70vh] bg-card px-6 py-4 grid grid-cols-3 gap-6">
             <div className="col-span-2 h-full flex flex-col gap-4">
                 <p className="text-xl font-bold text-center">Your cart</p>
 
@@ -107,6 +112,39 @@ function CheckoutPage() {
                         }}
                     />
                 ))}
+            </div>
+
+            <div className="col-span-1 flex flex-col gap-4">
+                <p className="text-xl font-bold text-center invisible">Hello</p>
+
+                <div className="p-4 bg-background">
+                    <p className="text-lg">Checkout</p>
+
+                    {booksThatCanBeReserved.length === 0 ?
+                        <p>You do not have books that can be reserved right now</p> :
+
+                        <div className="w-full flex flex-col gap-1">
+                            <p>Books that can be reserved</p>
+                            {booksThatCanBeReserved.map(book => (
+                                <li key={book.id} className="ml-8"><b>{book.title}</b>: {
+                                    dateRanges[book.id]?.from ? (
+                                        dateRanges[book.id]?.to ? (
+                                            <>
+                                                {format(dateRanges[book.id]!.from!, "LLL dd, y")} -{" "}
+                                                {format(dateRanges[book.id]!.to!, "LLL dd, y")}
+                                            </>
+                                        ) : (
+                                            format(dateRanges[book.id]!.from!, "LLL dd, y")
+                                        )
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )
+                                }
+                                </li>
+                            ))}
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     )
