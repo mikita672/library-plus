@@ -19,11 +19,13 @@ function AvailabilityFilter() {
         router.replace(`${pathname}?${params.toString()}`);
     }
 
+    const isAvailable = searchParams.get("isAvailable") ?? "";
+
     return (
         <div className="flex flex-col gap-2">
             <p>Availability</p>
 
-            <RadioGroup defaultValue="" onValueChange={handleChange}>
+            <RadioGroup defaultValue={isAvailable} onValueChange={handleChange}>
                 <Field orientation="horizontal">
                     <RadioGroupItem value="" id="availability-none" />
                     <FieldContent>

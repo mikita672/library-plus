@@ -1,4 +1,3 @@
-import React from 'react'
 import PageSelection from './PageSelection';
 
 interface Props {

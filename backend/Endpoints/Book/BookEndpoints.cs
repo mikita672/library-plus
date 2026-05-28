@@ -41,6 +41,15 @@ public static class BookEndpoints
             );
         });
 
+
+        group.MapPost("/multiple", async (
+            [FromBody] string[] ids,
+            BookService bookService
+        ) =>
+        {
+            return await bookService.GetMultipleByIds([.. ids]);
+        });
+
         group.MapGet("/pages", async (
             [FromQuery] string? searchToken,
             [FromQuery] string? authorId,
@@ -58,7 +67,8 @@ public static class BookEndpoints
                 publisherId,
                 categoryIds?.ToList(),
                 minPublicationYear,
-                maxPublicationYear
+                maxPublicationYear,
+                isAvailable
             );
         });
 
