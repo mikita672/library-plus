@@ -8,12 +8,12 @@ export function proxy(request: NextRequest) {
     if (refreshToken !== undefined && authGroup.includes(pathname)) {
         return NextResponse.redirect(new URL("/profile", request.url));
     }
-    if (refreshToken === undefined && pathname.startsWith('/profile')) {
+    if (refreshToken === undefined && (pathname.startsWith('/profile') || pathname.startsWith('/checkout'))) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
     return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/login", "/sign-up", "/password-reset", "/profile"],
+    matcher: ["/login", "/sign-up", "/password-reset", "/profile", "/checkout"],
 }
