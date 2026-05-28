@@ -3,24 +3,22 @@
 import { cartContext } from "@/context/cartContext";
 import { BookCard } from "@/types/book/Book"
 import { CalendarIcon, TrashIcon } from "@phosphor-icons/react";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import { Field, FieldLabel } from "../ui/field";
 import { DateRange } from "react-day-picker";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 
 interface Props {
     book: BookCard,
+    dateRange: DateRange | undefined,
+    changeDateRange: (newRange: DateRange | undefined) => void,
 }
 
-function BookEntry({ book }: Props) {
+function BookEntry({ book, dateRange, changeDateRange }: Props) {
     const { removeBook } = useContext(cartContext);
-    const [date, setDate] = useState<DateRange | undefined>({
-        from: new Date(),
-        to: addDays(new Date(), 21),
-    })
 
     return (
         <div className="w-full grid grid-cols-5 items-center gap-24 bg-background p-4">
@@ -54,14 +52,14 @@ function BookEntry({ book }: Props) {
                                 className="justify-start cursor-pointer"
                             >
                                 <CalendarIcon />
-                                {date?.from ? (
-                                    date.to ? (
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
                                         <>
-                                            {format(date.from, "LLL dd, y")} -{" "}
-                                            {format(date.to, "LLL dd, y")}
+                                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                                            {format(dateRange.to, "LLL dd, y")}
                                         </>
                                     ) : (
-                                        format(date.from, "LLL dd, y")
+                                        format(dateRange.from, "LLL dd, y")
                                     )
                                 ) : (
                                     <span>Pick a date</span>
@@ -71,9 +69,9 @@ function BookEntry({ book }: Props) {
                         <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                                 mode="range"
-                                defaultMonth={date?.from}
-                                selected={date}
-                                onSelect={setDate}
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={changeDateRange}
                                 numberOfMonths={2}
                             />
                         </PopoverContent>

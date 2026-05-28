@@ -45,7 +45,9 @@ function BookResult({ book }: Props) {
                                 }}>
                                     Rent now
                                 </Button> :
-                                <Button className="w-full bg-accent text-foreground cursor-not-allowed opacity-50">
+                                <Button className="w-full bg-accent text-foreground cursor-pointer opacity-80" onClick={() => {
+                                    addBook(book.id);
+                                }}>
                                     Rent now
                                 </Button>
                         )
