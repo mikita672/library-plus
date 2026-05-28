@@ -2,9 +2,11 @@
 
 import BookEntriesSkeleton from "@/components/checkout/BookEntriesSkeleton";
 import BookEntry from "@/components/checkout/BookEntry";
+import { Button } from "@/components/ui/button";
 import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
 import { addDays, setDate } from "date-fns";
+import Link from "next/link";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
 
@@ -82,7 +84,16 @@ function CheckoutPage() {
 
                 {isLoading ? <BookEntriesSkeleton /> :
                     (
-                        books.length === 0 ? <p>Empty...</p> : <></>
+                        books.length === 0 ?
+                            <div className="w-full h-full flex flex-col justify-center items-center gap-4">
+                                <p className="text-xl">Your cart is empty...</p>
+                                <Link href="/catalog">
+                                    <Button className="bg-primary text-light cursor-pointer hover:opacity-80 text-lg px-8 py-6">
+                                        Browse catalog
+                                    </Button>
+                                </Link>
+                            </div> :
+                            <></>
                     )
                 }
 
