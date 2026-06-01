@@ -1,6 +1,7 @@
 "use client";
 
 import { FadersIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type SubmitEvent } from "react";
 
 import { getAuthors } from "@/lib/api/authors";
@@ -40,6 +41,9 @@ import {
 } from "@/components/ui/select";
 
 export default function BooksTab() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   const [books, setBooks] = useState<BookCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -48,8 +52,8 @@ export default function BooksTab() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const [inputValue, setInputValue] = useState("");
-  const [searchToken, setSearchToken] = useState("");
+  const [inputValue, setInputValue] = useState(initialSearch);
+  const [searchToken, setSearchToken] = useState(initialSearch);
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 

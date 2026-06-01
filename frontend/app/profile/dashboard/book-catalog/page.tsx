@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import AuthorsTab from "@/components/profile/dashboard/book-catalog/AuthorsTab";
 import BooksTab from "@/components/profile/dashboard/book-catalog/BooksTab";
 import PublishersTab from "@/components/profile/dashboard/book-catalog/PublishersTab";
@@ -19,7 +21,9 @@ export default function BookCatalogPage() {
         </TabsList>
 
         <TabsContent value="books">
-          <BooksTab />
+          <Suspense fallback={<div>Loading books...</div>}>
+            <BooksTab />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="authors">
