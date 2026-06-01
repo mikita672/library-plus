@@ -13,3 +13,48 @@ export async function getUserById(id: string): Promise<UserMeShort | null> {
   if (!res.ok) return null;
   return res.json() as Promise<UserMeShort>;
 }
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  phoneNumber?: string | null;
+  joinedAt: string;
+  isDeleted: boolean;
+  isAdmin: boolean;
+}
+
+export async function getAllUsers(
+  pageNumber: number,
+  searchToken?: string,
+): Promise<AdminUser[]> {
+  const sp = new URLSearchParams();
+  sp.set("pageNumber", String(pageNumber));
+  if (searchToken) sp.set("searchToken", searchToken);
+
+  const res = await fetch(`/api/users/all?${sp.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<AdminUser[]>;
+}
+
+export async function getAllUsersPages(searchToken?: string): Promise<number> {
+  const sp = new URLSearchParams();
+  if (searchToken) sp.set("searchToken", searchToken);
+
+  const res = await fetch(`/api/users/all/pages?${sp.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return 1;
+  return res.json() as Promise<number>;
+}
+
+export async function softDeleteUser(id: string): Promise<boolean> {
+  const res = await fetch(`/api/users/user/${id}/delete`, {
+    method: "PATCH",
+  });
+  return res.ok;
+}

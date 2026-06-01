@@ -98,5 +98,37 @@ public static class UserEndpoints
 
             return deleted ? Results.NoContent() : Results.NotFound();
         });
+
+        group.MapGet("/all", [Authorize] async (
+            UserService userService,
+            [FromQuery] int pageNumber,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            var users = await userService.GetUsers(pageNumber, searchToken);
+            return Results.Ok(users.Select(AdminUserResponse.FromModel));
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/all/pages", [Authorize] async (
+            UserService userService,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            var pages = await userService.GetUsersPages(searchToken);
+            return Results.Ok(pages);
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPatch("/user/{id}/delete", [Authorize] async (
+            string id,
+            UserService userService,
+            RefreshTokenService refreshTokenService) =>
+        {
+            var deleted = await userService.SoftDeleteUser(id);
+            if (deleted)
+            {
+                await refreshTokenService.RemoveRefreshTokensForUser(id);
+            }
+            return deleted ? Results.NoContent() : Results.NotFound();
+        }).AddEndpointFilter<AdminUserFilter>();
     }
 }

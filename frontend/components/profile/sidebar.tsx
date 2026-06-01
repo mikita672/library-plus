@@ -30,6 +30,11 @@ const dashboardLinks = [
     label: "Rentals and fines",
     icon: HandCoinsIcon,
   },
+  {
+    href: "/profile/dashboard/clients",
+    label: "Client Management",
+    icon: UserIcon,
+  },
 ];
 
 export default function Sidebar() {

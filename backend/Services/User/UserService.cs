@@ -94,4 +94,41 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
 
         return result.ModifiedCount == 1;
     }
+
+    public async Task<List<UserModel>> GetUsers(int pageNumber, string? searchToken)
+    {
+        var pageSize = 20;
+        var filter = Builders<UserModel>.Filter.Empty;
+        if (!string.IsNullOrEmpty(searchToken))
+        {
+            var tokenLower = searchToken.ToLower();
+            filter = Builders<UserModel>.Filter.Or(
+                Builders<UserModel>.Filter.Regex(u => u.Email, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i")),
+                Builders<UserModel>.Filter.Regex(u => u.Name, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i"))
+            );
+        }
+
+        return await _users.Find(filter)
+            .SortByDescending(u => u.JoinedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetUsersPages(string? searchToken)
+    {
+        var pageSize = 20;
+        var filter = Builders<UserModel>.Filter.Empty;
+        if (!string.IsNullOrEmpty(searchToken))
+        {
+            var tokenLower = searchToken.ToLower();
+            filter = Builders<UserModel>.Filter.Or(
+                Builders<UserModel>.Filter.Regex(u => u.Email, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i")),
+                Builders<UserModel>.Filter.Regex(u => u.Name, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i"))
+            );
+        }
+
+        var count = await _users.CountDocumentsAsync(filter);
+        return (int)Math.Ceiling(count / (double)pageSize);
+    }
 }

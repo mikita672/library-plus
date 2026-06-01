@@ -23,3 +23,27 @@ public record MeResponse(
 };
 
 public record MeShortResponse(string Email, string? Name, string? AvatarUrl, string? PhoneNumber);
+
+public record AdminUserResponse(
+    string Id,
+    string Email,
+    string? Name,
+    string? PhoneNumber,
+    DateTime JoinedAt,
+    bool IsDeleted,
+    bool IsAdmin
+)
+{
+    public static AdminUserResponse FromModel(UserModel user)
+    {
+        return new AdminUserResponse(
+            user.Id,
+            user.Email,
+            user.Name,
+            user.PhoneNumber,
+            user.JoinedAt,
+            user.IsDeleted,
+            user.IsAdmin
+        );
+    }
+}
