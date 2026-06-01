@@ -22,4 +22,4 @@ public record MeResponse(
     }
 };
 
-public record MeShortResponse(string Email, string? Name, string? AvatarUrl);
+public record MeShortResponse(string Email, string? Name, string? AvatarUrl, string? PhoneNumber);

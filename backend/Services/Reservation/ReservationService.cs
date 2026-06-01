@@ -68,6 +68,9 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
                 .Set(r => r.Status, "Returned")
                 .Set(r => r.ReturnedDate, DateTime.UtcNow)
                 .Set(r => r.BookConditionUponReturn, handleReturnRequest.BookConditionUponReturn)
+                .Set(r => r.AdditionalNote, handleReturnRequest.AdditionalNote)
+                .Set(r => r.StartDate, handleReturnRequest.StartDate)
+                .Set(r => r.EndDate, handleReturnRequest.EndDate)
         );
         return res.MatchedCount == 1;
     }

@@ -2,6 +2,7 @@ export interface UserMeShort {
   email: string;
   name?: string | null;
   avatarUrl?: string | null;
+  phoneNumber?: string | null;
 }
 
 export async function getUserById(id: string): Promise<UserMeShort | null> {

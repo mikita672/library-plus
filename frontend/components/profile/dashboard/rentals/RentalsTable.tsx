@@ -1,14 +1,5 @@
 "use client";
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import Link from "next/link";
-import { useMemo } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,6 +10,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ManageRentalDialog } from "./ManageRentalDialog";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -73,7 +73,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function buildColumns(): ColumnDef<EnrichedReservationItem>[] {
+function buildColumns(
+  onManageClick: (r: EnrichedReservationItem) => void,
+): ColumnDef<EnrichedReservationItem>[] {
   return [
     {
       accessorKey: "userId",
@@ -130,9 +132,13 @@ function buildColumns(): ColumnDef<EnrichedReservationItem>[] {
     {
       id: "actions",
       header: "Actions",
-      cell: () => {
+      cell: ({ row }) => {
         return (
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onManageClick(row.original)}
+          >
             Manage
           </Button>
         );
@@ -143,10 +149,18 @@ function buildColumns(): ColumnDef<EnrichedReservationItem>[] {
 
 export default function RentalsTable({
   reservations,
+  onRefresh,
 }: {
   reservations: EnrichedReservationItem[];
+  onRefresh: () => void;
 }) {
-  const columns = useMemo(() => buildColumns(), []);
+  const [selectedReservation, setSelectedReservation] =
+    useState<EnrichedReservationItem | null>(null);
+
+  const columns = useMemo(
+    () => buildColumns((r) => setSelectedReservation(r)),
+    [],
+  );
 
   const table = useReactTable({
     data: reservations,
@@ -193,6 +207,12 @@ export default function RentalsTable({
           ))}
         </TableBody>
       </Table>
+
+      <ManageRentalDialog
+        reservation={selectedReservation}
+        onClose={() => setSelectedReservation(null)}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 }

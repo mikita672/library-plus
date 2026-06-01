@@ -18,5 +18,6 @@ public class ReservationModel
     public string? BookConditionUponReturn { get; set; }
     public string Status { get; set; } = null!;
     public decimal RepurchasePrice { get; set; }
+    public string? AdditionalNote { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

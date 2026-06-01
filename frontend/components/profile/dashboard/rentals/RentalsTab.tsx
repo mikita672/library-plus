@@ -74,24 +74,30 @@ export default function RentalsTab() {
         uniqueUnitIds.map((id) =>
           getBookUnitById(id)
             .then(async (unit) => {
-              if (!unit) return { id, title: "Unknown Book" };
+              if (!unit) return { id, book: null };
               const book = await getBookById(unit.bookId).catch(() => null);
-              return { id, title: book ? book.title : "Unknown Book" };
+              return { id, book };
             })
-            .catch(() => ({ id, title: "Error" })),
+            .catch(() => ({ id, book: null })),
         ),
       );
-      const unitTitleMap = Object.fromEntries(
-        unitsData.map(({ id, title }) => [id, title]),
+      const unitBookMap = Object.fromEntries(
+        unitsData.map(({ id, book }) => [id, book]),
       );
 
       const enrichedData: EnrichedReservationItem[] = data.map((r) => {
         const u = userMap[r.userId];
+        const b = unitBookMap[r.bookUnitId];
         return {
           ...r,
           clientName: u?.name || "Unknown User",
           clientEmail: u?.email || "",
-          bookTitle: unitTitleMap[r.bookUnitId] || "Unknown Book",
+          clientPhone: u?.phoneNumber || "none",
+          bookTitle: b?.title || "Unknown Book",
+          bookAuthor: b?.author?.name || "Unknown Author",
+          bookLanguage: b?.language || "Unknown Language",
+          bookYear: b?.publicationYear || 0,
+          bookCoverUri: b?.coverURI || "",
         };
       });
 
@@ -151,7 +157,7 @@ export default function RentalsTab() {
         </div>
       ) : (
         <>
-          <RentalsTable reservations={allReservations} />
+          <RentalsTable reservations={allReservations} onRefresh={fetchData} />
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
               <Button
