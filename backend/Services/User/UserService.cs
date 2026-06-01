@@ -95,6 +95,13 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return result.ModifiedCount == 1;
     }
 
+    public async Task<bool> RestoreUser(string userId)
+    {
+        var result = await _users.UpdateOneAsync(u => u.Id == userId && u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, false));
+
+        return result.ModifiedCount == 1;
+    }
+
     public async Task<List<UserModel>> GetUsers(int pageNumber, string? searchToken)
     {
         var pageSize = 20;

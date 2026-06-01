@@ -58,3 +58,10 @@ export async function softDeleteUser(id: string): Promise<boolean> {
   });
   return res.ok;
 }
+
+export async function restoreUser(id: string): Promise<boolean> {
+  const res = await fetch(`/api/users/user/${id}/restore`, {
+    method: "PATCH",
+  });
+  return res.ok;
+}

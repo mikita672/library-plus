@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AdminUser, softDeleteUser } from "@/lib/api/users";
+import { AdminUser, softDeleteUser, restoreUser } from "@/lib/api/users";
 import {
   ColumnDef,
   flexRender,
@@ -43,7 +43,8 @@ function StatusBadge({ isDeleted }: { isDeleted: boolean }) {
 
 function buildColumns(
   onRemoveClick: (id: string) => void,
-  deletingId: string | null,
+  onRestoreClick: (id: string) => void,
+  processingId: string | null,
 ): ColumnDef<AdminUser>[] {
   return [
     {
@@ -79,20 +80,33 @@ function buildColumns(
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        if (row.original.isDeleted || row.original.isAdmin) {
+        if (row.original.isAdmin) {
           return null;
         }
 
-        const isDeleting = deletingId === row.original.id;
+        const isProcessing = processingId === row.original.id;
+
+        if (row.original.isDeleted) {
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isProcessing}
+              onClick={() => onRestoreClick(row.original.id)}
+            >
+              {isProcessing ? "Restoring..." : "Restore User"}
+            </Button>
+          );
+        }
 
         return (
           <Button
             variant="destructive"
             size="sm"
-            disabled={isDeleting}
+            disabled={isProcessing}
             onClick={() => onRemoveClick(row.original.id)}
           >
-            {isDeleting ? "Removing..." : "Remove User"}
+            {isProcessing ? "Removing..." : "Remove User"}
           </Button>
         );
       },
@@ -107,12 +121,12 @@ export default function ClientsTable({
   users: AdminUser[];
   onRefresh: () => void;
 }) {
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const handleRemove = async (id: string) => {
     if (!confirm("Are you sure you want to remove this user?")) return;
 
-    setDeletingId(id);
+    setProcessingId(id);
     try {
       await softDeleteUser(id);
       onRefresh();
@@ -120,11 +134,26 @@ export default function ClientsTable({
       console.error(e);
       alert("Failed to remove user");
     } finally {
-      setDeletingId(null);
+      setProcessingId(null);
     }
   };
 
-  const columns = buildColumns(handleRemove, deletingId);
+  const handleRestore = async (id: string) => {
+    if (!confirm("Are you sure you want to restore this user?")) return;
+
+    setProcessingId(id);
+    try {
+      await restoreUser(id);
+      onRefresh();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to restore user");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const columns = buildColumns(handleRemove, handleRestore, processingId);
 
   const table = useReactTable({
     data: users,

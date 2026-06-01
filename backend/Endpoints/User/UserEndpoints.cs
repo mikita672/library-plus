@@ -130,5 +130,13 @@ public static class UserEndpoints
             }
             return deleted ? Results.NoContent() : Results.NotFound();
         }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPatch("/user/{id}/restore", [Authorize] async (
+            string id,
+            UserService userService) =>
+        {
+            var restored = await userService.RestoreUser(id);
+            return restored ? Results.NoContent() : Results.NotFound();
+        }).AddEndpointFilter<AdminUserFilter>();
     }
 }
