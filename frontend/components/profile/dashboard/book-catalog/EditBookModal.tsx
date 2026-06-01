@@ -15,7 +15,7 @@ import { PackageIcon, PlusIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { addBookUnit, updateBook } from "@/lib/api/books";
+import { addBookUnits, updateBook } from "@/lib/api/books";
 import { BookCard, UpdateBookRequest } from "@/types/book/Book";
 
 interface EditBookModalProps {
@@ -32,12 +32,13 @@ export default function EditBookModal({
   onSave,
 }: EditBookModalProps) {
   const [saving, setSaving] = useState(false);
-  const [addingUnit, setAddingUnit] = useState(false);
+  const [addingUnits, setAddingUnits] = useState(false);
 
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState("");
   const [publicationYear, setPublicationYear] = useState<number | "">("");
 
+  const [copiesToAdd, setCopiesToAdd] = useState(1);
   const [unitsAddedThisSession, setUnitsAddedThisSession] = useState(0);
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function EditBookModal({
       setTitle(book.title);
       setLanguage(book.language);
       setPublicationYear(book.publicationYear);
+      setCopiesToAdd(1);
       setUnitsAddedThisSession(0);
     }
   }, [book]);
@@ -72,19 +74,22 @@ export default function EditBookModal({
     }
   };
 
-  const handleAddUnit = async () => {
-    if (!book) return;
-    setAddingUnit(true);
+  const handleAddUnits = async () => {
+    if (!book || copiesToAdd < 1) return;
+    setAddingUnits(true);
     try {
-      await addBookUnit(book.id);
-      setUnitsAddedThisSession((n) => n + 1);
-      toast.success("Physical copy added to inventory");
+      await addBookUnits(book.id, copiesToAdd);
+      setUnitsAddedThisSession((n) => n + copiesToAdd);
+      toast.success(
+        `${copiesToAdd} physical ${copiesToAdd === 1 ? "copy" : "copies"} added`,
+      );
+      setCopiesToAdd(1);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to add physical copy",
+        err instanceof Error ? err.message : "Failed to add copies",
       );
     } finally {
-      setAddingUnit(false);
+      setAddingUnits(false);
     }
   };
 
@@ -184,23 +189,30 @@ export default function EditBookModal({
                 </span>
               )}
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddUnit}
-              disabled={addingUnit || !book}
-              className="gap-1"
-            >
-              <PlusIcon className="h-4 w-4" />
-              {addingUnit ? "Adding..." : "Add copy"}
-            </Button>
-          </div>
 
-          <p className="text-xs text-muted-foreground">
-            Each copy is a separate physical unit tracked in the inventory.
-            Copies are removed automatically when a reservation is returned.
-          </p>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min="1"
+                value={copiesToAdd}
+                onChange={(e) =>
+                  setCopiesToAdd(Math.max(1, parseInt(e.target.value) || 1))
+                }
+                className="w-20 h-9"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddUnits}
+                disabled={addingUnits || !book}
+                className="gap-1"
+              >
+                <PlusIcon className="h-4 w-4" />
+                {addingUnits ? "Adding..." : "Add copies"}
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">

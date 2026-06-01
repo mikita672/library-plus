@@ -7,6 +7,8 @@ import { PlusIcon } from "@phosphor-icons/react";
 import { z } from "zod";
 import { toast } from "sonner";
 
+import { createBook, addBookUnits } from "@/lib/api/books";
+
 import { Author } from "@/types/book/Author";
 import { Publisher } from "@/types/book/Publisher";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ const createBookSchema = z.object({
   publicationYear: z.number().int().min(1, "Publication year is required"),
   pagesCount: z.number().int().min(1, "Pages count is required"),
   repurchasePrice: z.number().min(0, "Repurchase price cannot be negative"),
+  initialCopies: z.number().int().min(0, "Cannot be negative"),
   authorId: z.string().optional(),
   publisherId: z.string().optional(),
   originalTitle: z.string().optional(),
@@ -74,6 +77,7 @@ export default function AddBookDialog() {
       publicationYear: new Date().getFullYear(),
       pagesCount: 1,
       repurchasePrice: 0,
+      initialCopies: 1,
       authorId: "",
       publisherId: "",
       originalTitle: "",
@@ -134,38 +138,26 @@ export default function AddBookDialog() {
           ? values.originalPublicationYear
           : null,
       originalPublisherId: null,
-      coverURI: nullableString(values.coverURI),
     };
 
     try {
-      const response = await fetch("/api/books", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const createdBook = await createBook(payload);
 
-      if (!response.ok) {
-        let errorMessage = "Failed to create book";
-        try {
-          const responseData = await response.json();
-          errorMessage = responseData?.message ?? errorMessage;
-        } catch {
-          errorMessage = `${errorMessage} (${response.status})`;
-        }
-
-        toast.error(errorMessage);
-        return;
+      if (values.initialCopies > 0) {
+        await addBookUnits(createdBook.id, values.initialCopies);
+        toast.success(
+          `Book created with ${values.initialCopies} physical ${values.initialCopies === 1 ? "copy" : "copies"}`,
+        );
+      } else {
+        toast.success("Book created successfully");
       }
 
-      toast.success("Book created successfully");
       form.reset();
       setOpen(false);
-    } catch {
-      toast.error("Network error while creating a book");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create book",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -230,6 +222,21 @@ export default function AddBookDialog() {
                 })}
               />
               <FieldError errors={[form.formState.errors.pagesCount]} />
+            </Field>
+
+            <Field data-invalid={!!form.formState.errors.initialCopies}>
+              <FieldLabel htmlFor="initialCopies">
+                Initial copies
+              </FieldLabel>
+              <Input
+                id="initialCopies"
+                type="number"
+                min="0"
+                {...form.register("initialCopies", {
+                  valueAsNumber: true,
+                })}
+              />
+              <FieldError errors={[form.formState.errors.initialCopies]} />
             </Field>
 
             <Field data-invalid={!!form.formState.errors.repurchasePrice}>

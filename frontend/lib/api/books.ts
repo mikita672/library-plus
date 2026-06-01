@@ -1,6 +1,8 @@
 import {
   AddBookUnitRequest,
+  Book,
   BookCard,
+  CreateBookRequest,
   UpdateBookRequest,
 } from "@/types/book/Book";
 
@@ -107,4 +109,28 @@ export async function deleteBookUnit(unitId: string): Promise<void> {
     const msg = await res.text().catch(() => res.statusText);
     throw new Error(msg || `Failed to delete book unit (${res.status})`);
   }
+}
+
+export async function createBook(body: CreateBookRequest): Promise<Book> {
+  const res = await fetch("/api/books", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => res.statusText);
+    throw new Error(msg || `Failed to create book (${res.status})`);
+  }
+
+  return res.json() as Promise<Book>;
+}
+
+export async function addBookUnits(
+  bookId: string,
+  count: number,
+): Promise<void> {
+  const requests = Array.from({ length: count }, () => addBookUnit(bookId));
+  await Promise.all(requests);
 }

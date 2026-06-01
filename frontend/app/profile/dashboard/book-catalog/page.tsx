@@ -1,51 +1,32 @@
-import BookCatalogTable from "@/components/profile/dashboard/book-catalog/BookCatalogTable";
-import BookCatalogToolbar from "@/components/profile/dashboard/book-catalog/BookCatalogToolbar";
-import { getBooks, GetBooksParams } from "@/lib/api/books";
+"use client";
 
-interface Props {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AuthorsTab from "@/components/profile/dashboard/book-catalog/AuthorsTab";
+import PublishersTab from "@/components/profile/dashboard/book-catalog/PublishersTab";
+import BooksTab from "@/components/profile/dashboard/book-catalog/BooksTab";
 
-export default async function BookCatalogPage({ searchParams }: Props) {
-  const rawParams = await searchParams;
-
-  const params: GetBooksParams = {
-    searchToken: rawParams.searchToken as string | undefined,
-    authorId: rawParams.authorId as string | undefined,
-    publisherId: rawParams.publisherId as string | undefined,
-    categoryIds: Array.isArray(rawParams.categoryIds)
-      ? rawParams.categoryIds
-      : rawParams.categoryIds
-        ? [rawParams.categoryIds]
-        : undefined,
-    minPublicationYear: rawParams.minPublicationYear
-      ? Number(rawParams.minPublicationYear)
-      : undefined,
-    maxPublicationYear: rawParams.maxPublicationYear
-      ? Number(rawParams.maxPublicationYear)
-      : undefined,
-    isAvailable: rawParams.isAvailable
-      ? rawParams.isAvailable === "true"
-      : undefined,
-    pageNumber: rawParams.pageNumber ? Number(rawParams.pageNumber) : 1,
-    sortBy: rawParams.sortBy as string | undefined,
-    sortDescending: rawParams.sortDescending
-      ? rawParams.sortDescending === "true"
-      : undefined,
-  };
-
-  const { books, error } = await getBooks(params, process.env.API_URL).then(
-    (books) => ({ books, error: false }),
-    () => ({ books: [], error: true }),
-  );
-
+export default function BookCatalogPage() {
   return (
     <section className="space-y-4">
-      <BookCatalogToolbar />
-      {error ? (
-        <div className="text-destructive">Failed to fetch books</div>
-      ) : null}
-      <BookCatalogTable books={books} />
+      <Tabs defaultValue="books">
+        <TabsList>
+          <TabsTrigger value="authors">Authors</TabsTrigger>
+          <TabsTrigger value="publishers">Publishers</TabsTrigger>
+          <TabsTrigger value="books">Books</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="authors">
+          <AuthorsTab />
+        </TabsContent>
+
+        <TabsContent value="publishers">
+          <PublishersTab />
+        </TabsContent>
+
+        <TabsContent value="books">
+          <BooksTab />
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }

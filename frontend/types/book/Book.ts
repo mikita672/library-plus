@@ -68,3 +68,19 @@ export interface BookCard {
 export interface AddBookUnitRequest {
   bookId: string;
 }
+
+export interface CreateBookRequest {
+  title: string;
+  description: string;
+  language: string;
+  publicationYear: number;
+  pagesCount: number;
+  repurchasePrice: number;
+  categoryIds: string[];
+  authorId?: string | null;
+  publisherId?: string | null;
+  originalTitle?: string | null;
+  originalLanguage?: string | null;
+  originalPublicationYear?: number | null;
+  originalPublisherId?: string | null;
+}
