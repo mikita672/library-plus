@@ -5,10 +5,12 @@ import { useCallback, useEffect, useState, type SubmitEvent } from "react";
 
 import { getAuthors } from "@/lib/api/authors";
 import { getBookPages, getBooks, type GetBooksParams } from "@/lib/api/books";
+import { getCategories } from "@/lib/api/categories";
 import { getPublishers } from "@/lib/api/publishers";
 
 import { Author } from "@/types/book/Author";
 import { BookCard } from "@/types/book/Book";
+import { Category } from "@/types/book/Category";
 import { Publisher } from "@/types/book/Publisher";
 
 import AddBookDialog from "./AddBookDialog";
@@ -44,6 +46,7 @@ export default function BooksTab() {
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [inputValue, setInputValue] = useState("");
   const [searchToken, setSearchToken] = useState("");
@@ -52,6 +55,7 @@ export default function BooksTab() {
 
   const [authorId, setAuthorId] = useState<string>("all");
   const [publisherId, setPublisherId] = useState<string>("all");
+  const [categoryId, setCategoryId] = useState<string>("all");
   const [isAvailable, setIsAvailable] = useState<string>("all");
   const [minYear, setMinYear] = useState<string>("");
   const [maxYear, setMaxYear] = useState<string>("");
@@ -59,9 +63,14 @@ export default function BooksTab() {
   useEffect(() => {
     const loadLookups = async () => {
       try {
-        const [a, p] = await Promise.all([getAuthors(), getPublishers()]);
+        const [a, p, c] = await Promise.all([
+          getAuthors(),
+          getPublishers(),
+          getCategories(),
+        ]);
         setAuthors(a);
         setPublishers(p);
+        setCategories(c);
       } catch (err) {
         console.error("Failed to load lookups", err);
       }
@@ -89,6 +98,7 @@ export default function BooksTab() {
         ...(searchToken ? { searchToken } : {}),
         ...(authorId !== "all" ? { authorId } : {}),
         ...(publisherId !== "all" ? { publisherId } : {}),
+        ...(categoryId !== "all" ? { categoryIds: [categoryId] } : {}),
         ...(isAvailable !== "all"
           ? { isAvailable: isAvailable === "true" }
           : {}),
@@ -112,6 +122,7 @@ export default function BooksTab() {
     searchToken,
     authorId,
     publisherId,
+    categoryId,
     isAvailable,
     minYear,
     maxYear,
@@ -140,6 +151,7 @@ export default function BooksTab() {
     setSearchToken("");
     setAuthorId("all");
     setPublisherId("all");
+    setCategoryId("all");
     setIsAvailable("all");
     setMinYear("");
     setMaxYear("");
@@ -208,6 +220,26 @@ export default function BooksTab() {
                   {publishers.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select
+                value={categoryId}
+                onValueChange={(v) => handleFilterChange(setCategoryId, v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

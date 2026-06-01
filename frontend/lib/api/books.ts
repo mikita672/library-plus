@@ -2,6 +2,7 @@ import {
   AddBookUnitRequest,
   Book,
   BookCard,
+  BookPreview,
   CreateBookRequest,
   UpdateBookRequest,
 } from "@/types/book/Book";
@@ -67,6 +68,14 @@ export async function getBookPages(
   const res = await fetch(url, { method: "GET", cache: "no-store" });
   if (!res.ok) return 1;
   return res.json() as Promise<number>;
+}
+
+export async function getBookById(id: string): Promise<BookPreview> {
+  const res = await fetch(`/api/books/book/${id}`, { method: "GET", cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch book (${res.status})`);
+  }
+  return res.json() as Promise<BookPreview>;
 }
 
 export async function updateBook(

@@ -6,10 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@phosphor-icons/react";
 import { z } from "zod";
 import { toast } from "sonner";
-
+import { getAuthors } from "@/lib/api/authors";
 import { createBook, addBookUnits } from "@/lib/api/books";
-
+import { getCategories } from "@/lib/api/categories";
+import { getPublishers } from "@/lib/api/publishers";
 import { Author } from "@/types/book/Author";
+import { Category } from "@/types/book/Category";
 import { Publisher } from "@/types/book/Publisher";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +49,7 @@ const createBookSchema = z.object({
   initialCopies: z.number().int().min(0, "Cannot be negative"),
   authorId: z.string().optional(),
   publisherId: z.string().optional(),
+  categoryId: z.string().optional(),
   originalTitle: z.string().optional(),
   originalLanguage: z.string().optional(),
   originalPublicationYear: z.number().int().min(1).optional(),
@@ -66,6 +69,7 @@ export default function AddBookDialog() {
   const [loadingLookups, setLoadingLookups] = useState(false);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const form = useForm<CreateBookFormValues>({
     resolver: zodResolver(createBookSchema),
@@ -80,6 +84,7 @@ export default function AddBookDialog() {
       initialCopies: 1,
       authorId: "",
       publisherId: "",
+      categoryId: "",
       originalTitle: "",
       originalLanguage: "",
       originalPublicationYear: undefined,
@@ -91,22 +96,16 @@ export default function AddBookDialog() {
     const loadLookups = async () => {
       setLoadingLookups(true);
       try {
-        const [authorsResponse, publishersResponse] = await Promise.all([
-          fetch("/api/authors", { method: "GET" }),
-          fetch("/api/publishers", { method: "GET" }),
+        const [a, p, c] = await Promise.all([
+          getAuthors(),
+          getPublishers(),
+          getCategories(),
         ]);
-
-        if (authorsResponse.ok) {
-          const data = (await authorsResponse.json()) as Author[];
-          setAuthors(data ?? []);
-        }
-
-        if (publishersResponse.ok) {
-          const data = (await publishersResponse.json()) as Publisher[];
-          setPublishers(data ?? []);
-        }
+        setAuthors(a);
+        setPublishers(p);
+        setCategories(c);
       } catch {
-        toast.error("Failed to load authors and publishers");
+        toast.error("Failed to load metadata");
       } finally {
         setLoadingLookups(false);
       }
@@ -127,7 +126,10 @@ export default function AddBookDialog() {
       publicationYear: values.publicationYear,
       pagesCount: values.pagesCount,
       repurchasePrice: values.repurchasePrice,
-      categoryIds: [],
+      categoryIds:
+        values.categoryId && values.categoryId !== "none"
+          ? [values.categoryId]
+          : [],
       authorId: nullableString(values.authorId),
       publisherId: nullableString(values.publisherId),
       originalTitle: nullableString(values.originalTitle),
@@ -294,6 +296,29 @@ export default function AddBookDialog() {
                   {publishers.map((publisher) => (
                     <SelectItem key={publisher.id} value={publisher.id}>
                       {publisher.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="categoryId">Category</FieldLabel>
+              <Select
+                disabled={loadingLookups}
+                value={form.watch("categoryId") || "none"}
+                onValueChange={(value) =>
+                  form.setValue("categoryId", value === "none" ? "" : value)
+                }
+              >
+                <SelectTrigger id="categoryId">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

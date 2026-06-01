@@ -23,10 +23,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { getAuthors } from "@/lib/api/authors";
-import { addBookUnits, updateBook } from "@/lib/api/books";
+import { addBookUnits, getBookById, updateBook } from "@/lib/api/books";
+import { getCategories } from "@/lib/api/categories";
 import { getPublishers } from "@/lib/api/publishers";
 import { Author } from "@/types/book/Author";
 import { BookCard, UpdateBookRequest } from "@/types/book/Book";
+import { Category } from "@/types/book/Category";
 import { Publisher } from "@/types/book/Publisher";
 
 interface EditBookModalProps {
@@ -51,9 +53,12 @@ export default function EditBookModal({
   const [publicationYear, setPublicationYear] = useState<number | "">("");
   const [authorId, setAuthorId] = useState<string>("none");
   const [publisherId, setPublisherId] = useState<string>("none");
+  const [categoryId, setCategoryId] = useState<string>("none");
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   const [copiesToAdd, setCopiesToAdd] = useState(1);
   const [unitsAddedThisSession, setUnitsAddedThisSession] = useState(0);
@@ -64,14 +69,14 @@ export default function EditBookModal({
     const loadLookups = async () => {
       setLoadingLookups(true);
       try {
-        const [authorsData, publishersData] = await Promise.all([
-          getAuthors(),
-          getPublishers(),
-        ]);
+        const [authorsData, publishersData, categoriesData] = await Promise.all(
+          [getAuthors(), getPublishers(), getCategories()],
+        );
         setAuthors(authorsData);
         setPublishers(publishersData);
+        setCategories(categoriesData);
       } catch {
-        toast.error("Failed to load authors and publishers");
+        toast.error("Failed to load metadata lookups");
       } finally {
         setLoadingLookups(false);
       }
@@ -89,6 +94,21 @@ export default function EditBookModal({
       setUnitsAddedThisSession(0);
       setAuthorId("none");
       setPublisherId("none");
+      setCategoryId("none");
+
+      const loadDetails = async () => {
+        setLoadingDetails(true);
+        try {
+          const details = await getBookById(book.id);
+          if (details.categories && details.categories.length > 0) {
+            setCategoryId(details.categories[0].id);
+          }
+        } catch {
+        } finally {
+          setLoadingDetails(false);
+        }
+      };
+      void loadDetails();
     }
   }, [book]);
 
@@ -110,6 +130,7 @@ export default function EditBookModal({
         typeof publicationYear === "number" ? publicationYear : undefined,
       authorId: authorId === "none" ? null : authorId,
       publisherId: publisherId === "none" ? null : publisherId,
+      categoryIds: categoryId === "none" ? [] : [categoryId],
     };
 
     try {
@@ -201,6 +222,31 @@ export default function EditBookModal({
                 {publishers.map((publisher) => (
                   <SelectItem key={publisher.id} value={publisher.id}>
                     {publisher.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Category</Label>
+            <Select
+              value={categoryId}
+              onValueChange={setCategoryId}
+              disabled={loadingLookups || loadingDetails}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue
+                  placeholder={
+                    loadingDetails ? "Loading..." : "Select category"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No category</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
