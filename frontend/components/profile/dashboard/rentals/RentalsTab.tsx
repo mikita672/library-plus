@@ -12,6 +12,7 @@ import { getUserById } from "@/lib/api/users";
 import { EnrichedReservationItem } from "@/types/reservation/Reservation";
 
 import RentalsTable from "./RentalsTable";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -156,32 +157,14 @@ export default function RentalsTab() {
           Failed to fetch reservations
         </div>
       ) : (
-        <>
+        <div className="min-h-[600px] flex flex-col justify-between">
           <RentalsTable reservations={allReservations} onRefresh={fetchData} />
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageNumber <= 1}
-                onClick={() => setPageNumber((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {pageNumber} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageNumber >= totalPages}
-                onClick={() => setPageNumber((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
+          <PaginationControls
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            onPageChange={setPageNumber}
+          />
+        </div>
       )}
     </div>
   );

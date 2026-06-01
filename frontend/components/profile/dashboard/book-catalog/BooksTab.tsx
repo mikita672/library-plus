@@ -25,13 +25,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import {
   Select,
   SelectContent,
@@ -300,44 +294,14 @@ export default function BooksTab() {
       ) : error ? (
         <div className="text-destructive py-8">Failed to fetch books</div>
       ) : (
-        <>
+        <div className="min-h-[600px] flex flex-col justify-between">
           <BookCatalogTable books={books} />
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (pageNumber > 1) setPageNumber((p) => p - 1);
-                    }}
-                    className={
-                      pageNumber <= 1 ? "pointer-events-none opacity-50" : ""
-                    }
-                  />
-                </PaginationItem>
-                <span className="text-sm text-muted-foreground px-4">
-                  Page {pageNumber} of {totalPages}
-                </span>
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (pageNumber < totalPages) setPageNumber((p) => p + 1);
-                    }}
-                    className={
-                      pageNumber >= totalPages
-                        ? "pointer-events-none opacity-50"
-                        : ""
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
-        </>
+          <PaginationControls
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            onPageChange={setPageNumber}
+          />
+        </div>
       )}
     </div>
   );

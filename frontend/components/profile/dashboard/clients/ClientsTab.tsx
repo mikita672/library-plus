@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ClientsTable from "./ClientsTable";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 export default function ClientsTab() {
   const searchParams = useSearchParams();
@@ -46,32 +47,14 @@ export default function ClientsTab() {
       ) : error ? (
         <div className="text-destructive py-8">Failed to fetch users</div>
       ) : (
-        <>
+        <div className="min-h-[600px] flex flex-col justify-between">
           <ClientsTable users={users} onRefresh={refetch} />
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageNumber <= 1}
-                onClick={() => setPageNumber((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {pageNumber} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageNumber >= totalPages}
-                onClick={() => setPageNumber((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
+          <PaginationControls
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            onPageChange={setPageNumber}
+          />
+        </div>
       )}
     </div>
   );
