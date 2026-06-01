@@ -55,6 +55,20 @@ export async function getBooks(
   return res.json() as Promise<BookCard[]>;
 }
 
+export async function getBookPages(
+  params: GetBooksParams,
+  baseUrl?: string,
+): Promise<number> {
+  const sp = buildSearchParams(params);
+  const url = baseUrl
+    ? `${baseUrl}/books/pages?${sp.toString()}`
+    : `/api/books/pages?${sp.toString()}`;
+
+  const res = await fetch(url, { method: "GET", cache: "no-store" });
+  if (!res.ok) return 1;
+  return res.json() as Promise<number>;
+}
+
 export async function updateBook(
   id: string,
   body: UpdateBookRequest,
