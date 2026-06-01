@@ -1,7 +1,9 @@
 "use client";
 
-import { AdminUser, getAllUsers, getAllUsersPages } from "@/lib/api/users";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useDebounce } from "@/hooks/useDebounce";
+import { useClients } from "@/hooks/useClients";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,41 +11,14 @@ import { Label } from "@/components/ui/label";
 import ClientsTable from "./ClientsTable";
 
 export default function ClientsTab() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchToken, setSearchToken] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebounce(searchToken, 300);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchToken);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchToken]);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const [data, pages] = await Promise.all([
-        getAllUsers(pageNumber, debouncedSearch),
-        getAllUsersPages(debouncedSearch),
-      ]);
-      setUsers(data);
-      setTotalPages(Math.max(1, pages));
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [pageNumber, debouncedSearch]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  const { users, loading, error, totalPages, refetch } = useClients(
+    pageNumber,
+    debouncedSearch,
+  );
 
   useEffect(() => {
     setPageNumber(1);
@@ -68,7 +43,7 @@ export default function ClientsTab() {
         <div className="text-destructive py-8">Failed to fetch users</div>
       ) : (
         <>
-          <ClientsTable users={users} onRefresh={fetchData} />
+          <ClientsTable users={users} onRefresh={refetch} />
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 pt-2">
               <Button
