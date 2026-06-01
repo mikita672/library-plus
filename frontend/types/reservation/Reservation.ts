@@ -16,3 +16,9 @@ export interface ReservationItem {
   repurchasePrice: number;
   createdAt: string;
 }
+
+export interface EnrichedReservationItem extends ReservationItem {
+  clientName: string;
+  clientEmail: string;
+  bookTitle: string;
+}

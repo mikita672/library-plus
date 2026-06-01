@@ -1,15 +1,13 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react";
 import {
+  ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   useReactTable,
-  type ColumnDef,
-  type SortingState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,9 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ReservationItem } from "@/types/reservation/Reservation";
-
-import { BookTitleCell, ClientNameCell } from "./AsyncTableCells";
+import { EnrichedReservationItem } from "@/types/reservation/Reservation";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -70,34 +66,61 @@ function StatusBadge({ status }: { status: string }) {
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold ${colorClasses}`}
+      className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${colorClasses}`}
     >
       {label}
     </span>
   );
 }
 
-function buildColumns(): ColumnDef<ReservationItem>[] {
+function buildColumns(): ColumnDef<EnrichedReservationItem>[] {
   return [
     {
       accessorKey: "userId",
       header: "Client",
-      cell: ({ row }) => <ClientNameCell userId={row.original.userId} />,
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium text-sm">{row.original.clientName}</div>
+          {row.original.clientEmail && (
+            <div className="text-xs text-muted-foreground">
+              {row.original.clientEmail}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       accessorKey: "bookUnitId",
       header: "Book",
-      cell: ({ row }) => <BookTitleCell bookUnitId={row.original.bookUnitId} />,
+      cell: ({ row }) => {
+        const title = row.original.bookTitle;
+        if (
+          title === "Loading..." ||
+          title === "Unknown Book" ||
+          title === "Error"
+        ) {
+          return <span className="text-muted-foreground text-sm">{title}</span>;
+        }
+
+        return (
+          <Link
+            href={`/profile/dashboard/book-catalog?search=${encodeURIComponent(title)}`}
+            className="text-primary text-sm underline underline-offset-2 hover:text-primary/80"
+          >
+            {title}
+          </Link>
+        );
+      },
     },
     {
       accessorKey: "startDate",
       header: "Start Date",
-      cell: ({ row }) => <div>{formatDate(row.original.startDate)}</div>,
+      cell: ({ row }) => formatDate(row.original.startDate),
     },
     {
       accessorKey: "endDate",
       header: "Due Date",
-      cell: ({ row }) => <div>{formatDate(row.original.endDate)}</div>,
+      cell: ({ row }) => formatDate(row.original.endDate),
     },
     {
       accessorKey: "status",
@@ -106,17 +129,11 @@ function buildColumns(): ColumnDef<ReservationItem>[] {
     },
     {
       id: "actions",
-      enableHiding: false,
+      header: "Actions",
       cell: () => {
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            disabled
-            aria-label="Manage reservation"
-          >
-            <DotsThreeIcon className="h-4 w-4" />
+          <Button variant="outline" size="sm" disabled>
+            Manage
           </Button>
         );
       },
@@ -124,22 +141,17 @@ function buildColumns(): ColumnDef<ReservationItem>[] {
   ];
 }
 
-interface Props {
-  reservations: ReservationItem[];
-}
-
-export default function RentalsTable({ reservations }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-
-  const columns = buildColumns();
+export default function RentalsTable({
+  reservations,
+}: {
+  reservations: EnrichedReservationItem[];
+}) {
+  const columns = useMemo(() => buildColumns(), []);
 
   const table = useReactTable({
     data: reservations,
     columns,
-    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: { sorting },
   });
 
   if (!reservations.length) {

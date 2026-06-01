@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { getBookById, getBookUnitById } from "@/lib/api/books";
 import {
   GetReservationsParams,
   getReservationPages,
   getReservations,
 } from "@/lib/api/reservations";
-import { ReservationItem } from "@/types/reservation/Reservation";
+import { getUserById } from "@/lib/api/users";
+import { EnrichedReservationItem } from "@/types/reservation/Reservation";
 
 import RentalsTable from "./RentalsTable";
 
@@ -30,7 +32,9 @@ const STATUS_OPTIONS = [
 ];
 
 export default function RentalsTab() {
-  const [allReservations, setAllReservations] = useState<ReservationItem[]>([]);
+  const [allReservations, setAllReservations] = useState<
+    EnrichedReservationItem[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -51,7 +55,47 @@ export default function RentalsTab() {
         getReservations(params),
         getReservationPages(params),
       ]);
-      setAllReservations(data);
+
+      const uniqueUserIds = Array.from(new Set(data.map((r) => r.userId)));
+      const uniqueUnitIds = Array.from(new Set(data.map((r) => r.bookUnitId)));
+
+      const usersData = await Promise.all(
+        uniqueUserIds.map((id) =>
+          getUserById(id)
+            .then((u) => ({ id, user: u }))
+            .catch(() => ({ id, user: null })),
+        ),
+      );
+      const userMap = Object.fromEntries(
+        usersData.map(({ id, user }) => [id, user]),
+      );
+
+      const unitsData = await Promise.all(
+        uniqueUnitIds.map((id) =>
+          getBookUnitById(id)
+            .then(async (unit) => {
+              if (!unit) return { id, title: "Unknown Book" };
+              const book = await getBookById(unit.bookId).catch(() => null);
+              return { id, title: book ? book.title : "Unknown Book" };
+            })
+            .catch(() => ({ id, title: "Error" })),
+        ),
+      );
+      const unitTitleMap = Object.fromEntries(
+        unitsData.map(({ id, title }) => [id, title]),
+      );
+
+      const enrichedData: EnrichedReservationItem[] = data.map((r) => {
+        const u = userMap[r.userId];
+        return {
+          ...r,
+          clientName: u?.name || "Unknown User",
+          clientEmail: u?.email || "",
+          bookTitle: unitTitleMap[r.bookUnitId] || "Unknown Book",
+        };
+      });
+
+      setAllReservations(enrichedData);
       setTotalPages(Math.max(1, pages));
     } catch {
       setError(true);
@@ -100,9 +144,7 @@ export default function RentalsTab() {
       </div>
 
       {loading ? (
-        <div className="text-center text-muted-foreground py-8">
-          Loading...
-        </div>
+        <div className="text-center text-muted-foreground py-8">Loading...</div>
       ) : error ? (
         <div className="text-destructive py-8">
           Failed to fetch reservations
