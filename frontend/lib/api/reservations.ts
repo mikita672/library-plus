@@ -33,3 +33,22 @@ export async function getReservationPages(
   if (!res.ok) return 1;
   return res.json() as Promise<number>;
 }
+
+export interface ReturnReservationPayload {
+  bookConditionUponReturn: string;
+  additionalNote: string;
+  startDate: string;
+  endDate: string;
+}
+
+export async function returnReservation(
+  id: string,
+  payload: ReturnReservationPayload,
+): Promise<boolean> {
+  const res = await fetch(`/api/reservations/reservation/${id}/return`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return res.ok;
+}

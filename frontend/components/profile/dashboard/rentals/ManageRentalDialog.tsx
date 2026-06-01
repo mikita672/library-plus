@@ -1,8 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { useMemo, useState } from "react";
-
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { returnReservation } from "@/lib/api/reservations";
 import { EnrichedReservationItem } from "@/types/reservation/Reservation";
 
 interface Props {
@@ -52,16 +54,22 @@ const rentalSchema = z
   .object({
     startDateStr: dateSchema,
     endDateStr: dateSchema,
+    condition: z.string(),
+    note: z.string(),
   })
   .refine(
     (data) => {
       const parseDate = (str: string) => {
         const parts = str.split("/");
-        return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+        return new Date(
+          Number(parts[2]),
+          Number(parts[1]) - 1,
+          Number(parts[0]),
+        );
       };
       const start = parseDate(data.startDateStr);
       const end = parseDate(data.endDateStr);
-      
+
       if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
       return start.getTime() <= end.getTime();
     },
@@ -71,28 +79,39 @@ const rentalSchema = z
     },
   );
 
+type FormValues = z.infer<typeof rentalSchema>;
+
 export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
-  const [condition, setCondition] = useState<string>("Good");
-  const [note, setNote] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const [startDateStr, setStartDateStr] = useState<string>("");
-  const [endDateStr, setEndDateStr] = useState<string>("");
-  const [validationError, setValidationError] = useState<string>("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(rentalSchema),
+    defaultValues: {
+      startDateStr: "",
+      endDateStr: "",
+      condition: "Good",
+      note: "",
+    },
+  });
 
-  useMemo(() => {
+  useEffect(() => {
     if (reservation) {
-      setCondition(reservation.bookConditionUponReturn || "Good");
-      setNote(reservation.additionalNote || "");
-      setStartDateStr(formatDate(reservation.startDate));
-      setEndDateStr(formatDate(reservation.endDate));
+      form.reset({
+        startDateStr: formatDate(reservation.startDate),
+        endDateStr: formatDate(reservation.endDate),
+        condition: reservation.bookConditionUponReturn || "Good",
+        note: reservation.additionalNote || "",
+      });
     }
-  }, [reservation]);
+  }, [reservation, form]);
 
   if (!reservation) return null;
 
+  const { startDateStr, endDateStr, condition, note } = form.watch();
+
   const parseDateStr = (dateStr: string, fallbackIso: string) => {
     try {
+      if (!dateStr) return new Date(fallbackIso);
       const parts = dateStr.split("/");
       if (parts.length === 3) {
         const d = new Date(
@@ -131,44 +150,33 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     condition === "Lost/Destroyed" ? reservation.repurchasePrice : 0;
   const totalFine = overdueFine + conditionFine;
 
-  const handleDateChange = (val: string, setter: (v: string) => void) => {
-    setter(val.replace(/[^\d/]/g, ""));
+  const handleDateChange = (val: string, onChange: (v: string) => void) => {
+    onChange(val.replace(/[^\d/]/g, ""));
   };
 
-  const handleReturn = async () => {
-    setValidationError("");
+  const onSubmit = async (data: FormValues) => {
+    setLoading(true);
 
-    const validation = rentalSchema.safeParse({ startDateStr, endDateStr });
-    if (!validation.success) {
-      setValidationError(validation.error.issues[0].message);
-      return;
-    }
-
-    const partsStart = startDateStr.split("/");
+    const partsStart = data.startDateStr.split("/");
     const startObj = new Date(
       Number(partsStart[2]),
       Number(partsStart[1]) - 1,
       Number(partsStart[0]),
     );
 
-    const partsEnd = endDateStr.split("/");
+    const partsEnd = data.endDateStr.split("/");
     const endObj = new Date(
       Number(partsEnd[2]),
       Number(partsEnd[1]) - 1,
       Number(partsEnd[0]),
     );
 
-    setLoading(true);
     try {
-      await fetch(`/api/reservations/reservation/${reservation.id}/return`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookConditionUponReturn: condition,
-          additionalNote: note,
-          startDate: startObj.toISOString(),
-          endDate: endObj.toISOString(),
-        }),
+      await returnReservation(reservation.id, {
+        bookConditionUponReturn: data.condition,
+        additionalNote: data.note,
+        startDate: startObj.toISOString(),
+        endDate: endObj.toISOString(),
       });
       onSuccess();
       onClose();
@@ -186,7 +194,10 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
           <DialogTitle>Manage Rental</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2"
+        >
           <div className="space-y-4">
             <h2 className="text-xl font-bold">{reservation.bookTitle}</h2>
             <div className="text-sm space-y-1">
@@ -217,24 +228,50 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
             <div className="space-y-4">
               <h3 className="font-bold text-lg">Rental period</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>From</Label>
-                  <Input
-                    value={startDateStr}
-                    onChange={(e) => handleDateChange(e.target.value, setStartDateStr)}
-                    placeholder="DD/MM/YYYY"
-                    className="rounded-none bg-transparent"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>To</Label>
-                  <Input
-                    value={endDateStr}
-                    onChange={(e) => handleDateChange(e.target.value, setEndDateStr)}
-                    placeholder="DD/MM/YYYY"
-                    className="rounded-none bg-transparent"
-                  />
-                </div>
+                <Controller
+                  name="startDateStr"
+                  control={form.control}
+                  render={({ field }) => (
+                    <div className="space-y-1">
+                      <Label>From</Label>
+                      <Input
+                        value={field.value}
+                        onChange={(e) =>
+                          handleDateChange(e.target.value, field.onChange)
+                        }
+                        placeholder="DD/MM/YYYY"
+                        className="rounded-none bg-transparent"
+                      />
+                      {form.formState.errors.startDateStr && (
+                        <p className="text-destructive text-xs font-medium">
+                          {form.formState.errors.startDateStr.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
+                <Controller
+                  name="endDateStr"
+                  control={form.control}
+                  render={({ field }) => (
+                    <div className="space-y-1">
+                      <Label>To</Label>
+                      <Input
+                        value={field.value}
+                        onChange={(e) =>
+                          handleDateChange(e.target.value, field.onChange)
+                        }
+                        placeholder="DD/MM/YYYY"
+                        className="rounded-none bg-transparent"
+                      />
+                      {form.formState.errors.endDateStr && (
+                        <p className="text-destructive text-xs font-medium">
+                          {form.formState.errors.endDateStr.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
               </div>
 
               <div className="text-sm space-y-1 mt-4">
@@ -258,27 +295,39 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <h3 className="font-bold text-lg">Rental details</h3>
               <div className="space-y-2 flex items-center gap-4">
                 <Label>Book condition:</Label>
-                <Select value={condition} onValueChange={setCondition}>
-                  <SelectTrigger className="w-[180px] rounded-none bg-transparent">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-none">
-                    {CONDITIONS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="condition"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-[180px] rounded-none bg-transparent">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        {CONDITIONS.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label>Additional note:</Label>
-                <Textarea
-                  placeholder="Enter additional noted regarding this rental"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="min-h-[120px] resize-none rounded-none bg-transparent"
+                <Controller
+                  name="note"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Textarea
+                      placeholder="Enter additional noted regarding this rental"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="min-h-[120px] resize-none rounded-none bg-transparent"
+                    />
+                  )}
                 />
               </div>
             </div>
@@ -310,19 +359,20 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               </div>
 
               <div className="flex flex-col gap-2">
-                {validationError && (
+                {form.formState.errors.root && (
                   <p className="text-destructive text-sm font-medium mb-1">
-                    {validationError}
+                    {form.formState.errors.root.message}
                   </p>
                 )}
                 <Button
+                  type="submit"
                   className="w-full py-6 text-lg rounded-none shadow-none"
-                  onClick={handleReturn}
                   disabled={loading}
                 >
                   {totalFine > 0 ? "Request payment" : "Process return"}
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   className="w-full py-6 text-lg rounded-none"
                   onClick={onClose}
@@ -333,7 +383,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               </div>
             </div>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
