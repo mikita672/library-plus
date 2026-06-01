@@ -22,7 +22,7 @@ const links = [
 const dashboardLinks = [
   {
     href: "/profile/dashboard/book-catalog",
-    label: "Book Catalog",
+    label: "Book Management",
     icon: BooksIcon,
   },
   {
