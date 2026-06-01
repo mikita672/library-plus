@@ -5,13 +5,14 @@ import BookEntry from "@/components/checkout/BookEntry";
 import { Button } from "@/components/ui/button";
 import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
-import { addDays, format, setDate } from "date-fns";
+import { addDays, endOfDay, format, setDate } from "date-fns";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
+import { toast } from "sonner";
 
 function CheckoutPage() {
-    const { bookIds } = useContext(cartContext);
+    const { bookIds, removeBook } = useContext(cartContext);
     const [isLoading, setIsLoading] = useState(true);
     const [books, setBooks] = useState<BookCard[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -85,6 +86,47 @@ function CheckoutPage() {
         setDateRanges(newDateRanges);
     }
 
+    const handleReservation = async () => {
+        const requests: Promise<Response>[] = [];
+        for (const book of booksThatCanBeReserved) {
+            const dateRange = dateRanges[book.id];
+            if (dateRange?.from === undefined || dateRange?.to === undefined) {
+                return;
+            }
+            requests.push(fetch('/api/reservations', {
+                method: "POST",
+                body: JSON.stringify({
+                    bookId: book.id,
+                    startDate: dateRange.from,
+                    endDate: dateRange.to,
+                }),
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                }
+            }));
+        }
+        const responses = await Promise.allSettled(requests);
+        const reservedBooksIds = [];
+        let i = 0;
+        for (const response of responses) {
+            const bookId = booksThatCanBeReserved[i].id;
+            i++;
+            if (response.status === 'rejected' || !response.value.ok) {
+                continue;
+            }
+            reservedBooksIds.push(bookId);
+        }
+        if (reservedBooksIds.length === 0) {
+            toast.error("Failed to reserve books");
+        } else {
+            toast.success(`Reserved ${reservedBooksIds.length} books`);
+        }
+        for (const bookId of reservedBooksIds) {
+            removeBook(bookId);
+        }
+    }
+
     return (
         <div className="w-full min-h-[70vh] bg-card px-6 py-4 grid grid-cols-3 gap-6">
             <div className="col-span-2 h-full flex flex-col gap-4">
@@ -149,6 +191,7 @@ function CheckoutPage() {
 
                             <Button
                                 className="bg-primary text-lg font-bold cursor-pointer py-4"
+                                onClick={handleReservation}
                             >
                                 Reserve
                             </Button>
