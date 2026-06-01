@@ -41,6 +41,15 @@ public static class BookEndpoints
             );
         });
 
+
+        group.MapPost("/multiple", async (
+            [FromBody] string[] ids,
+            BookService bookService
+        ) =>
+        {
+            return await bookService.GetMultipleByIds([.. ids]);
+        });
+
         group.MapGet("/pages", async (
             [FromQuery] string? searchToken,
             [FromQuery] string? authorId,
@@ -58,7 +67,8 @@ public static class BookEndpoints
                 publisherId,
                 categoryIds?.ToList(),
                 minPublicationYear,
-                maxPublicationYear
+                maxPublicationYear,
+                isAvailable
             );
         });
 
@@ -75,7 +85,7 @@ public static class BookEndpoints
             string id
         ) =>
         {
-            return await bookService.GetBookById(id);
+            return await bookService.GetBookPreviewById(id);
         });
 
         group.MapPost("/", [Authorize] async (
@@ -132,6 +142,22 @@ public static class BookEndpoints
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/booksByAuthor/{authorId}", async (
+            BookService bookService,
+            [FromQuery] string? excludedBookId,
+            string authorId
+        ) =>
+        {
+            return await bookService.GetBooksByAuthor(authorId, excludedBookId);
+        });
+
+        group.MapGet("/popular", async (
+            BookService bookService
+        ) =>
+        {
+            return await bookService.GetPopularBooks();
+        });
 
     }
 }

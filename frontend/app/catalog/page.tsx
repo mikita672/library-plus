@@ -1,4 +1,4 @@
-import BookResults from '@/components/catalog/BookResults'
+import BookResults from '@/components/catalog/book-results/BookResults'
 import FiltersSideBar from '@/components/catalog/FiltersSideBar'
 import ResultsPagination from '@/components/catalog/results-pagination/ResultsPagination';
 import SearchBar from '@/components/catalog/SearchBar'

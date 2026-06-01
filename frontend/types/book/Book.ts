@@ -1,3 +1,7 @@
+import { Author } from "./Author";
+import { Category } from "./Category";
+import { Publisher } from "./Publisher";
+
 export interface Book {
   id: string;
   title: string;
@@ -30,6 +34,24 @@ export interface UpdateBookRequest {
   originalLanguage?: string | null;
   originalPublicationYear?: number | null;
   originalPublisherId?: string | null;
+}
+
+export interface BookPreview {
+  id: string;
+  title: string;
+  description: string;
+  author?: Author;
+  publisher?: Publisher;
+  language: string;
+  publicationYear: number;
+  pagesCount: number;
+  categories: Category[];
+  originalTitle?: string;
+  originalLanguage?: string;
+  originalPublicationYear?: number;
+  originalPublisher?: Publisher;
+  coverURI?: string;
+  isAvailable: boolean;
 }
 
 export interface BookCard {
