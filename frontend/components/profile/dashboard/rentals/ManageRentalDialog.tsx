@@ -181,7 +181,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
 
   return (
     <Dialog open={!!reservation} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl sm:max-w-4xl rounded-none bg-[#f2efe9] border-none p-8">
+      <DialogContent className="max-w-4xl sm:max-w-4xl rounded-none border-none p-8">
         <DialogHeader className="hidden">
           <DialogTitle>Manage Rental</DialogTitle>
         </DialogHeader>
@@ -316,7 +316,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                   </p>
                 )}
                 <Button
-                  className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white py-6 text-lg rounded-none shadow-none"
+                  className="w-full py-6 text-lg rounded-none shadow-none"
                   onClick={handleReturn}
                   disabled={loading}
                 >
@@ -324,7 +324,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full py-6 text-lg rounded-none text-[#4CAF50] border-[#4CAF50] hover:bg-[#4CAF50]/10 bg-white"
+                  className="w-full py-6 text-lg rounded-none"
                   onClick={onClose}
                   disabled={loading}
                 >
