@@ -149,14 +149,15 @@ export default function BooksTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <form onSubmit={handleSearch} className="flex flex-1 max-w-sm gap-2">
+        <form onSubmit={handleSearch} className="flex flex-1 max-w mr-4 gap-2">
           <Input
+            className="h-10 text-base"
             placeholder="Search books..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <Button type="submit" variant="outline" size="icon">
-            <MagnifyingGlassIcon className="h-4 w-4" />
+          <Button type="submit" variant="outline" className="h-10 w-10 p-0">
+            <MagnifyingGlassIcon className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
         </form>
@@ -259,9 +260,7 @@ export default function BooksTab() {
       </Collapsible>
 
       {loading ? (
-        <div className="text-center text-muted-foreground py-8">
-          Loading...
-        </div>
+        <div className="text-center text-muted-foreground py-8">Loading...</div>
       ) : error ? (
         <div className="text-destructive py-8">Failed to fetch books</div>
       ) : (
