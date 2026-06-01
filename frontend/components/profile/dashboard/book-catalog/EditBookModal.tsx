@@ -10,13 +10,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { PackageIcon, PlusIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { getAuthors } from "@/lib/api/authors";
 import { addBookUnits, updateBook } from "@/lib/api/books";
+import { getPublishers } from "@/lib/api/publishers";
+import { Author } from "@/types/book/Author";
 import { BookCard, UpdateBookRequest } from "@/types/book/Book";
+import { Publisher } from "@/types/book/Publisher";
 
 interface EditBookModalProps {
   book: BookCard | null;
@@ -33,13 +44,41 @@ export default function EditBookModal({
 }: EditBookModalProps) {
   const [saving, setSaving] = useState(false);
   const [addingUnits, setAddingUnits] = useState(false);
+  const [loadingLookups, setLoadingLookups] = useState(false);
 
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState("");
   const [publicationYear, setPublicationYear] = useState<number | "">("");
+  const [authorId, setAuthorId] = useState<string>("none");
+  const [publisherId, setPublisherId] = useState<string>("none");
+
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [publishers, setPublishers] = useState<Publisher[]>([]);
 
   const [copiesToAdd, setCopiesToAdd] = useState(1);
   const [unitsAddedThisSession, setUnitsAddedThisSession] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const loadLookups = async () => {
+      setLoadingLookups(true);
+      try {
+        const [authorsData, publishersData] = await Promise.all([
+          getAuthors(),
+          getPublishers(),
+        ]);
+        setAuthors(authorsData);
+        setPublishers(publishersData);
+      } catch {
+        toast.error("Failed to load authors and publishers");
+      } finally {
+        setLoadingLookups(false);
+      }
+    };
+
+    void loadLookups();
+  }, [open]);
 
   useEffect(() => {
     if (book) {
@@ -48,8 +87,17 @@ export default function EditBookModal({
       setPublicationYear(book.publicationYear);
       setCopiesToAdd(1);
       setUnitsAddedThisSession(0);
+      setAuthorId("none");
+      setPublisherId("none");
     }
   }, [book]);
+
+  useEffect(() => {
+    if (book && authors.length > 0 && book.authorName) {
+      const match = authors.find((a) => a.name === book.authorName);
+      if (match) setAuthorId(match.id);
+    }
+  }, [book, authors]);
 
   const handleSave = async () => {
     if (!book) return;
@@ -60,6 +108,8 @@ export default function EditBookModal({
       language: language.trim() || null,
       publicationYear:
         typeof publicationYear === "number" ? publicationYear : undefined,
+      authorId: authorId === "none" ? null : authorId,
+      publisherId: publisherId === "none" ? null : publisherId,
     };
 
     try {
@@ -85,9 +135,7 @@ export default function EditBookModal({
       );
       setCopiesToAdd(1);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to add copies",
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to add copies");
     } finally {
       setAddingUnits(false);
     }
@@ -118,15 +166,45 @@ export default function EditBookModal({
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-author" className="text-right">
-              Author
-            </Label>
-            <Input
-              id="edit-author"
-              value={book?.authorName ?? "-"}
-              disabled
-              className="col-span-3"
-            />
+            <Label className="text-right">Author</Label>
+            <Select
+              value={authorId}
+              onValueChange={setAuthorId}
+              disabled={loadingLookups}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select author" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No author</SelectItem>
+                {authors.map((author) => (
+                  <SelectItem key={author.id} value={author.id}>
+                    {author.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Publisher</Label>
+            <Select
+              value={publisherId}
+              onValueChange={setPublisherId}
+              disabled={loadingLookups}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select publisher" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No publisher</SelectItem>
+                {publishers.map((publisher) => (
+                  <SelectItem key={publisher.id} value={publisher.id}>
+                    {publisher.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
