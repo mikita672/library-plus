@@ -166,7 +166,15 @@ function CheckoutPage() {
                     <p className="text-lg">Checkout</p>
 
                     {booksThatCanBeReserved.length === 0 ?
-                        <p>You do not have books that can be reserved right now</p> :
+                        <div className="flex flex-col gap-2">
+                            <p>You do not have books that can be reserved right now</p>
+                            <p>See our catalog for books that are available</p>
+                            <Link href="/catalog">
+                                <Button className="bg-primary text-light cursor-pointer hover:opacity-80 text-lg w-full">
+                                    Browse catalog
+                                </Button>
+                            </Link>
+                        </div> :
                         <div className="w-full flex flex-col gap-4">
                             <div className="w-full flex flex-col gap-1">
                                 <p>Books that can be reserved:</p>
