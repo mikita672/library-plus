@@ -78,8 +78,16 @@ function CheckoutPage() {
         if (newRange?.from !== undefined && newRange.from < today) {
             newRange.from = today;
         }
-        if (newRange?.to !== undefined && newRange?.from !== undefined && newRange.to < newRange.from) {
-            newRange.to = new Date(newRange.from);
+        if (newRange?.from !== undefined && newRange?.to !== undefined) {
+            const THRITY_DAYS = 30 * 24 * 60 * 60 * 1000;
+            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+            if (newRange.to.getTime() - newRange.from.getTime() > THRITY_DAYS) {
+                newRange.to = new Date(newRange.from.getTime() + THRITY_DAYS);
+            } else if (newRange.to.getTime() - newRange.from.getTime() < SEVEN_DAYS) {
+                newRange.to = new Date(newRange.from.getTime() + SEVEN_DAYS);
+            } else if (newRange.to < newRange.from) {
+                newRange.to = new Date(newRange.from);
+            }
         }
         const newDateRanges = { ...dateRanges };
         newDateRanges[id] = newRange;
@@ -169,11 +177,13 @@ function CheckoutPage() {
                         <div className="flex flex-col gap-2">
                             <p>You do not have books that can be reserved right now</p>
                             <p>See our catalog for books that are available</p>
-                            <Link href="/catalog">
-                                <Button className="bg-primary text-light cursor-pointer hover:opacity-80 text-lg w-full">
-                                    Browse catalog
-                                </Button>
-                            </Link>
+                            {bookIds.length === 0 ? <></> :
+                                <Link href="/catalog">
+                                    <Button className="bg-primary text-light cursor-pointer hover:opacity-80 text-lg w-full">
+                                        Browse catalog
+                                    </Button>
+                                </Link>
+                            }
                         </div> :
                         <div className="w-full flex flex-col gap-4">
                             <div className="w-full flex flex-col gap-1">
@@ -207,7 +217,7 @@ function CheckoutPage() {
                     }
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

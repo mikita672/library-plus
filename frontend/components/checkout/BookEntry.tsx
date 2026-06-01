@@ -21,7 +21,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
     const { removeBook } = useContext(cartContext);
 
     return (
-        <div className="w-full grid grid-cols-5 items-center gap-24 bg-background p-4">
+        <div className="w-full grid grid-cols-5 items-center gap-12 bg-background p-4">
             <div className="col-span-3 flex items-center gap-4">
                 <img
                     src={book.coverURI ?? "/images/book-placeholder.png"}
@@ -42,41 +42,53 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
             </div>
 
             <div className="col-span-2 flex items-center justify-between px-4">
-                <Field className="w-50 relative">
-                    <FieldLabel htmlFor="date-picker-range" className="absolute -top-5">Reservation time</FieldLabel>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                id="date-picker-range"
-                                className="justify-start cursor-pointer"
-                            >
-                                <CalendarIcon />
-                                {dateRange?.from ? (
-                                    dateRange.to ? (
-                                        <>
-                                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                                            {format(dateRange.to, "LLL dd, y")}
-                                        </>
-                                    ) : (
-                                        format(dateRange.from, "LLL dd, y")
-                                    )
-                                ) : (
-                                    <span>Pick a date</span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="range"
-                                defaultMonth={dateRange?.from}
-                                selected={dateRange}
-                                onSelect={changeDateRange}
-                                numberOfMonths={2}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </Field>
+                <div className="flex gap-4">
+                    <Field className="relative">
+                        <FieldLabel className="absolute -top-5">Start Date</FieldLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="justify-start cursor-pointer w-full"
+                                >
+                                    <CalendarIcon className="mr-2" />
+                                    {dateRange?.from ? format(dateRange.from, "LLL dd, y") : "Pick start"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    defaultMonth={dateRange?.from}
+                                    selected={dateRange?.from}
+                                    onSelect={(date) => changeDateRange({ from: date, to: dateRange?.to })}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </Field>
+
+                    <Field className="relative">
+                        <FieldLabel className="absolute -top-5">End Date</FieldLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="justify-start cursor-pointer w-full"
+                                >
+                                    <CalendarIcon className="mr-2" />
+                                    {dateRange?.to ? format(dateRange.to, "LLL dd, y") : "Pick end"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    defaultMonth={dateRange?.to ?? dateRange?.from}
+                                    selected={dateRange?.to}
+                                    onSelect={(date) => changeDateRange({ from: dateRange?.from, to: date })}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </Field>
+                </div>
 
                 <TrashIcon
                     className="text-destructive w-6 h-6 cursor-pointer"
