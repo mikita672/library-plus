@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,17 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { BookCard } from "@/types/book/Book";
+import { Separator } from "@/components/ui/separator";
+import { PackageIcon, PlusIcon } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { addBookUnit, updateBook } from "@/lib/api/books";
+import { BookCard, UpdateBookRequest } from "@/types/book/Book";
 
 interface EditBookModalProps {
   book: BookCard | null;
@@ -33,21 +31,61 @@ export default function EditBookModal({
   onOpenChange,
   onSave,
 }: EditBookModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<Partial<BookCard>>(book || {});
+  const [saving, setSaving] = useState(false);
+  const [addingUnit, setAddingUnit] = useState(false);
 
-  const handleChange = (key: keyof BookCard, value: any) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
+  const [title, setTitle] = useState("");
+  const [language, setLanguage] = useState("");
+  const [publicationYear, setPublicationYear] = useState<number | "">("");
+
+  const [unitsAddedThisSession, setUnitsAddedThisSession] = useState(0);
+
+  useEffect(() => {
+    if (book) {
+      setTitle(book.title);
+      setLanguage(book.language);
+      setPublicationYear(book.publicationYear);
+      setUnitsAddedThisSession(0);
+    }
+  }, [book]);
 
   const handleSave = async () => {
-    if (!book?.id) return;
-    setLoading(true);
+    if (!book) return;
+    setSaving(true);
 
-    await onSave?.(formData as BookCard);
-    onOpenChange(false);
-    setFormData({});
-    setLoading(false);
+    const body: UpdateBookRequest = {
+      title: title.trim() || null,
+      language: language.trim() || null,
+      publicationYear:
+        typeof publicationYear === "number" ? publicationYear : undefined,
+    };
+
+    try {
+      await updateBook(book.id, body);
+      toast.success(`"${book.title}" updated successfully`);
+      await onSave?.(book);
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update book");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddUnit = async () => {
+    if (!book) return;
+    setAddingUnit(true);
+    try {
+      await addBookUnit(book.id);
+      setUnitsAddedThisSession((n) => n + 1);
+      toast.success("Physical copy added to inventory");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to add physical copy",
+      );
+    } finally {
+      setAddingUnit(false);
+    }
   };
 
   return (
@@ -56,73 +94,61 @@ export default function EditBookModal({
         <DialogHeader>
           <DialogTitle>Edit Book</DialogTitle>
           <DialogDescription>
-            Update book details below. Click save when done.
+            Update book details and manage physical copies below.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-2">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right">
-              ID
-            </Label>
-            <Input
-              id="id"
-              value={book?.id || ""}
-              disabled
-              className="col-span-3"
-            />
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="title" className="text-right">
+            <Label htmlFor="edit-title" className="text-right">
               Title
             </Label>
             <Input
-              id="title"
-              value={formData.title || ""}
-              onChange={(e) => handleChange("title", e.target.value)}
+              id="edit-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="col-span-3"
               placeholder="Enter book title"
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="author" className="text-right">
+            <Label htmlFor="edit-author" className="text-right">
               Author
             </Label>
             <Input
-              id="author"
-              value={formData.authorName || ""}
-              onChange={(e) => handleChange("authorName", e.target.value)}
-              className="col-span-3"
-              placeholder="Enter author name"
+              id="edit-author"
+              value={book?.authorName ?? "-"}
               disabled
+              className="col-span-3"
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="language" className="text-right">
+            <Label htmlFor="edit-language" className="text-right">
               Language
             </Label>
             <Input
-              id="language"
-              value={formData.language || ""}
-              onChange={(e) => handleChange("language", e.target.value)}
+              id="edit-language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
               className="col-span-3"
               placeholder="e.g., English"
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="year" className="text-right">
+            <Label htmlFor="edit-year" className="text-right">
               Year
             </Label>
             <Input
-              id="year"
+              id="edit-year"
               type="number"
-              value={formData.publicationYear || ""}
+              value={publicationYear}
               onChange={(e) =>
-                handleChange("publicationYear", parseInt(e.target.value))
+                setPublicationYear(
+                  e.target.value ? parseInt(e.target.value) : "",
+                )
               }
               className="col-span-3"
               placeholder="e.g., 2024"
@@ -130,32 +156,59 @@ export default function EditBookModal({
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="availability" className="text-right">
-              Availability
-            </Label>
-            <Select
-              value={formData.isAvailable ? "available" : "unavailable"}
-              onValueChange={(value) =>
-                handleChange("isAvailable", value === "available")
-              }
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="unavailable">Unavailable</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-right">Availability</Label>
+            <div className="col-span-3">
+              {book ? (
+                <span
+                  className={`font-medium ${book.isAvailable ? "text-green-600" : "text-destructive"}`}
+                >
+                  {book.isAvailable ? "Available" : "Unavailable"}
+                </span>
+              ) : (
+                "-"
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <Separator />
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PackageIcon className="h-4 w-4 text-muted-foreground mr-2" />
+              <span className="text-sm font-medium">Physical Copies</span>
+              {unitsAddedThisSession > 0 && (
+                <span className="bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                  +{unitsAddedThisSession} added this session
+                </span>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddUnit}
+              disabled={addingUnit || !book}
+              className="gap-1"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {addingUnit ? "Adding..." : "Add copy"}
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Each copy is a separate physical unit tracked in the inventory.
+            Copies are removed automatically when a reservation is returned.
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </DialogContent>

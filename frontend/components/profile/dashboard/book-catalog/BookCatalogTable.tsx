@@ -1,22 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import {
+  PencilSimpleIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 import {
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type Column,
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import {
-  SortAscendingIcon,
-  SortDescendingIcon,
-  TrashIcon,
-  PencilSimpleIcon,
-} from "@phosphor-icons/react";
-import { BookCard } from "@/types/book/Book";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,151 +28,117 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useFieldArray } from "react-hook-form";
+import { deleteBook } from "@/lib/api/books";
+import { BookCard } from "@/types/book/Book";
 import EditBookModal from "./EditBookModal";
 
-const columns: ColumnDef<BookCard>[] = [
-  {
-    accessorKey: "id",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0"
-      >
-        ID
-        {column.getIsSorted() === "asc" ? (
-          <SortAscendingIcon className="ml-2 h-4 w-4" />
-        ) : column.getIsSorted() === "desc" ? (
-          <SortDescendingIcon className="ml-2 h-4 w-4" />
-        ) : (
-          <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
-        )}
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="font-mono text-sm">{row.getValue("id") ?? "-"}</div>
-    ),
-  },
-  {
-    accessorKey: "title",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0"
-      >
-        Title
-        {column.getIsSorted() === "asc" ? (
-          <SortAscendingIcon className="ml-2 h-4 w-4" />
-        ) : column.getIsSorted() === "desc" ? (
-          <SortDescendingIcon className="ml-2 h-4 w-4" />
-        ) : (
-          <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
-        )}
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("title")}</div>,
-  },
-  {
-    accessorKey: "authorName",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0"
-      >
-        Author
-        {column.getIsSorted() === "asc" ? (
-          <SortAscendingIcon className="ml-2 h-4 w-4" />
-        ) : column.getIsSorted() === "desc" ? (
-          <SortDescendingIcon className="ml-2 h-4 w-4" />
-        ) : (
-          <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
-        )}
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div>{(row.getValue("authorName") as string | null) ?? "-"}</div>
-    ),
-  },
-  {
-    accessorKey: "language",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0"
-      >
-        Language
-        {column.getIsSorted() === "asc" ? (
-          <SortAscendingIcon className="ml-2 h-4 w-4" />
-        ) : column.getIsSorted() === "desc" ? (
-          <SortDescendingIcon className="ml-2 h-4 w-4" />
-        ) : (
-          <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
-        )}
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("language")}</div>,
-  },
-  {
-    accessorKey: "publicationYear",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-0"
-      >
-        Year
-        {column.getIsSorted() === "asc" ? (
-          <SortAscendingIcon className="ml-2 h-4 w-4" />
-        ) : column.getIsSorted() === "desc" ? (
-          <SortDescendingIcon className="ml-2 h-4 w-4" />
-        ) : (
-          <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
-        )}
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div>
-        {row.original.originalPublicationYear ??
-          row.getValue("publicationYear")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "isAvailable",
-    header: "Available",
-    cell: ({ row }) => <div>{row.original.isAvailable ? "Yes" : "No"}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: () => {
-      return (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            title="Edit book"
-          >
-            <PencilSimpleIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            title="Remove book"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      );
+function SortableHeader({
+  label,
+  column,
+}: {
+  label: string;
+  column: Column<BookCard>;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      className="px-0"
+    >
+      {label}
+      {column.getIsSorted() === "asc" ? (
+        <SortAscendingIcon className="ml-2 h-4 w-4" />
+      ) : column.getIsSorted() === "desc" ? (
+        <SortDescendingIcon className="ml-2 h-4 w-4" />
+      ) : (
+        <SortAscendingIcon className="ml-2 h-4 w-4 opacity-50" />
+      )}
+    </Button>
+  );
+}
+
+function AvailabilityBadge({ isAvailable }: { isAvailable: boolean }) {
+  return (
+    <span
+      className={`font-medium ${isAvailable ? "text-green-600" : "text-destructive"}`}
+    >
+      {isAvailable ? "Available" : "Unavailable"}
+    </span>
+  );
+}
+
+function buildColumns(
+  onEditClick: (book: BookCard) => void,
+  onDeleteClick: (book: BookCard) => void,
+): ColumnDef<BookCard>[] {
+  return [
+    {
+      accessorKey: "title",
+      header: ({ column }) => <SortableHeader label="Title" column={column} />,
+      cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
-  },
-];
+    {
+      accessorKey: "authorName",
+      header: ({ column }) => <SortableHeader label="Author" column={column} />,
+      cell: ({ row }) => (
+        <div>{(row.getValue("authorName") as string | null) ?? "-"}</div>
+      ),
+    },
+    {
+      accessorKey: "language",
+      header: ({ column }) => (
+        <SortableHeader label="Language" column={column} />
+      ),
+      cell: ({ row }) => <div>{row.getValue("language")}</div>,
+    },
+    {
+      accessorKey: "publicationYear",
+      header: ({ column }) => <SortableHeader label="Year" column={column} />,
+      cell: ({ row }) => (
+        <div>
+          {row.original.originalPublicationYear ??
+            row.getValue("publicationYear")}
+        </div>
+      ),
+    },
+    {
+      id: "availability",
+      header: "Availability",
+      cell: ({ row }) => (
+        <AvailabilityBadge isAvailable={row.original.isAvailable} />
+      ),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const book = row.original;
+        return (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEditClick(book)}
+              aria-label={`Edit ${book.title}`}
+              className="h-8 w-8 p-0"
+            >
+              <PencilSimpleIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDeleteClick(book)}
+              aria-label={`Delete ${book.title}`}
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}
 
 interface Props {
   books: BookCard[];
@@ -182,6 +149,32 @@ export default function BookCatalogTable({ books }: Props) {
   const [editingBook, setEditingBook] = useState<BookCard | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
+  const handleEditClick = (book: BookCard) => {
+    setEditingBook(book);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteClick = async (book: BookCard) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${book.title}"?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteBook(book.id);
+      toast.success(`"${book.title}" has been deleted`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete book");
+    }
+  };
+
+  const handleSaveBook = async (updatedBook: BookCard) => {
+    setEditModalOpen(false);
+    setEditingBook(null);
+  };
+
+  const columns = buildColumns(handleEditClick, handleDeleteClick);
+
   const table = useReactTable({
     data: books,
     columns,
@@ -189,73 +182,7 @@ export default function BookCatalogTable({ books }: Props) {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-    },
-  });
-
-  const handleEditClick = (book: BookCard) => {
-    setEditingBook(book);
-    setEditModalOpen(true);
-  };
-
-  const handleSaveBook = async (updatedBook: BookCard) => {
-    // TODO: Call API to update book
-  };
-
-  const handleDeleteClick = (book: BookCard) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${book.title}"?`,
-    );
-    if (confirmed) {
-      // TODO: Call API to remove the book
-    }
-  };
-
-  const updatedColumns = columns.map((col) => {
-    if (col.id === "actions") {
-      return {
-        ...col,
-        cell: ({ row }: any) => {
-          const book = row.original;
-          return (
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEditClick(book)}
-                aria-label={`Edit ${book.title}`}
-                className="h-8 w-8 p-0"
-              >
-                <PencilSimpleIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteClick(book)}
-                aria-label={`Delete ${book.title}`}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          );
-        },
-      };
-    }
-    return col;
-  });
-
-  const tableWithUpdatedColumns = useReactTable({
-    data: books,
-    columns: updatedColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
+    state: { sorting },
   });
 
   if (!books.length) {
@@ -268,25 +195,23 @@ export default function BookCatalogTable({ books }: Props) {
     <div className="w-full">
       <Table>
         <TableHeader>
-          {tableWithUpdatedColumns.getHeaderGroups().map((headerGroup) => (
+          {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                );
-              })}
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </TableHead>
+              ))}
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
-          {tableWithUpdatedColumns.getRowModel().rows.map((row) => (
+          {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>
@@ -302,16 +227,16 @@ export default function BookCatalogTable({ books }: Props) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => tableWithUpdatedColumns.previousPage()}
-          disabled={!tableWithUpdatedColumns.getCanPreviousPage()}
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
         >
           Previous
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => tableWithUpdatedColumns.nextPage()}
-          disabled={!tableWithUpdatedColumns.getCanNextPage()}
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
         >
           Next
         </Button>
