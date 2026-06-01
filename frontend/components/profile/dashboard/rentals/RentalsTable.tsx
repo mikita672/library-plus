@@ -82,7 +82,12 @@ function buildColumns(
       header: "Client",
       cell: ({ row }) => (
         <div>
-          <div className="font-medium text-sm">{row.original.clientName}</div>
+          <Link
+            href={`/profile/dashboard/clients?search=${encodeURIComponent(row.original.clientEmail)}`}
+            className="font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
+          >
+            {row.original.clientName}
+          </Link>
           {row.original.clientEmail && (
             <div className="text-xs text-muted-foreground">
               {row.original.clientEmail}

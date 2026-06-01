@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -337,12 +338,12 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
             <div className="space-y-4">
               <h3 className="font-bold text-lg">Client info</h3>
               <div className="text-sm space-y-1">
-                <a
-                  href="#"
+                <Link
+                  href={`/profile/dashboard/clients?search=${encodeURIComponent(reservation.clientEmail)}`}
                   className="text-primary underline hover:opacity-80 block mb-2"
                 >
                   {reservation.clientName}
-                </a>
+                </Link>
                 <p>Email: {reservation.clientEmail}</p>
                 <p>Phone: {reservation.clientPhone}</p>
               </div>

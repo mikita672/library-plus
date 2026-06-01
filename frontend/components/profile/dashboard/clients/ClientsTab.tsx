@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useDebounce } from "@/hooks/useDebounce";
@@ -11,8 +12,11 @@ import { Label } from "@/components/ui/label";
 import ClientsTable from "./ClientsTable";
 
 export default function ClientsTab() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   const [pageNumber, setPageNumber] = useState(1);
-  const [searchToken, setSearchToken] = useState("");
+  const [searchToken, setSearchToken] = useState(initialSearch);
   const debouncedSearch = useDebounce(searchToken, 300);
 
   const { users, loading, error, totalPages, refetch } = useClients(
