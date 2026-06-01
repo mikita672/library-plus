@@ -133,6 +133,19 @@ public static class BookEndpoints
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
 
+        group.MapGet("/bookUnit/{id}", [Authorize] async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            var bookUnit = await bookService.GetBookUnitById(id);
+            if (bookUnit == null)
+            {
+                return Results.NotFound();
+            }
+            return Results.Ok(bookUnit);
+        });
+
         group.MapDelete("/bookUnit/{id}", [Authorize] async (
             BookService bookService,
             string id

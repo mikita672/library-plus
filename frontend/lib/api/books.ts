@@ -3,6 +3,7 @@ import {
   Book,
   BookCard,
   BookPreview,
+  BookUnit,
   CreateBookRequest,
   UpdateBookRequest,
 } from "@/types/book/Book";
@@ -105,6 +106,15 @@ export async function deleteBook(id: string): Promise<void> {
     const msg = await res.text().catch(() => res.statusText);
     throw new Error(msg || `Failed to delete book (${res.status})`);
   }
+}
+
+export async function getBookUnitById(id: string): Promise<BookUnit | null> {
+  const res = await fetch(`/api/books/bookUnit/${id}`, {
+    method: "GET",
+    cache: "force-cache",
+  });
+  if (!res.ok) return null;
+  return res.json() as Promise<BookUnit>;
 }
 
 export async function addBookUnit(bookId: string): Promise<void> {

@@ -72,4 +72,28 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         return res.MatchedCount == 1;
     }
 
+    public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null)
+    {
+        var query = _reservations.AsQueryable().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(r => r.Status == status);
+        }
+        return await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip(8 * (page - 1))
+            .Take(8)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetAllReservationsPageCount(string? status = null)
+    {
+        var query = _reservations.AsQueryable().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(r => r.Status == status);
+        }
+        var count = await query.CountAsync();
+        return (int)Math.Ceiling((double)count / 8);
+    }
 }

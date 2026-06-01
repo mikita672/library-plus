@@ -254,6 +254,11 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         return bookUnit;
     }
 
+    public async Task<BookUnitModel?> GetBookUnitById(string bookUnitId)
+    {
+        return await _bookUnits.Find(b => b.Id == bookUnitId).FirstOrDefaultAsync();
+    }
+
     public async Task DeleteBookUnit(string bookUnitId)
     {
         await _bookUnits.FindOneAndDeleteAsync(b => b.Id == bookUnitId);

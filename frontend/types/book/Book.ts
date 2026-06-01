@@ -54,6 +54,11 @@ export interface BookPreview {
   isAvailable: boolean;
 }
 
+export interface BookUnit {
+  id: string;
+  bookId: string;
+}
+
 export interface BookCard {
   id: string;
   title: string;

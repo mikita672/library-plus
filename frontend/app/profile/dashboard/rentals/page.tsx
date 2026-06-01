@@ -1,3 +1,9 @@
+import RentalsTab from "@/components/profile/dashboard/rentals/RentalsTab";
+
 export default function DashboardRentalsPage() {
-  return <div className="text-lg font-medium">Rentals and fines</div>;
+  return (
+    <section className="space-y-4">
+      <RentalsTab />
+    </section>
+  );
 }
