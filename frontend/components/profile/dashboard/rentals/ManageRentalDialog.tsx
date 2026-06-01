@@ -58,8 +58,19 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
 
   if (!reservation) return null;
 
-  const startDate = new Date(reservation.startDate);
-  const endDate = new Date(reservation.endDate);
+  const parseDateStr = (dateStr: string, fallbackIso: string) => {
+    try {
+      const parts = dateStr.split("/");
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+        if (!isNaN(d.getTime())) return d;
+      }
+    } catch {}
+    return new Date(fallbackIso);
+  };
+
+  const startDate = parseDateStr(startDateStr, reservation.startDate);
+  const endDate = parseDateStr(endDateStr, reservation.endDate);
   const now = new Date();
 
   const totalDays = Math.max(
@@ -72,9 +83,9 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     reservation.status === "Overdue" ||
     (reservation.status !== "Returned" && now > endDate)
   ) {
-    overdueDays = Math.ceil(
+    overdueDays = Math.max(0, Math.ceil(
       (now.getTime() - endDate.getTime()) / (1000 * 3600 * 24),
-    );
+    ));
   }
 
   const overdueFine = overdueDays * 1;
@@ -176,7 +187,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               </div>
 
               <div className="text-sm space-y-1 mt-4">
-                <p>Due date: {formatDate(reservation.endDate)}</p>
+                <p>Due date: {endDate.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
                 <p>Total rental time: {totalDays} days</p>
                 <p>
                   <span className="font-semibold">Overdue time:</span>{" "}
