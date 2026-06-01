@@ -1,19 +1,23 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthorsTab from "@/components/profile/dashboard/book-catalog/AuthorsTab";
-import PublishersTab from "@/components/profile/dashboard/book-catalog/PublishersTab";
 import BooksTab from "@/components/profile/dashboard/book-catalog/BooksTab";
+import PublishersTab from "@/components/profile/dashboard/book-catalog/PublishersTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function BookCatalogPage() {
   return (
     <section className="space-y-4">
       <Tabs defaultValue="books">
         <TabsList>
+          <TabsTrigger value="books">Books</TabsTrigger>
           <TabsTrigger value="authors">Authors</TabsTrigger>
           <TabsTrigger value="publishers">Publishers</TabsTrigger>
-          <TabsTrigger value="books">Books</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="books">
+          <BooksTab />
+        </TabsContent>
 
         <TabsContent value="authors">
           <AuthorsTab />
@@ -21,10 +25,6 @@ export default function BookCatalogPage() {
 
         <TabsContent value="publishers">
           <PublishersTab />
-        </TabsContent>
-
-        <TabsContent value="books">
-          <BooksTab />
         </TabsContent>
       </Tabs>
     </section>
