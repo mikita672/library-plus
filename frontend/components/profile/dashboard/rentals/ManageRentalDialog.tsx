@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +41,36 @@ function formatDate(iso: string) {
   });
 }
 
+const dateSchema = z
+  .string()
+  .regex(
+    /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/,
+    "Dates must be in DD/MM/YYYY format",
+  );
+
+const rentalSchema = z
+  .object({
+    startDateStr: dateSchema,
+    endDateStr: dateSchema,
+  })
+  .refine(
+    (data) => {
+      const parseDate = (str: string) => {
+        const parts = str.split("/");
+        return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      };
+      const start = parseDate(data.startDateStr);
+      const end = parseDate(data.endDateStr);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
+      return start.getTime() <= end.getTime();
+    },
+    {
+      message: "'From' date cannot be greater than 'To' date",
+      path: ["startDateStr"],
+    },
+  );
+
 export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
   const [condition, setCondition] = useState<string>("Good");
   const [note, setNote] = useState<string>("");
@@ -46,6 +78,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
 
   const [startDateStr, setStartDateStr] = useState<string>("");
   const [endDateStr, setEndDateStr] = useState<string>("");
+  const [validationError, setValidationError] = useState<string>("");
 
   useMemo(() => {
     if (reservation) {
@@ -62,7 +95,11 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     try {
       const parts = dateStr.split("/");
       if (parts.length === 3) {
-        const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+        const d = new Date(
+          Number(parts[2]),
+          Number(parts[1]) - 1,
+          Number(parts[0]),
+        );
         if (!isNaN(d.getTime())) return d;
       }
     } catch {}
@@ -83,9 +120,10 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     reservation.status === "Overdue" ||
     (reservation.status !== "Returned" && now > endDate)
   ) {
-    overdueDays = Math.max(0, Math.ceil(
-      (now.getTime() - endDate.getTime()) / (1000 * 3600 * 24),
-    ));
+    overdueDays = Math.max(
+      0,
+      Math.ceil((now.getTime() - endDate.getTime()) / (1000 * 3600 * 24)),
+    );
   }
 
   const overdueFine = overdueDays * 1;
@@ -93,30 +131,43 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     condition === "Lost/Destroyed" ? reservation.repurchasePrice : 0;
   const totalFine = overdueFine + conditionFine;
 
+  const handleDateChange = (val: string, setter: (v: string) => void) => {
+    setter(val.replace(/[^\d/]/g, ""));
+  };
+
   const handleReturn = async () => {
+    setValidationError("");
+
+    const validation = rentalSchema.safeParse({ startDateStr, endDateStr });
+    if (!validation.success) {
+      setValidationError(validation.error.issues[0].message);
+      return;
+    }
+
+    const partsStart = startDateStr.split("/");
+    const startObj = new Date(
+      Number(partsStart[2]),
+      Number(partsStart[1]) - 1,
+      Number(partsStart[0]),
+    );
+
+    const partsEnd = endDateStr.split("/");
+    const endObj = new Date(
+      Number(partsEnd[2]),
+      Number(partsEnd[1]) - 1,
+      Number(partsEnd[0]),
+    );
+
     setLoading(true);
     try {
-      const partsStart = startDateStr.split("/");
-      const isoStart = new Date(
-        Number(partsStart[2]),
-        Number(partsStart[1]) - 1,
-        Number(partsStart[0]),
-      ).toISOString();
-      const partsEnd = endDateStr.split("/");
-      const isoEnd = new Date(
-        Number(partsEnd[2]),
-        Number(partsEnd[1]) - 1,
-        Number(partsEnd[0]),
-      ).toISOString();
-
       await fetch(`/api/reservations/reservation/${reservation.id}/return`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookConditionUponReturn: condition,
           additionalNote: note,
-          startDate: isoStart,
-          endDate: isoEnd,
+          startDate: startObj.toISOString(),
+          endDate: endObj.toISOString(),
         }),
       });
       onSuccess();
@@ -170,7 +221,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                   <Label>From</Label>
                   <Input
                     value={startDateStr}
-                    onChange={(e) => setStartDateStr(e.target.value)}
+                    onChange={(e) => handleDateChange(e.target.value, setStartDateStr)}
                     placeholder="DD/MM/YYYY"
                     className="rounded-none bg-transparent"
                   />
@@ -179,7 +230,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                   <Label>To</Label>
                   <Input
                     value={endDateStr}
-                    onChange={(e) => setEndDateStr(e.target.value)}
+                    onChange={(e) => handleDateChange(e.target.value, setEndDateStr)}
                     placeholder="DD/MM/YYYY"
                     className="rounded-none bg-transparent"
                   />
@@ -187,7 +238,14 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               </div>
 
               <div className="text-sm space-y-1 mt-4">
-                <p>Due date: {endDate.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
+                <p>
+                  Due date:{" "}
+                  {endDate.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </p>
                 <p>Total rental time: {totalDays} days</p>
                 <p>
                   <span className="font-semibold">Overdue time:</span>{" "}
@@ -252,6 +310,11 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               </div>
 
               <div className="flex flex-col gap-2">
+                {validationError && (
+                  <p className="text-destructive text-sm font-medium mb-1">
+                    {validationError}
+                  </p>
+                )}
                 <Button
                   className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white py-6 text-lg rounded-none shadow-none"
                   onClick={handleReturn}
