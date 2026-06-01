@@ -58,6 +58,7 @@ export interface BookCard {
   id: string;
   title: string;
   authorName?: string | null;
+  categoryName?: string | null;
   language: string;
   publicationYear: number;
   originalPublicationYear?: number | null;

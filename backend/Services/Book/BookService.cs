@@ -129,11 +129,19 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         var authors = await _authorService.GetAuthorsByIds(authorIds);
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
 
+        var categoryIds = books
+            .SelectMany(b => b.CategoryIds ?? [])
+            .Distinct()
+            .ToList();
+        var categories = await _categoryService.GetCategoriesByIds(categoryIds);
+        var categoryMap = categories.ToDictionary(c => c.Id, c => c.Name);
+
         return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
             b.Id,
             b.Title,
             b.Language,
             b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
+            b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
             b.CoverURI,
@@ -191,14 +199,21 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             .ToList();
 
         var authors = await _authorService.GetAuthorsByIds(authorIds);
-
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
+
+        var responseCategoryIds = books
+            .SelectMany(b => b.CategoryIds ?? [])
+            .Distinct()
+            .ToList();
+        var categories = await _categoryService.GetCategoriesByIds(responseCategoryIds);
+        var categoryMap = categories.ToDictionary(c => c.Id, c => c.Name);
 
         return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
             b.Id,
             b.Title,
             b.Language,
             b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var name) ? name : null,
+            b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
             b.CoverURI,
@@ -320,11 +335,19 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         var books = await booksTask;
         var author = await authorTask;
 
+        var categoryIds = books
+            .SelectMany(b => b.CategoryIds ?? [])
+            .Distinct()
+            .ToList();
+        var categories = await _categoryService.GetCategoriesByIds(categoryIds);
+        var categoryMap = categories.ToDictionary(c => c.Id, c => c.Name);
+
         return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
             b.Id,
             b.Title,
             b.Language,
             author?.Name,
+            b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
             b.CoverURI,
@@ -348,15 +371,24 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
         var authors = await _authorService.GetAuthorsByIds(authorIds);
         var authorDict = authors.ToDictionary(a => a.Id);
 
+        var categoryIds = books
+            .SelectMany(b => b.CategoryIds ?? [])
+            .Distinct()
+            .ToList();
+        var categories = await _categoryService.GetCategoriesByIds(categoryIds);
+        var categoryMap = categories.ToDictionary(c => c.Id, c => c.Name);
+
         var responseTasks = books.Select(async b =>
         {
             authorDict.TryGetValue(b.AuthorId ?? string.Empty, out var author);
+            categoryMap.TryGetValue(b.CategoryIds?.FirstOrDefault() ?? string.Empty, out var catName);
 
             return new BookCardResponse(
                 b.Id,
                 b.Title,
                 b.Language,
                 author?.Name,
+                catName,
                 b.PublicationYear,
                 b.OriginalPublicationYear,
                 b.CoverURI,
