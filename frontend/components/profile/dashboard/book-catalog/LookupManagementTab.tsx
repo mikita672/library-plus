@@ -54,7 +54,11 @@ function buildColumns<T extends BaseLookupModel>(
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate" title={row.getValue("name")}>
+          {row.getValue("name")}
+        </div>
+      ),
     },
     {
       id: "actions",

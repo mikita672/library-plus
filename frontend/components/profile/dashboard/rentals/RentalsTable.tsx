@@ -81,15 +81,16 @@ function buildColumns(
       accessorKey: "userId",
       header: "Client",
       cell: ({ row }) => (
-        <div>
+        <div className="max-w-[180px]">
           <Link
             href={`/profile/dashboard/clients?search=${encodeURIComponent(row.original.clientEmail)}`}
-            className="font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
+            className="block truncate font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
+            title={row.original.clientName}
           >
             {row.original.clientName}
           </Link>
           {row.original.clientEmail && (
-            <div className="text-xs text-muted-foreground">
+            <div className="truncate text-xs text-muted-foreground" title={row.original.clientEmail}>
               {row.original.clientEmail}
             </div>
           )}
@@ -112,7 +113,8 @@ function buildColumns(
         return (
           <Link
             href={`/profile/dashboard/book-catalog?search=${encodeURIComponent(title)}`}
-            className="text-primary text-sm underline underline-offset-2 hover:text-primary/80"
+            className="block max-w-[200px] truncate text-primary text-sm underline underline-offset-2 hover:text-primary/80"
+            title={title}
           >
             {title}
           </Link>

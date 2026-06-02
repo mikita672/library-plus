@@ -74,23 +74,37 @@ function buildColumns(
     {
       accessorKey: "title",
       header: ({ column }) => <SortableHeader label="Title" column={column} />,
-      cell: ({ row }) => <div>{row.getValue("title")}</div>,
+      cell: ({ row }) => (
+        <div className="max-w-50 truncate" title={row.getValue("title")}>
+          {row.getValue("title")}
+        </div>
+      ),
     },
     {
       accessorKey: "authorName",
       header: ({ column }) => <SortableHeader label="Author" column={column} />,
-      cell: ({ row }) => (
-        <div>{(row.getValue("authorName") as string | null) ?? "-"}</div>
-      ),
+      cell: ({ row }) => {
+        const val = row.getValue("authorName") as string | null;
+        return (
+          <div className="max-w-37.5 truncate" title={val ?? ""}>
+            {val ?? "-"}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "categoryName",
       header: ({ column }) => (
         <SortableHeader label="Category" column={column} />
       ),
-      cell: ({ row }) => (
-        <div>{(row.getValue("categoryName") as string | null) ?? "-"}</div>
-      ),
+      cell: ({ row }) => {
+        const val = row.getValue("categoryName") as string | null;
+        return (
+          <div className="max-w-30 truncate" title={val ?? ""}>
+            {val ?? "-"}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "language",

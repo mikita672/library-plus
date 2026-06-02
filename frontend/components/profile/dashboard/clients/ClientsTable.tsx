@@ -51,11 +51,11 @@ function buildColumns(
       accessorKey: "email",
       header: "Client",
       cell: ({ row }) => (
-        <div>
-          <div className="font-medium text-sm">
+        <div className="max-w-[200px]">
+          <div className="truncate font-medium text-sm" title={row.original.name || "Unknown"}>
             {row.original.name || "Unknown"}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="truncate text-xs text-muted-foreground" title={row.original.email}>
             {row.original.email}
           </div>
         </div>
