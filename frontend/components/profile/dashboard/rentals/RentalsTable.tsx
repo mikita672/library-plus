@@ -81,7 +81,13 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-const STATUSES = ["Reserved", "Taken", "Returned", "Overdue", "Waiting for payment"];
+const STATUSES = [
+  "Reserved",
+  "Taken",
+  "Returned",
+  "Overdue",
+  "Waiting for payment",
+];
 
 function buildColumns(
   onManageClick: (r: EnrichedReservationItem) => void,
@@ -92,7 +98,7 @@ function buildColumns(
       accessorKey: "userId",
       header: "Client",
       cell: ({ row }) => (
-        <div className="max-w-[180px]">
+        <div className="max-w-45">
           <Link
             href={`/profile/dashboard/clients?search=${encodeURIComponent(row.original.clientEmail)}`}
             className="block truncate font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
@@ -101,7 +107,10 @@ function buildColumns(
             {row.original.clientName}
           </Link>
           {row.original.clientEmail && (
-            <div className="truncate text-xs text-muted-foreground" title={row.original.clientEmail}>
+            <div
+              className="truncate text-xs text-muted-foreground"
+              title={row.original.clientEmail}
+            >
               {row.original.clientEmail}
             </div>
           )}
@@ -124,7 +133,7 @@ function buildColumns(
         return (
           <Link
             href={`/profile/dashboard/book-catalog?search=${encodeURIComponent(title)}`}
-            className="block max-w-[200px] truncate text-primary text-sm underline underline-offset-2 hover:text-primary/80"
+            className="block max-w-50 truncate text-primary text-sm underline underline-offset-2 hover:text-primary/80"
             title={title}
           >
             {title}
@@ -172,7 +181,9 @@ function buildColumns(
                   <DropdownMenuItem
                     key={s}
                     onClick={() => onStatusChange(row.original.id, s)}
-                    className={row.original.status === s ? "bg-accent font-bold" : ""}
+                    className={
+                      row.original.status === s ? "bg-accent font-bold" : ""
+                    }
                   >
                     {s}
                   </DropdownMenuItem>
