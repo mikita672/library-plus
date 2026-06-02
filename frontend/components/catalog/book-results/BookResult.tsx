@@ -5,6 +5,7 @@ import { cartContext } from "@/context/cartContext";
 import { BookCard } from "@/types/book/Book"
 import Link from "next/link";
 import { useContext } from "react";
+import Image from "next/image";
 
 interface Props {
     book: BookCard
@@ -15,11 +16,15 @@ function BookResult({ book }: Props) {
 
     return (
         <div className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
-            <img
-                src={book.coverURI ?? "/images/book-placeholder.png"}
-                className="w-full max-w-[235px] h-[235px] object-contain"
-                alt="Book cover"
-            />
+            <div className="relative w-full max-w-[235px] h-[235px]">
+                <Image
+                    src={book.coverURI ?? "/images/book-placeholder.png"}
+                    fill
+                    unoptimized={!!book.coverURI}
+                    className="object-contain"
+                    alt="Book cover"
+                />
+            </div>
 
             <div className="w-full">
                 <p>{book.title}</p>

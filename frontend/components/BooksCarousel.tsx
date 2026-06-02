@@ -6,6 +6,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 import { BookCard } from "@/types/book/Book"
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface Props {
     books: BookCard[];
@@ -60,11 +61,15 @@ function BooksCarousel({ books, includeAuthor }: Props) {
                     {books.map((book, index) => (
                         <CarouselItem key={index} className="md:basis-1/3 pl-8">
                             <div className="w-full bg-background p-6 flex flex-col items-center gap-4">
-                                <img
-                                    src={book.coverURI ?? "/images/book-placeholder.png"}
-                                    className="w-full max-w-[235px] h-[235px] object-contain"
-                                    alt="Book cover"
-                                />
+                                <div className="relative w-full max-w-[235px] h-[235px]">
+                                    <Image
+                                        src={book.coverURI ?? "/images/book-placeholder.png"}
+                                        fill
+                                        unoptimized={!!book.coverURI}
+                                        className="object-contain"
+                                        alt="Book cover"
+                                    />
+                                </div>
 
                                 <div className="w-full">
                                     <p className="text-lg font-bold">{book.title}</p>

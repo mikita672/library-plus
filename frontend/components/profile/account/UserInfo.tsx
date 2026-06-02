@@ -6,6 +6,7 @@ import { uploadUserAvatar } from "@/lib/api/media";
 import { toast } from "sonner";
 import ChangePhonePopover from "./ChangePhonePopover";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 function UserInfo() {
   const { fullUserData, isLoading, refreshFullUser, refreshUser } = useContext(userContext);
@@ -55,11 +56,15 @@ function UserInfo() {
       </div>
       <div className="flex items-center gap-4">
         <div className="group relative cursor-pointer" onClick={handleAvatarClick}>
-          <img
-            src={fullUserData.avatarUrl || "/images/user_placeholder.png"}
-            alt="User Avatar"
-            className={`size-24 rounded-full object-cover transition-opacity ${uploading ? "opacity-50" : "group-hover:opacity-75"}`}
-          />
+          <div className="relative size-24 overflow-hidden rounded-full">
+            <Image
+              src={fullUserData.avatarUrl || "/images/user_placeholder.png"}
+              alt="User Avatar"
+              fill
+              unoptimized={!!fullUserData.avatarUrl}
+              className={`object-cover transition-opacity ${uploading ? "opacity-50" : "group-hover:opacity-75"}`}
+            />
+          </div>
           {uploading ? (
             <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
               ...

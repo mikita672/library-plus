@@ -148,9 +148,10 @@ function buildColumns(
 
 interface Props {
   books: BookCard[];
+  onSuccess?: () => void;
 }
 
-export default function BookCatalogTable({ books }: Props) {
+export default function BookCatalogTable({ books, onSuccess }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [editingBook, setEditingBook] = useState<BookCard | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -169,6 +170,7 @@ export default function BookCatalogTable({ books }: Props) {
     try {
       await deleteBook(book.id);
       toast.success(`"${book.title}" has been deleted`);
+      onSuccess?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete book");
     }
@@ -177,6 +179,7 @@ export default function BookCatalogTable({ books }: Props) {
   const handleSaveBook = async (updatedBook: BookCard) => {
     setEditModalOpen(false);
     setEditingBook(null);
+    onSuccess?.();
   };
 
   const columns = buildColumns(handleEditClick, handleDeleteClick);

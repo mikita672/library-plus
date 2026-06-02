@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@phosphor-icons/react";
 import { z } from "zod";
 import { toast } from "sonner";
+import Image from "next/image";
 import { getAuthors } from "@/lib/api/authors";
 import { createBook, addBookUnits } from "@/lib/api/books";
 import { uploadBookCover } from "@/lib/api/media";
@@ -15,6 +16,7 @@ import { Author } from "@/types/book/Author";
 import { Category } from "@/types/book/Category";
 import { Publisher } from "@/types/book/Publisher";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   Dialog,
   DialogContent,
@@ -63,7 +65,11 @@ function nullableString(value?: string) {
   return trimmed ? trimmed : null;
 }
 
-export default function AddBookDialog() {
+interface AddBookDialogProps {
+  onSuccess?: () => void;
+}
+
+export default function AddBookDialog({ onSuccess }: AddBookDialogProps) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingLookups, setLoadingLookups] = useState(false);
@@ -71,7 +77,6 @@ export default function AddBookDialog() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm<CreateBookFormValues>({
     resolver: zodResolver(createBookSchema),
@@ -92,16 +97,6 @@ export default function AddBookDialog() {
       originalPublicationYear: undefined,
     },
   });
-
-  useEffect(() => {
-    if (selectedFile) {
-      const url = URL.createObjectURL(selectedFile);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(null);
-    }
-  }, [selectedFile]);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -174,6 +169,7 @@ export default function AddBookDialog() {
       }
 
       form.reset();
+      onSuccess?.();
       setOpen(false);
     } catch (err) {
       toast.error(
@@ -378,30 +374,13 @@ export default function AddBookDialog() {
               />
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="coverFile">Book cover</FieldLabel>
-              <Input
-                id="coverFile"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setSelectedFile(file);
-                  }
-                }}
-              />
-              {previewUrl && (
-                <div className="mt-2 h-32 w-24 overflow-hidden rounded-md border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewUrl}
-                    alt="Cover preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-            </Field>
+            <ImageUpload
+              id="coverFile"
+              label="Book cover"
+              onFileSelect={setSelectedFile}
+              aspectRatio="cover"
+              labelClassName="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            />
           </FieldGroup>
 
           <Field data-invalid={!!form.formState.errors.description}>

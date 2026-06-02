@@ -130,6 +130,10 @@ export default function BooksTab() {
     void fetchBooksAndPages();
   }, [fetchBooksAndPages]);
 
+  const refresh = () => {
+    void fetchBooksAndPages();
+  };
+
   const handleSearch = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSearchToken(inputValue);
@@ -172,7 +176,7 @@ export default function BooksTab() {
           </Button>
         </form>
 
-        <AddBookDialog />
+        <AddBookDialog onSuccess={refresh} />
       </div>
 
       <Collapsible>
@@ -295,7 +299,7 @@ export default function BooksTab() {
         <div className="text-destructive py-8">Failed to fetch books</div>
       ) : (
         <div className="min-h-[600px] flex flex-col justify-between">
-          <BookCatalogTable books={books} />
+          <BookCatalogTable books={books} onSuccess={refresh} />
           <PaginationControls
             pageNumber={pageNumber}
             totalPages={totalPages}

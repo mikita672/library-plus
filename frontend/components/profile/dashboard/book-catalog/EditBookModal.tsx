@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { PackageIcon, PlusIcon } from "@phosphor-icons/react";
+import Image from "next/image";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -65,17 +67,6 @@ export default function EditBookModal({
   const [unitsAddedThisSession, setUnitsAddedThisSession] = useState(0);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (selectedFile) {
-      const url = URL.createObjectURL(selectedFile);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(book?.coverURI || null);
-    }
-  }, [selectedFile, book]);
 
   useEffect(() => {
     if (!open) return;
@@ -308,32 +299,16 @@ export default function EditBookModal({
             />
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-cover" className="text-right">
-              Cover
-            </Label>
-            <div className="col-span-3 flex flex-col gap-2">
-              <Input
-                id="edit-cover"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setSelectedFile(file);
-                }}
-              />
-              {previewUrl && (
-                <div className="h-32 w-24 overflow-hidden rounded-md border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewUrl}
-                    alt="Cover preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          <ImageUpload
+            id="edit-cover"
+            label="Cover"
+            onFileSelect={setSelectedFile}
+            initialPreviewUrl={book?.coverURI}
+            aspectRatio="cover"
+            className="grid grid-cols-4 items-start gap-4"
+            labelClassName="text-right pt-2"
+            contentClassName="col-span-3"
+          />
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Availability</Label>

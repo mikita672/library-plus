@@ -8,6 +8,7 @@ import AddToCardButton from './AddToCardButton';
 import { useContext } from 'react';
 import { cartContext } from '@/context/cartContext';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 interface Props {
     book: BookPreview;
@@ -17,11 +18,15 @@ function BookMainInformation({ book }: Props) {
     return (
         <div className="w-full grid grid-cols-2">
             <div className="col-span-1 flex justify-center">
-                <img
-                    src={book.coverURI ?? "/images/book-placeholder.png"}
-                    className="h-[500px] shadow-md object-contain"
-                    alt="Book cover"
-                />
+                <div className="relative h-[500px] w-full max-w-[400px]">
+                    <Image
+                        src={book.coverURI ?? "/images/book-placeholder.png"}
+                        fill
+                        unoptimized={!!book.coverURI}
+                        className="shadow-md object-contain"
+                        alt="Book cover"
+                    />
+                </div>
             </div>
 
             <div className="col-span-1 flex flex-col pl-24 gap-24">
