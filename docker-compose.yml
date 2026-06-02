@@ -22,8 +22,6 @@ services:
       - MINIO_DEFAULT_BUCKETS=library-plus
     volumes:
       - minio_data:/data
-    networks:
-      - minio_network
     command: server /data --console-address ":9001"
     healthcheck:
       test: "curl -k -f http://127.0.0.1:9001/minio/health/live || exit 1"
@@ -31,14 +29,36 @@ services:
       timeout: 5s
       retries: 5
 
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 miniouser miniopass &&
+      mc mb local/library-plus || true &&
+      mc anonymous set download local/library-plus/covers || true &&
+      mc anonymous set download local/library-plus/avatars || true
+      "
+
   backend:
     build:
       context: ./backend
+    environment:
+      - Storage__Endpoint=http://minio:9000
+      - Storage__Bucket=library-plus
+      - Storage__AccessKey=miniouser
+      - Storage__SecretKey=miniopass
+      - Storage__ForcePathStyle=true
+      - Storage__PublicBaseUrl=http://localhost:9000/library-plus
     depends_on:
       mongo:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
       interval: 10s
@@ -60,7 +80,3 @@ volumes:
   db:
   minio_data:
     driver: local
-
-networks:
-  minio_network:
-    driver: bridge

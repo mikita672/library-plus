@@ -5,9 +5,11 @@ using LibraryPlus.Responses.Book;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
+using LibraryPlus.Services.Storage;
+
 namespace LibraryPlus.Services.Book;
 
-public class BookService(IMongoDatabase db, CategoryService categoryService, AuthorService authorService, PublisherService publisherService)
+public class BookService(IMongoDatabase db, CategoryService categoryService, AuthorService authorService, PublisherService publisherService, IObjectStorageService storageService)
 {
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
@@ -15,6 +17,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
     private readonly AuthorService _authorService = authorService;
     private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
+    private readonly IObjectStorageService _storageService = storageService;
     private const int SEARCH_PAGE_SIZE = 12;
 
     public async Task<BookModel> CreateBook(CreateBookRequest createBookRequest)
@@ -144,7 +147,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
-            b.CoverURI,
+            _storageService.GetPublicUrl(b.CoverURI),
             (await GetAvailableBookUnitForBook(b.Id)) != null
         ))]);
 
@@ -216,7 +219,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
-            b.CoverURI,
+            _storageService.GetPublicUrl(b.CoverURI),
             (await GetAvailableBookUnitForBook(b.Id)) != null
         ))]);
     }
@@ -296,9 +299,18 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             book.OriginalLanguage,
             book.OriginalPublicationYear,
             await originalPublisherTask,
-            book.CoverURI,
+            _storageService.GetPublicUrl(book.CoverURI),
             (await bookUnitTask) != null
         );
+    }
+
+    public async Task<bool> SetCoverURI(string bookId, string? coverURI)
+    {
+        var res = await _books.UpdateOneAsync(
+            Builders<BookModel>.Filter.Eq(b => b.Id, bookId),
+            Builders<BookModel>.Update.Set(b => b.CoverURI, coverURI)
+        );
+        return res.MatchedCount == 1;
     }
 
     public async Task IncreasePopularity(BookModel book)
@@ -355,7 +367,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
             b.CategoryIds != null && b.CategoryIds.Count > 0 && categoryMap.TryGetValue(b.CategoryIds[0], out var catName) ? catName : null,
             b.PublicationYear,
             b.OriginalPublicationYear,
-            b.CoverURI,
+            _storageService.GetPublicUrl(b.CoverURI),
             (await GetAvailableBookUnitForBook(b.Id)) != null
         ))]);
     }
@@ -396,7 +408,7 @@ public class BookService(IMongoDatabase db, CategoryService categoryService, Aut
                 catName,
                 b.PublicationYear,
                 b.OriginalPublicationYear,
-                b.CoverURI,
+                _storageService.GetPublicUrl(b.CoverURI),
                 (await GetAvailableBookUnitForBook(b.Id)) != null
             );
         });

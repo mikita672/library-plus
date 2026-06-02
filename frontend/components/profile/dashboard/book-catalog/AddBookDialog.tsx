@@ -8,6 +8,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { getAuthors } from "@/lib/api/authors";
 import { createBook, addBookUnits } from "@/lib/api/books";
+import { uploadBookCover } from "@/lib/api/media";
 import { getCategories } from "@/lib/api/categories";
 import { getPublishers } from "@/lib/api/publishers";
 import { Author } from "@/types/book/Author";
@@ -53,7 +54,6 @@ const createBookSchema = z.object({
   originalTitle: z.string().optional(),
   originalLanguage: z.string().optional(),
   originalPublicationYear: z.number().int().min(1).optional(),
-  coverURI: z.string().optional(),
 });
 
 type CreateBookFormValues = z.infer<typeof createBookSchema>;
@@ -70,6 +70,8 @@ export default function AddBookDialog() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm<CreateBookFormValues>({
     resolver: zodResolver(createBookSchema),
@@ -88,9 +90,18 @@ export default function AddBookDialog() {
       originalTitle: "",
       originalLanguage: "",
       originalPublicationYear: undefined,
-      coverURI: "",
     },
   });
+
+  useEffect(() => {
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [selectedFile]);
 
   useEffect(() => {
     const loadLookups = async () => {
@@ -144,6 +155,14 @@ export default function AddBookDialog() {
 
     try {
       const createdBook = await createBook(payload);
+
+      if (selectedFile) {
+        try {
+          await uploadBookCover(createdBook.id, selectedFile);
+        } catch (uploadErr) {
+          toast.error("Book created, but cover upload failed.");
+        }
+      }
 
       if (values.initialCopies > 0) {
         await addBookUnits(createdBook.id, values.initialCopies);
@@ -360,8 +379,28 @@ export default function AddBookDialog() {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="coverURI">Cover URL</FieldLabel>
-              <Input id="coverURI" {...form.register("coverURI")} />
+              <FieldLabel htmlFor="coverFile">Book cover</FieldLabel>
+              <Input
+                id="coverFile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                  }
+                }}
+              />
+              {previewUrl && (
+                <div className="mt-2 h-32 w-24 overflow-hidden rounded-md border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrl}
+                    alt="Cover preview"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
             </Field>
           </FieldGroup>
 

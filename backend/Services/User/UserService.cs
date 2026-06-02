@@ -3,12 +3,17 @@ using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
 using LibraryPlus.Requests.Auth;
 
+using LibraryPlus.Services.Storage;
+
 namespace LibraryPlus.Services.User;
 
-public class UserService(IMongoDatabase db, NotificationService notificationService)
+public class UserService(IMongoDatabase db, NotificationService notificationService, IObjectStorageService storageService)
 {
     private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
     private readonly NotificationService _notificationService = notificationService;
+    private readonly IObjectStorageService _storageService = storageService;
+
+    public string? GetAvatarUrl(string? avatarKey) => _storageService.GetPublicUrl(avatarKey);
 
     public async Task<UserModel?> GetUserById(string id)
     {
@@ -60,6 +65,15 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
             Builders<UserModel>.Filter.Eq(u => u.Id, userId),
             Builders<UserModel>.Update.Set(u => u.PhoneNumber, newPhoneNumber)
         );
+    }
+
+    public async Task<bool> SetAvatarUrl(string userId, string? avatarUrl)
+    {
+        var res = await _users.UpdateOneAsync(
+            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
+            Builders<UserModel>.Update.Set(u => u.AvatarUrl, avatarUrl)
+        );
+        return res.MatchedCount == 1;
     }
 
     public async Task<bool> VerifyUserPassword(UserModel user, string password)
