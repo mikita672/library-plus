@@ -176,7 +176,7 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
     }
   };
 
-  const handleSaveBook = async (updatedBook: BookCard) => {
+  const handleSaveBook = async () => {
     setEditModalOpen(false);
     setEditingBook(null);
     onSuccess?.();

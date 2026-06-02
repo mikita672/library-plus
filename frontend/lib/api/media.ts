@@ -1,5 +1,3 @@
-import { API_URL } from "@/lib/api/books"; // I'll check if API_URL is exported there or just use the same pattern
-
 const BASE_URL = "/api/media";
 
 export async function uploadBookCover(bookId: string, file: File): Promise<{ coverURI: string }> {

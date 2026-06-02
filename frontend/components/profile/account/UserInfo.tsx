@@ -5,7 +5,6 @@ import { userContext } from "@/context/userContext";
 import { uploadUserAvatar } from "@/lib/api/media";
 import { toast } from "sonner";
 import ChangePhonePopover from "./ChangePhonePopover";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 function UserInfo() {
@@ -37,7 +36,7 @@ function UserInfo() {
     }
   };
 
-  let joinDate = fullUserData.joinedAt
+  const joinDate = fullUserData.joinedAt
     ? new Date(fullUserData.joinedAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",

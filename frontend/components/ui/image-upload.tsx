@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Input } from "./input";
-import { FieldLabel } from "./field";
 import { Label } from "./label";
 
 interface ImageUploadProps {
@@ -27,26 +26,24 @@ export function ImageUpload({
   contentClassName = "",
   aspectRatio = "square",
 }: ImageUploadProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialPreviewUrl || null,
   );
 
-  useEffect(() => {
-    if (selectedFile) {
-      const url = URL.createObjectURL(selectedFile);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
     } else {
       setPreviewUrl(initialPreviewUrl || null);
     }
-  }, [selectedFile, initialPreviewUrl]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
     onFileSelect(file);
   };
+
+  useEffect(() => {
+    setPreviewUrl(initialPreviewUrl || null);
+  }, [initialPreviewUrl]);
 
   const containerAspect =
     aspectRatio === "cover" ? "aspect-[2/3] h-48" : "size-24";

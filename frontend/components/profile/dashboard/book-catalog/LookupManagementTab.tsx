@@ -7,8 +7,9 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +98,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
 }: LookupManagementTabProps<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<T | null>(null);
@@ -108,7 +110,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
     try {
       const data = await fetchItems();
       setItems(data);
-    } catch (err) {
+    } catch {
       toast.error(`Failed to load ${entityNamePlural.toLowerCase()}`);
     } finally {
       setLoading(false);
@@ -174,15 +176,33 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
 
   const columns = buildColumns<T>(entityName, openEditDialog, handleDelete);
 
+  const filteredItems = useMemo(() => {
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [items, searchQuery]);
+
   const table = useReactTable({
-    data: items,
+    data: filteredItems,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-1 max-w mr-4 gap-2">
+          <Input
+            className="h-10 text-base"
+            placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5" />
+            <span className="sr-only">Search</span>
+          </Button>
+        </div>
         <Button className="h-10 px-4 text-lg" onClick={openAddDialog}>
           <PlusIcon />
           Add {entityName.toLowerCase()}
@@ -191,9 +211,11 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
 
       {loading ? (
         <div className="text-center text-muted-foreground">Loading...</div>
-      ) : !items.length ? (
-        <div className="text-center text-muted-foreground">
-          No {entityNamePlural.toLowerCase()} found.
+      ) : !filteredItems.length ? (
+        <div className="text-center text-muted-foreground py-8">
+          {searchQuery
+            ? `No ${entityNamePlural.toLowerCase()} matching "${searchQuery}"`
+            : `No ${entityNamePlural.toLowerCase()} found.`}
         </div>
       ) : (
         <Table>

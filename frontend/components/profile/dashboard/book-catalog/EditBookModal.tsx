@@ -19,9 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { PackageIcon, PlusIcon } from "@phosphor-icons/react";
-import Image from "next/image";
 import { ImageUpload } from "@/components/ui/image-upload";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { getAuthors } from "@/lib/api/authors";
@@ -144,7 +143,7 @@ export default function EditBookModal({
       if (selectedFile) {
         try {
           await uploadBookCover(book.id, selectedFile);
-        } catch (uploadErr) {
+        } catch {
           toast.error("Book updated, but cover upload failed.");
         }
       }

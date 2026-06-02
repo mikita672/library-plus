@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@phosphor-icons/react";
 import { z } from "zod";
 import { toast } from "sonner";
-import Image from "next/image";
 import { getAuthors } from "@/lib/api/authors";
 import { createBook, addBookUnits } from "@/lib/api/books";
 import { uploadBookCover } from "@/lib/api/media";
@@ -154,7 +153,7 @@ export default function AddBookDialog({ onSuccess }: AddBookDialogProps) {
       if (selectedFile) {
         try {
           await uploadBookCover(createdBook.id, selectedFile);
-        } catch (uploadErr) {
+        } catch {
           toast.error("Book created, but cover upload failed.");
         }
       }
