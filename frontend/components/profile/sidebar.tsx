@@ -54,7 +54,7 @@ export default function Sidebar() {
               href={href}
               aria-current={active ? "page" : undefined}
               className={[
-                  "flex h-12 items-center gap-3 border-b border-black px-6 text-[15px] transition-colors last:border-b-0",
+                  "flex h-12 items-center gap-3 border-b border-black px-6 text-[13px] whitespace-nowrap transition-colors last:border-b-0",
                 active
                   ? "font-semibold text-primary hover:text-sidebar-foreground underline"
                   : "text-sidebar-foreground hover:text-primary",
@@ -71,7 +71,7 @@ export default function Sidebar() {
             <div
               aria-current={isDashboardActive ? "page" : undefined}
               className={[
-                "flex h-12 items-center gap-3 border-b border-black px-6 text-[15px] transition-colors",
+                "flex h-12 items-center gap-3 border-b border-black px-6 text-[13px] whitespace-nowrap transition-colors",
                 isDashboardActive
                   ? "font-semibold text-primary"
                   : "text-sidebar-foreground",
@@ -93,7 +93,7 @@ export default function Sidebar() {
                     href={href}
                     aria-current={active ? "page" : undefined}
                     className={[
-                      "flex h-12 items-center gap-3 border-b border-black pl-12 pr-6 text-[15px] transition-colors last:border-b-0",
+                      "flex h-12 items-center gap-3 border-b border-black pl-12 pr-6 text-[13px] whitespace-nowrap transition-colors last:border-b-0",
                       active
                         ? "font-semibold text-primary"
                         : "text-sidebar-foreground hover:text-primary",
