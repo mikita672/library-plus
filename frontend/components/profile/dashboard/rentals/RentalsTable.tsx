@@ -17,8 +17,16 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ManageRentalDialog } from "./ManageRentalDialog";
+import { updateReservationStatus } from "@/lib/api/reservations";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -73,8 +81,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const STATUSES = ["Reserved", "Taken", "Returned", "Overdue", "Waiting for payment"];
+
 function buildColumns(
   onManageClick: (r: EnrichedReservationItem) => void,
+  onStatusChange: (id: string, newStatus: string) => void,
 ): ColumnDef<EnrichedReservationItem>[] {
   return [
     {
@@ -141,13 +152,34 @@ function buildColumns(
       header: "Actions",
       cell: ({ row }) => {
         return (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onManageClick(row.original)}
-          >
-            Manage
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onManageClick(row.original)}
+            >
+              Manage
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Status
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {STATUSES.map((s) => (
+                  <DropdownMenuItem
+                    key={s}
+                    onClick={() => onStatusChange(row.original.id, s)}
+                    className={row.original.status === s ? "bg-accent font-bold" : ""}
+                  >
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
@@ -165,9 +197,26 @@ export default function RentalsTable({
   const [selectedReservation, setSelectedReservation] =
     useState<EnrichedReservationItem | null>(null);
 
+  const handleStatusChange = useCallback(
+    async (id: string, newStatus: string) => {
+      try {
+        const success = await updateReservationStatus(id, newStatus);
+        if (success) {
+          toast.success(`Status updated to ${newStatus}`);
+          onRefresh();
+        } else {
+          toast.error("Failed to update status");
+        }
+      } catch {
+        toast.error("An error occurred while updating status");
+      }
+    },
+    [onRefresh],
+  );
+
   const columns = useMemo(
-    () => buildColumns((r) => setSelectedReservation(r)),
-    [],
+    () => buildColumns((r) => setSelectedReservation(r), handleStatusChange),
+    [handleStatusChange],
   );
 
   const data = useMemo(() => reservations, [reservations]);

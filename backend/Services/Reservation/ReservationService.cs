@@ -75,6 +75,15 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         return res.MatchedCount == 1;
     }
 
+    public async Task<bool> UpdateStatus(string id, string status)
+    {
+        var res = await _reservations.UpdateOneAsync(
+            Builders<ReservationModel>.Filter.Eq(r => r.Id, id),
+            Builders<ReservationModel>.Update.Set(r => r.Status, status)
+        );
+        return res.MatchedCount == 1;
+    }
+
     public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null)
     {
         var query = _reservations.AsQueryable().AsQueryable();

@@ -316,7 +316,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
                 <Label>Additional note:</Label>
                 <Controller
                   name="note"

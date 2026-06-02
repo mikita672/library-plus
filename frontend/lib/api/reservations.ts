@@ -52,3 +52,15 @@ export async function returnReservation(
   });
   return res.ok;
 }
+
+export async function updateReservationStatus(
+  id: string,
+  status: string,
+): Promise<boolean> {
+  const res = await fetch(`/api/reservations/reservation/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  return res.ok;
+}

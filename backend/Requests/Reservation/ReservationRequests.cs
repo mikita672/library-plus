@@ -12,3 +12,7 @@ public record HandleReturnRequest(
     DateTime StartDate,
     DateTime EndDate
 );
+
+public record UpdateStatusRequest(
+    string Status
+);
