@@ -85,7 +85,9 @@ function buildColumns(
     },
     {
       accessorKey: "categoryName",
-      header: ({ column }) => <SortableHeader label="Category" column={column} />,
+      header: ({ column }) => (
+        <SortableHeader label="Category" column={column} />
+      ),
       cell: ({ row }) => (
         <div>{(row.getValue("categoryName") as string | null) ?? "-"}</div>
       ),

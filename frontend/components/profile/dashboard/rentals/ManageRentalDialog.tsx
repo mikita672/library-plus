@@ -208,7 +208,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <p>Year of publication: {reservation.bookYear}</p>
             </div>
             {reservation.bookCoverUri && (
-              <div className="mt-4 overflow-hidden relative w-[200px] h-[300px]">
+              <div className="mt-4 overflow-hidden relative w-50 h-75">
                 <Image
                   src={
                     reservation.bookCoverUri.startsWith("http")
@@ -301,7 +301,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                   control={form.control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-[180px] rounded-none bg-transparent">
+                      <SelectTrigger className="w-45 rounded-none bg-transparent">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-none">
@@ -326,7 +326,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                       placeholder="Enter additional noted regarding this rental"
                       value={field.value}
                       onChange={field.onChange}
-                      className="min-h-[120px] resize-none rounded-none bg-transparent"
+                      className="min-h-30 resize-none rounded-none bg-transparent"
                     />
                   )}
                 />
