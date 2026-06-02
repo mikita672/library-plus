@@ -1,14 +1,12 @@
 "use client"
-
 import { BookPreview } from '@/types/book/Book'
 import Link from 'next/link';
 import { Badge } from '../../ui/badge';
 import ScrollToExtendedInformation from './ScrollToExtendedInformation';
 import AddToCardButton from './AddToCardButton';
-import { useContext } from 'react';
-import { cartContext } from '@/context/cartContext';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import Image from 'next/image';
+
 
 interface Props {
     book: BookPreview;
@@ -49,7 +47,7 @@ function BookMainInformation({ book }: Props) {
 
                     {book.categories.length === 0 ? <></> :
                         <div className="w-full flex items-center gap-1">
-                            Categories: {book.categories.map((category, i) => (
+                            Categories: {book.categories.map((category) => (
                                 <Link key={category.id} href={`/catalog?categoryIds=${category.id}`}>
                                     <Badge>{category.name}</Badge>
                                 </Link>

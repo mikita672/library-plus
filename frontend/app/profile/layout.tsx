@@ -16,7 +16,7 @@ export default function ProfileLayout({
 
   useEffect(() => {
     void refreshFullUser();
-  }, [pathname]);
+  }, [pathname, refreshFullUser]);
 
   return (
     <section className="flex  bg-card py-4">

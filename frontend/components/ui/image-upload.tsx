@@ -42,7 +42,10 @@ export function ImageUpload({
   };
 
   useEffect(() => {
-    setPreviewUrl(initialPreviewUrl || null);
+    const frame = requestAnimationFrame(() => {
+      setPreviewUrl(initialPreviewUrl || null);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [initialPreviewUrl]);
 
   const containerAspect =

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useClients } from "@/hooks/useClients";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ClientsTable from "./ClientsTable";
@@ -26,7 +25,10 @@ export default function ClientsTab() {
   );
 
   useEffect(() => {
-    setPageNumber(1);
+    const frame = requestAnimationFrame(() => {
+      setPageNumber(1);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [debouncedSearch]);
 
   return (

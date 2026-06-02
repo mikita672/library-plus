@@ -108,7 +108,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
 
   if (!reservation) return null;
 
-  const { startDateStr, endDateStr, condition, note } = form.watch();
+  const { startDateStr, endDateStr, condition } = form.watch();
 
   const parseDateStr = (dateStr: string, fallbackIso: string) => {
     try {

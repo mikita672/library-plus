@@ -1,4 +1,4 @@
-import { BookCard, BookPreview } from "@/types/book/Book";
+import { BookCard } from "@/types/book/Book";
 import BooksCarousel from "../BooksCarousel";
 
 async function TrendingBooks() {

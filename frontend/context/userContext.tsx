@@ -26,8 +26,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [fullUserData, setFullUserData] = useState<FullUserData | null>(null);
 
-  const refreshUser = async () => {
-    setIsLoading(true);
+  const refreshUser = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     const response = await fetch("/api/users/meShort", {
       method: "GET",
     });
@@ -40,8 +40,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
   };
 
-  const refreshFullUser = async () => {
-    setIsLoading(true);
+  const refreshFullUser = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     const response = await fetch("/api/users/me", { method: "GET" });
 
     if (response.ok) {
@@ -53,7 +53,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    refreshUser();
+    const frame = requestAnimationFrame(() => {
+        void refreshUser(false);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const login = async ({

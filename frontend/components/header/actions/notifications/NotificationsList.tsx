@@ -24,7 +24,7 @@ function NotificationsList({ notifications }: Params) {
     return (
         <>
             {notifications.map((n, i) => {
-                let subject = n.subject.length > 30 ? n.subject.substring(0, 27) + '...' : n.subject;
+                const subject = n.subject.length > 30 ? n.subject.substring(0, 27) + '...' : n.subject;
 
                 return (
                     <div

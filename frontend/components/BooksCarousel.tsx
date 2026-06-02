@@ -34,7 +34,10 @@ function BooksCarousel({ books, includeAuthor }: Props) {
       return;
     }
 
-    setCurrentSlide(api.selectedScrollSnap());
+    const initialSnap = api.selectedScrollSnap();
+    const frame = requestAnimationFrame(() => {
+      setCurrentSlide(initialSnap);
+    });
 
     const onSelect = () => {
       setCurrentSlide(api.selectedScrollSnap());
@@ -42,6 +45,7 @@ function BooksCarousel({ books, includeAuthor }: Props) {
 
     api.on("select", onSelect);
     return () => {
+      cancelAnimationFrame(frame);
       api.off("select", onSelect);
     };
   }, [api]);

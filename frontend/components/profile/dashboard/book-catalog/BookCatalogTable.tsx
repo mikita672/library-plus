@@ -15,7 +15,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -152,45 +152,57 @@ interface Props {
 }
 
 export default function BookCatalogTable({ books, onSuccess }: Props) {
+  "use no memo";
   const [sorting, setSorting] = useState<SortingState>([]);
   const [editingBook, setEditingBook] = useState<BookCard | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const handleEditClick = (book: BookCard) => {
+  const handleEditClick = useCallback((book: BookCard) => {
     setEditingBook(book);
     setEditModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteClick = async (book: BookCard) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${book.title}"?`,
-    );
-    if (!confirmed) return;
+  const handleDeleteClick = useCallback(
+    async (book: BookCard) => {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete "${book.title}"?`,
+      );
+      if (!confirmed) return;
 
-    try {
-      await deleteBook(book.id);
-      toast.success(`"${book.title}" has been deleted`);
-      onSuccess?.();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete book");
-    }
-  };
+      try {
+        await deleteBook(book.id);
+        toast.success(`"${book.title}" has been deleted`);
+        onSuccess?.();
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete book",
+        );
+      }
+    },
+    [onSuccess],
+  );
 
-  const handleSaveBook = async () => {
+  const handleSaveBook = useCallback(async () => {
     setEditModalOpen(false);
     setEditingBook(null);
     onSuccess?.();
-  };
+  }, [onSuccess]);
 
-  const columns = buildColumns(handleEditClick, handleDeleteClick);
+  const columns = useMemo(
+    () => buildColumns(handleEditClick, handleDeleteClick),
+    [handleEditClick, handleDeleteClick],
+  );
 
+  const data = useMemo(() => books, [books]);
+
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: books,
+    data,
     columns,
     onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: { sorting },
+    getCoreRowModel: useMemo(() => getCoreRowModel(), []),
+    getSortedRowModel: useMemo(() => getSortedRowModel(), []),
+    state: useMemo(() => ({ sorting }), [sorting]),
   });
 
   if (!books.length) {

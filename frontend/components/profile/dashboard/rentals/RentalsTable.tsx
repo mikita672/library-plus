@@ -159,6 +159,7 @@ export default function RentalsTable({
   reservations: EnrichedReservationItem[];
   onRefresh: () => void;
 }) {
+  "use no memo";
   const [selectedReservation, setSelectedReservation] =
     useState<EnrichedReservationItem | null>(null);
 
@@ -167,10 +168,13 @@ export default function RentalsTable({
     [],
   );
 
+  const data = useMemo(() => reservations, [reservations]);
+
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: reservations,
+    data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
+    getCoreRowModel: useMemo(() => getCoreRowModel(), []),
   });
 
   if (!reservations.length) {

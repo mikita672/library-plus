@@ -22,7 +22,7 @@ import { useContext, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-export default function page() {
+export default function SignUpPage() {
   const form = useForm<SignUpFormSchema>({
     resolver: zodResolver(signUpformSchema),
     mode: "onChange",

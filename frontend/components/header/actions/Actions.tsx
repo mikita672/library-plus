@@ -1,6 +1,5 @@
 "use client";
 
-import { BasketIcon } from '@phosphor-icons/react'
 import HeaderActionThemeToggle from './ThemeToggle';
 import HeaderNotifications from './notifications/Nofications';
 import { useContext } from 'react';
