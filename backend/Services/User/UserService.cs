@@ -42,6 +42,17 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
 
     public async Task UpdatePhoneNumber(string id, string phone) => await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.PhoneNumber, phone));
 
+    public async Task UpdateName(string id, string name) => await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.Name, name));
+
+    public async Task UpdateProfile(string id, string? name, string? phone)
+    {
+        var update = Builders<UserModel>.Update;
+        var updates = new List<UpdateDefinition<UserModel>>();
+        if (name != null) updates.Add(update.Set(u => u.Name, name));
+        if (phone != null) updates.Add(update.Set(u => u.PhoneNumber, phone));
+        if (updates.Count > 0) await _users.UpdateOneAsync(u => u.Id == id, update.Combine(updates));
+    }
+
     public async Task<bool> SetAvatarUrl(string id, string? url)
     {
         var result = await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.AvatarUrl, url));

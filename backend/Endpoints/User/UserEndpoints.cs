@@ -51,6 +51,24 @@ public static class UserEndpoints
             await userService.UpdatePhoneNumber(userId, updatePhoneNumberDto.NewPhoneNumber);
         });
 
+        group.MapPatch("/updateName", [Authorize] async (
+            ClaimsPrincipal claims,
+            UserService userService,
+            [FromBody] UpdateNameRequest updateNameDto) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            await userService.UpdateName(userId, updateNameDto.NewName);
+        });
+
+        group.MapPatch("/updateProfile", [Authorize] async (
+            ClaimsPrincipal claims,
+            UserService userService,
+            [FromBody] UpdateProfileRequest updateProfileDto) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            await userService.UpdateProfile(userId, updateProfileDto.Name, updateProfileDto.PhoneNumber);
+        });
+
         group.MapPatch("/updatePassword", [Authorize] async (
             ClaimsPrincipal claims,
             AuthService authService,

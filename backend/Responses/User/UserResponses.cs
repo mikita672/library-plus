@@ -4,6 +4,7 @@ namespace LibraryPlus.Responses.User;
 
 public record MeResponse(
     string Email,
+    string? Name,
     string? PhoneNumber,
     string? AvatarUrl,
     DateTime JoinedAt,
@@ -14,6 +15,7 @@ public record MeResponse(
     {
         return new MeResponse(
             user.Email,
+            user.Name,
             user.PhoneNumber,
             user.AvatarUrl,
             user.JoinedAt,

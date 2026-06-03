@@ -17,6 +17,7 @@ export interface IUserContext {
   resetPassword: ({ email }: PasswordResetFormSchema) => Promise<string | null>;
   refreshUser: (showLoading?: boolean) => Promise<void>;
   refreshFullUser: (showLoading?: boolean) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
 }
 
 export const userContext = createContext({} as IUserContext);
@@ -118,7 +119,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!response.ok) {
       const data: AuthResponseDTO = await response.json().catch(() => {});
-      return data?.message ?? "something went wrong";
+      return data.message ?? "something went wrong";
     }
 
     setUserData(null);
@@ -147,6 +148,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return null;
   }, []);
 
+  const updateName = useCallback(async (newName: string) => {
+    await fetch("/api/users/updateName", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newName }),
+    });
+  }, []);
+
   const contextValue = useMemo(() => ({
     userData,
     fullUserData,
@@ -157,6 +168,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     refreshUser,
     refreshFullUser,
     resetPassword,
+    updateName,
   }), [
     userData,
     fullUserData,
@@ -167,6 +179,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     refreshUser,
     refreshFullUser,
     resetPassword,
+    updateName,
   ]);
 
   return (

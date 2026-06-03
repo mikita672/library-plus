@@ -4,7 +4,7 @@ import { useContext, useRef, useState } from "react";
 import { userContext } from "@/context/userContext";
 import { uploadUserAvatar } from "@/lib/api/media";
 import { toast } from "sonner";
-import ChangePhonePopover from "./ChangePhonePopover";
+import EditProfilePopover from "./EditProfilePopover";
 import Image from "next/image";
 
 function UserInfo() {
@@ -48,8 +48,9 @@ function UserInfo() {
     <div className="p-2">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xl font-semibold">Account Info</h2>
-        <ChangePhonePopover
-          phoneNumber={fullUserData.phoneNumber}
+        <EditProfilePopover
+          currentName={fullUserData.name}
+          currentPhone={fullUserData.phoneNumber}
           onSuccess={refreshFullUser}
         />
       </div>
@@ -82,6 +83,7 @@ function UserInfo() {
           />
         </div>
         <div className="flex flex-col">
+          <h3>Name: {fullUserData.name || "N/A"}</h3>
           <h3>Email: {fullUserData.email}</h3>
           <h3>Phone number: {fullUserData.phoneNumber}</h3>
           <h3>Joined: {joinDate}</h3>
