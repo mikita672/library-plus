@@ -12,6 +12,7 @@ using LibraryPlus.Endpoints.Reservation;
 using LibraryPlus.Services.Reservation;
 using LibraryPlus.Services.Mail;
 using LibraryPlus.Services.Storage;
+using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -64,6 +65,7 @@ builder.Services.AddSingleton<PublisherService>();
 builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<ReservationService>();
+builder.Services.AddSingleton<StatisticsService>();
 builder.Services.AddSingleton(mailService);
 
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Storage));
@@ -88,5 +90,6 @@ app.MapCategoryEndpoints();
 app.MapBookEndpoints();
 app.MapReservationEndpoints();
 app.MapMediaEndpoints();
+app.MapStatisticsEndpoints();
 
 app.Run();

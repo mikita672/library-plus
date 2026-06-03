@@ -68,7 +68,8 @@ export default function Sidebar() {
 
         {isAdmin ? (
           <div className="flex flex-col">
-            <div
+            <Link
+              href="/profile/dashboard"
               aria-current={isDashboardActive ? "page" : undefined}
               className={[
                 "flex h-12 items-center gap-3 border-b border-black px-6 text-[13px] whitespace-nowrap transition-colors",
@@ -82,7 +83,7 @@ export default function Sidebar() {
                 weight={isDashboardActive ? "fill" : "regular"}
               />
               <span>Dashboard</span>
-            </div>
+            </Link>
 
             <div className="flex flex-col">
               {dashboardLinks.map(({ href, label, icon: Icon }) => {
