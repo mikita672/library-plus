@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -35,64 +35,28 @@ interface Props {
 
 const CONDITIONS = ["Brand New", "Good", "Fair", "Lost/Destroyed"];
 
-function formatDate(iso: string) {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
+const formatDate = (iso: string) =>
+  iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
 
-const dateSchema = z
-  .string()
-  .regex(
-    /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/,
-    "Dates must be in DD/MM/YYYY format",
-  );
+const dateSchema = z.string().regex(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/, "Use DD/MM/YYYY");
 
-const rentalSchema = z
-  .object({
-    startDateStr: dateSchema,
-    endDateStr: dateSchema,
-    condition: z.string(),
-    note: z.string(),
-  })
-  .refine(
-    (data) => {
-      const parseDate = (str: string) => {
-        const parts = str.split("/");
-        return new Date(
-          Number(parts[2]),
-          Number(parts[1]) - 1,
-          Number(parts[0]),
-        );
-      };
-      const start = parseDate(data.startDateStr);
-      const end = parseDate(data.endDateStr);
-
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) return false;
-      return start.getTime() <= end.getTime();
-    },
-    {
-      message: "'From' date cannot be greater than 'To' date",
-      path: ["startDateStr"],
-    },
-  );
+const rentalSchema = z.object({
+  startDateStr: dateSchema,
+  endDateStr: dateSchema,
+  condition: z.string(),
+  note: z.string(),
+}).refine(d => {
+  const p = (s: string) => { const [dd, mm, y] = s.split("/").map(Number); return new Date(y, mm - 1, dd); };
+  return p(d.startDateStr).getTime() <= p(d.endDateStr).getTime();
+}, { message: "'From' must be before 'To'", path: ["startDateStr"] });
 
 type FormValues = z.infer<typeof rentalSchema>;
 
 export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(rentalSchema),
-    defaultValues: {
-      startDateStr: "",
-      endDateStr: "",
-      condition: "Good",
-      note: "",
-    },
+    defaultValues: { startDateStr: "", endDateStr: "", condition: "Good", note: "" },
   });
 
   useEffect(() => {
@@ -106,121 +70,61 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     }
   }, [reservation, form]);
 
-  if (!reservation) return null;
-
   const { startDateStr, endDateStr, condition } = form.watch();
 
-  const parseDateStr = (dateStr: string, fallbackIso: string) => {
-    try {
-      if (!dateStr) return new Date(fallbackIso);
-      const parts = dateStr.split("/");
-      if (parts.length === 3) {
-        const d = new Date(
-          Number(parts[2]),
-          Number(parts[1]) - 1,
-          Number(parts[0]),
-        );
-        if (!isNaN(d.getTime())) return d;
-      }
-    } catch {}
-    return new Date(fallbackIso);
-  };
+  const dates = useMemo(() => {
+    const parse = (s: string, fallback: string) => {
+      const p = s.split("/");
+      if (p.length !== 3) return new Date(fallback);
+      const d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+      return isNaN(d.getTime()) ? new Date(fallback) : d;
+    };
+    const s = parse(startDateStr, reservation?.startDate || "");
+    const e = parse(endDateStr, reservation?.endDate || "");
+    return { s, e };
+  }, [startDateStr, endDateStr, reservation]);
 
-  const startDate = parseDateStr(startDateStr, reservation.startDate);
-  const endDate = parseDateStr(endDateStr, reservation.endDate);
-  const now = new Date();
+  if (!reservation) return null;
 
-  const totalDays = Math.max(
-    1,
-    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)),
-  );
-
-  let overdueDays = 0;
-  if (
-    reservation.status === "Overdue" ||
-    (reservation.status !== "Returned" && now > endDate)
-  ) {
-    overdueDays = Math.max(
-      0,
-      Math.ceil((now.getTime() - endDate.getTime()) / (1000 * 3600 * 24)),
-    );
-  }
+  const totalDays = Math.max(1, Math.ceil((dates.e.getTime() - dates.s.getTime()) / 86400000));
+  const overdueDays = (reservation.status === "Overdue" || (reservation.status !== "Returned" && new Date() > dates.e))
+    ? Math.max(0, Math.ceil((new Date().getTime() - dates.e.getTime()) / 86400000)) : 0;
 
   const overdueFine = overdueDays * 1;
-  const conditionFine =
-    condition === "Lost/Destroyed" ? reservation.repurchasePrice : 0;
+  const conditionFine = condition === "Lost/Destroyed" ? reservation.repurchasePrice : 0;
   const totalFine = overdueFine + conditionFine;
 
-  const handleDateChange = (val: string, onChange: (v: string) => void) => {
-    onChange(val.replace(/[^\d/]/g, ""));
-  };
-
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     setLoading(true);
-
-    const partsStart = data.startDateStr.split("/");
-    const startObj = new Date(
-      Number(partsStart[2]),
-      Number(partsStart[1]) - 1,
-      Number(partsStart[0]),
-    );
-
-    const partsEnd = data.endDateStr.split("/");
-    const endObj = new Date(
-      Number(partsEnd[2]),
-      Number(partsEnd[1]) - 1,
-      Number(partsEnd[0]),
-    );
-
+    const p = (s: string) => { const [d, m, y] = s.split("/").map(Number); return new Date(y, m - 1, d); };
     try {
       await returnReservation(reservation.id, {
-        bookConditionUponReturn: data.condition,
-        additionalNote: data.note,
-        startDate: startObj.toISOString(),
-        endDate: endObj.toISOString(),
+        bookConditionUponReturn: values.condition,
+        additionalNote: values.note,
+        startDate: p(values.startDateStr).toISOString(),
+        endDate: p(values.endDateStr).toISOString(),
       });
       onSuccess();
       onClose();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   return (
-    <Dialog open={!!reservation} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl sm:max-w-4xl rounded-none border-none p-8">
-        <DialogHeader className="hidden">
-          <DialogTitle>Manage Rental</DialogTitle>
-        </DialogHeader>
-
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2"
-        >
+    <Dialog open={!!reservation} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-4xl rounded-none border-none p-8">
+        <DialogHeader className="hidden"><DialogTitle>Manage</DialogTitle></DialogHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
           <div className="space-y-4">
             <h2 className="text-xl font-bold">{reservation.bookTitle}</h2>
             <div className="text-sm space-y-1">
               <p>id: {reservation.bookUnitId.substring(0, 8)}</p>
               <p>Author: {reservation.bookAuthor}</p>
               <p>Language: {reservation.bookLanguage}</p>
-              <p>Year of publication: {reservation.bookYear}</p>
+              <p>Year: {reservation.bookYear}</p>
             </div>
             {reservation.bookCoverUri && (
-              <div className="mt-4 overflow-hidden relative w-50 h-75">
-                <Image
-                  src={
-                    reservation.bookCoverUri.startsWith("http")
-                      ? reservation.bookCoverUri
-                      : `http://localhost:5032${reservation.bookCoverUri}`
-                  }
-                  alt={reservation.bookTitle}
-                  fill
-                  className="object-cover"
-                  sizes="200px"
-                  unoptimized
-                />
+              <div className="mt-4 relative w-50 h-75 overflow-hidden">
+                <Image src={reservation.bookCoverUri} alt={reservation.bookTitle} fill className="object-cover" unoptimized />
               </div>
             )}
           </div>
@@ -229,158 +133,67 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
             <div className="space-y-4">
               <h3 className="font-bold text-lg">Rental period</h3>
               <div className="grid grid-cols-2 gap-4">
-                <Controller
-                  name="startDateStr"
-                  control={form.control}
-                  render={({ field }) => (
-                    <div className="space-y-1">
-                      <Label>From</Label>
-                      <Input
-                        value={field.value}
-                        onChange={(e) =>
-                          handleDateChange(e.target.value, field.onChange)
-                        }
-                        placeholder="DD/MM/YYYY"
-                        className="rounded-none bg-transparent"
-                      />
-                      {form.formState.errors.startDateStr && (
-                        <p className="text-destructive text-xs font-medium">
-                          {form.formState.errors.startDateStr.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                />
-                <Controller
-                  name="endDateStr"
-                  control={form.control}
-                  render={({ field }) => (
-                    <div className="space-y-1">
-                      <Label>To</Label>
-                      <Input
-                        value={field.value}
-                        onChange={(e) =>
-                          handleDateChange(e.target.value, field.onChange)
-                        }
-                        placeholder="DD/MM/YYYY"
-                        className="rounded-none bg-transparent"
-                      />
-                      {form.formState.errors.endDateStr && (
-                        <p className="text-destructive text-xs font-medium">
-                          {form.formState.errors.endDateStr.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                />
+                <Controller name="startDateStr" control={form.control} render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label>From</Label>
+                    <Input {...field} onChange={e => field.onChange(e.target.value.replace(/[^\d/]/g, ""))} placeholder="DD/MM/YYYY" className="rounded-none bg-transparent" />
+                    {form.formState.errors.startDateStr && <p className="text-destructive text-xs">{form.formState.errors.startDateStr.message}</p>}
+                  </div>
+                )} />
+                <Controller name="endDateStr" control={form.control} render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label>To</Label>
+                    <Input {...field} onChange={e => field.onChange(e.target.value.replace(/[^\d/]/g, ""))} placeholder="DD/MM/YYYY" className="rounded-none bg-transparent" />
+                    {form.formState.errors.endDateStr && <p className="text-destructive text-xs">{form.formState.errors.endDateStr.message}</p>}
+                  </div>
+                )} />
               </div>
-
               <div className="text-sm space-y-1 mt-4">
-                <p>
-                  Due date:{" "}
-                  {endDate.toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
-                </p>
-                <p>Total rental time: {totalDays} days</p>
-                <p>
-                  <span className="font-semibold">Overdue time:</span>{" "}
-                  {overdueDays > 0 ? `${overdueDays} days` : "none"}
-                </p>
+                <p>Due: {dates.e.toLocaleDateString("en-GB")}</p>
+                <p>Total: {totalDays} days</p>
+                <p><span className="font-semibold">Overdue:</span> {overdueDays || "none"}</p>
               </div>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-transparent">
-              <h3 className="font-bold text-lg">Rental details</h3>
+              <h3 className="font-bold text-lg">Details</h3>
               <div className="space-y-2 flex items-center gap-4">
-                <Label>Book condition:</Label>
-                <Controller
-                  name="condition"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-45 rounded-none bg-transparent">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        {CONDITIONS.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Label>Condition:</Label>
+                <Controller name="condition" control={form.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-45 rounded-none bg-transparent"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-none">{CONDITIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
               </div>
-
               <div className="space-y-2 mt-4">
-                <Label>Additional note:</Label>
-                <Controller
-                  name="note"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Textarea
-                      placeholder="Enter additional noted regarding this rental"
-                      value={field.value}
-                      onChange={field.onChange}
-                      className="min-h-30 resize-none rounded-none bg-transparent"
-                    />
-                  )}
-                />
+                <Label>Note:</Label>
+                <Controller name="note" control={form.control} render={({ field }) => (
+                  <Textarea {...field} placeholder="Notes..." className="min-h-30 resize-none rounded-none bg-transparent" />
+                )} />
               </div>
             </div>
           </div>
 
-          <div className="space-y-8 flex flex-col h-full">
-            <div className="space-y-4">
-              <h3 className="font-bold text-lg">Client info</h3>
-              <div className="text-sm space-y-1">
-                <Link
-                  href={`/profile/dashboard/clients?search=${encodeURIComponent(reservation.clientEmail)}`}
-                  className="text-primary underline hover:opacity-80 block mb-2"
-                >
-                  {reservation.clientName}
-                </Link>
-                <p>Email: {reservation.clientEmail}</p>
-                <p>Phone: {reservation.clientPhone}</p>
-              </div>
+          <div className="space-y-8 flex flex-col">
+            <div>
+              <h3 className="font-bold text-lg">Client</h3>
+              <Link href={`/profile/dashboard/clients?search=${encodeURIComponent(reservation.clientEmail)}`} className="text-primary underline block mb-2">{reservation.clientName}</Link>
+              <p className="text-sm">{reservation.clientEmail}</p>
+              <p className="text-sm">{reservation.clientPhone}</p>
             </div>
-
             <div className="mt-auto space-y-6">
               <div className="text-right">
-                <h3 className="font-bold text-lg mb-2">Fines details</h3>
+                <h3 className="font-bold text-lg mb-2">Fines</h3>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>Overdue: ${overdueFine}</p>
-                  <p>Unusable book condition: ${conditionFine}</p>
-                  <p className="font-semibold mt-1">Total: ${totalFine}</p>
+                  <p>Condition: ${conditionFine}</p>
+                  <p className="font-semibold text-foreground">Total: ${totalFine}</p>
                 </div>
               </div>
-
               <div className="flex flex-col gap-2">
-                {form.formState.errors.root && (
-                  <p className="text-destructive text-sm font-medium mb-1">
-                    {form.formState.errors.root.message}
-                  </p>
-                )}
-                <Button
-                  type="submit"
-                  className="w-full py-6 text-lg rounded-none shadow-none"
-                  disabled={loading}
-                >
-                  {totalFine > 0 ? "Request payment" : "Process return"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full py-6 text-lg rounded-none"
-                  onClick={onClose}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
+                <Button type="submit" className="w-full py-6 text-lg rounded-none" disabled={loading}>{totalFine > 0 ? "Request payment" : "Return"}</Button>
+                <Button type="button" variant="outline" className="w-full py-6 rounded-none" onClick={onClose} disabled={loading}>Cancel</Button>
               </div>
             </div>
           </div>

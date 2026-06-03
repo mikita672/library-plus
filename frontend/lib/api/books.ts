@@ -57,7 +57,7 @@ export async function getBooks(
   return res.json() as Promise<BookCard[]>;
 }
 
-export async function getBookPages(
+export async function getBooksPages(
   params: GetBooksParams,
   baseUrl?: string,
 ): Promise<number> {

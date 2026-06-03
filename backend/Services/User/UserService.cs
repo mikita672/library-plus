@@ -2,7 +2,6 @@ using MongoDB.Driver;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
 using LibraryPlus.Requests.Auth;
-
 using LibraryPlus.Services.Storage;
 
 namespace LibraryPlus.Services.User;
@@ -12,28 +11,16 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
     private readonly NotificationService _notificationService = notificationService;
     private readonly IObjectStorageService _storageService = storageService;
+    private const int PAGE_SIZE = 20;
 
-    public string? GetAvatarUrl(string? avatarKey) => _storageService.GetPublicUrl(avatarKey);
-
-    public async Task<UserModel?> GetUserById(string id)
-    {
-        return await (await _users.FindAsync(u => u.Id == id)).FirstOrDefaultAsync();
-    }
-
-    public async Task<UserModel?> GetUserByEmail(string email)
-    {
-        return await (await _users.FindAsync(u => u.Email == email)).FirstOrDefaultAsync();
-    }
-
-    public async Task<bool> IsEmailTaken(string email)
-    {
-        var existingUser = await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
-        return existingUser != null;
-    }
+    public string? GetAvatarUrl(string? key) => _storageService.GetPublicUrl(key);
+    public async Task<UserModel?> GetUserById(string id) => await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
+    public async Task<UserModel?> GetUserByEmail(string email) => await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
+    public async Task<bool> IsEmailTaken(string email) => await _users.Find(u => u.Email == email).AnyAsync();
 
     public async Task CreateUser(SignupRequest request)
     {
-        var newUser = new UserModel
+        var user = new UserModel
         {
             Email = request.Email,
             Name = request.Name,
@@ -43,113 +30,62 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
             JoinedAt = DateTime.UtcNow,
             IsDeleted = false,
         };
-
-        await _users.InsertOneAsync(newUser);
+        await _users.InsertOneAsync(user);
     }
 
     public async Task<UserModel?> VerifyUserLogin(string email, string password)
     {
-        var user = await _users.Find(u => u.Email == email && !u.IsDeleted).FirstOrDefaultAsync();
-
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-        {
-            return null;
-        }
-
+        var user = await GetUserByEmail(email);
+        if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash)) return null;
         return user;
     }
 
-    public async Task UpdatePhoneNumber(string userId, string newPhoneNumber)
-    {
-        await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
-            Builders<UserModel>.Update.Set(u => u.PhoneNumber, newPhoneNumber)
-        );
-    }
+    public async Task UpdatePhoneNumber(string id, string phone) => await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.PhoneNumber, phone));
 
-    public async Task<bool> SetAvatarUrl(string userId, string? avatarUrl)
+    public async Task<bool> SetAvatarUrl(string id, string? url)
     {
-        var res = await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
-            Builders<UserModel>.Update.Set(u => u.AvatarUrl, avatarUrl)
-        );
-        return res.MatchedCount == 1;
-    }
-
-    public async Task<bool> VerifyUserPassword(UserModel user, string password)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-    }
-
-    public async Task ChangePassword(string userId, string newPassword)
-    {
-        await _users.UpdateOneAsync(
-            Builders<UserModel>.Filter.Eq(u => u.Id, userId),
-            Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(newPassword))
-        );
-    }
-
-    public async Task SendAllUsersNotification(NotificationRequest notificationBody)
-    {
-        var allUsers = _users.Find(Builders<UserModel>.Filter.Empty);
-        var allUserIds = allUsers.ToEnumerable().Select(u => u.Id);
-        await _notificationService.SendAllUsersNotification(allUserIds, notificationBody);
-    }
-
-    public async Task<bool> IsAdmin(string userId)
-    {
-        var user = await (await _users.FindAsync(u => u.Id == userId)).FirstAsync();
-        return user.IsAdmin;
-    }
-
-    public async Task<bool> SoftDeleteUser(string userId)
-    {
-        var result = await _users.UpdateOneAsync(u => u.Id == userId && !u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, true));
-
+        var result = await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.AvatarUrl, url));
         return result.ModifiedCount == 1;
     }
 
-    public async Task<bool> RestoreUser(string userId)
-    {
-        var result = await _users.UpdateOneAsync(u => u.Id == userId && u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, false));
+    public async Task<bool> VerifyUserPassword(UserModel user, string password) => BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
 
-        return result.ModifiedCount == 1;
+    public async Task ChangePassword(string id, string password) => await _users.UpdateOneAsync(u => u.Id == id, Builders<UserModel>.Update.Set(u => u.PasswordHash, BCrypt.Net.BCrypt.HashPassword(password)));
+
+    public async Task SendAllUsersNotification(NotificationRequest request)
+    {
+        var ids = await _users.Find(_ => true).Project(u => u.Id).ToListAsync();
+        await _notificationService.SendAllUsersNotification(ids, request);
     }
 
-    public async Task<List<UserModel>> GetUsers(int pageNumber, string? searchToken)
+    public async Task<bool> IsAdmin(string id)
     {
-        var pageSize = 20;
-        var filter = Builders<UserModel>.Filter.Empty;
-        if (!string.IsNullOrEmpty(searchToken))
-        {
-            var tokenLower = searchToken.ToLower();
-            filter = Builders<UserModel>.Filter.Or(
-                Builders<UserModel>.Filter.Regex(u => u.Email, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i")),
-                Builders<UserModel>.Filter.Regex(u => u.Name, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i"))
-            );
-        }
-
-        return await _users.Find(filter)
-            .SortByDescending(u => u.JoinedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Limit(pageSize)
-            .ToListAsync();
+        var user = await GetUserById(id);
+        return user?.IsAdmin ?? false;
     }
 
-    public async Task<int> GetUsersPages(string? searchToken)
-    {
-        var pageSize = 20;
-        var filter = Builders<UserModel>.Filter.Empty;
-        if (!string.IsNullOrEmpty(searchToken))
-        {
-            var tokenLower = searchToken.ToLower();
-            filter = Builders<UserModel>.Filter.Or(
-                Builders<UserModel>.Filter.Regex(u => u.Email, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i")),
-                Builders<UserModel>.Filter.Regex(u => u.Name, new MongoDB.Bson.BsonRegularExpression(tokenLower, "i"))
-            );
-        }
+    public async Task<bool> SoftDeleteUser(string id) => (await _users.UpdateOneAsync(u => u.Id == id && !u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, true))).ModifiedCount == 1;
+    public async Task<bool> RestoreUser(string id) => (await _users.UpdateOneAsync(u => u.Id == id && u.IsDeleted, Builders<UserModel>.Update.Set(u => u.IsDeleted, false))).ModifiedCount == 1;
 
-        var count = await _users.CountDocumentsAsync(filter);
-        return (int)Math.Ceiling(count / (double)pageSize);
+    public async Task<List<UserModel>> GetUsers(int page, string? token)
+    {
+        var filter = BuildUserFilter(token);
+        return await _users.Find(filter).SortByDescending(u => u.JoinedAt).Skip((page - 1) * PAGE_SIZE).Limit(PAGE_SIZE).ToListAsync();
+    }
+
+    public async Task<int> GetUsersPages(string? token)
+    {
+        var count = await _users.CountDocumentsAsync(BuildUserFilter(token));
+        return (int)Math.Ceiling(count / (double)PAGE_SIZE);
+    }
+
+    private FilterDefinition<UserModel> BuildUserFilter(string? token)
+    {
+        if (string.IsNullOrEmpty(token)) return Builders<UserModel>.Filter.Empty;
+        var regex = new MongoDB.Bson.BsonRegularExpression(token, "i");
+        return Builders<UserModel>.Filter.Or(
+            Builders<UserModel>.Filter.Regex(u => u.Email, regex),
+            Builders<UserModel>.Filter.Regex(u => u.Name, regex)
+        );
     }
 }

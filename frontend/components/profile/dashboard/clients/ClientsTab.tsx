@@ -7,19 +7,18 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useClients } from "@/hooks/useClients";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import ClientsTable from "./ClientsTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Button } from "@/components/ui/button";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
 export default function ClientsTab() {
   const searchParams = useSearchParams();
-  const initialSearch = searchParams.get("search") || "";
-
   const [pageNumber, setPageNumber] = useState(1);
-  const [searchToken, setSearchToken] = useState(initialSearch);
-  const debouncedSearch = useDebounce(searchToken, 300);
+  const [inputValue, setInputValue] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(inputValue, 500);
 
-  const { users, loading, error, totalPages, refetch } = useClients(
+  const { users, totalPages, loading, error, refetch } = useClients(
     pageNumber,
     debouncedSearch,
   );
@@ -31,23 +30,32 @@ export default function ClientsTab() {
     return () => cancelAnimationFrame(frame);
   }, [debouncedSearch]);
 
+  const handleClear = () => {
+    setInputValue("");
+    setPageNumber(1);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-end gap-4 max-w-md">
-        <div className="space-y-2 flex-1">
-          <Label>Search clients</Label>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-1 max-w mr-4 gap-2">
           <Input
-            placeholder="Search by name or email..."
-            value={searchToken}
-            onChange={(e) => setSearchToken(e.target.value)}
+            className="h-10 text-base"
+            placeholder="Search clients by name or email..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
+          <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </Button>
         </div>
+        <Button variant="ghost" size="sm" onClick={handleClear}>Clear</Button>
       </div>
 
       {loading ? (
-        <div className="text-center text-muted-foreground py-8">Loading...</div>
+        <div className="text-center py-8">Loading...</div>
       ) : error ? (
-        <div className="text-destructive py-8">Failed to fetch users</div>
+        <div className="text-destructive py-8">Error loading clients</div>
       ) : (
         <div className="min-h-150 flex flex-col justify-between">
           <ClientsTable users={users} onRefresh={refetch} />

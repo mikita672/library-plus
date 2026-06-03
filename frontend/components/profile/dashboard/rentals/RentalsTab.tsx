@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-
 import { getBookById, getBookUnitById } from "@/lib/api/books";
 import {
   GetReservationsParams,
@@ -14,11 +13,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 import RentalsTable from "./RentalsTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import {
   Select,
   SelectContent,
@@ -26,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { Input } from "@/components/ui/input";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -36,15 +34,12 @@ const STATUS_OPTIONS = [
 ];
 
 export default function RentalsTab() {
-  const [allReservations, setAllReservations] = useState<
-    EnrichedReservationItem[]
-  >([]);
+  const [allReservations, setAllReservations] = useState<EnrichedReservationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [inputValue, setInputValue] = useState("");
   const debouncedSearch = useDebounce(inputValue, 500);
 
@@ -54,8 +49,8 @@ export default function RentalsTab() {
     try {
       const params: GetReservationsParams = {
         pageNumber,
-        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-        ...(debouncedSearch ? { searchToken: debouncedSearch } : {}),
+        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(debouncedSearch && { searchToken: debouncedSearch }),
       };
 
       const [data, pages] = await Promise.all([
@@ -63,52 +58,39 @@ export default function RentalsTab() {
         getReservationPages(params),
       ]);
 
-      const uniqueUserIds = Array.from(new Set(data.map((r) => r.userId)));
-      const uniqueUnitIds = Array.from(new Set(data.map((r) => r.bookUnitId)));
+      const userIds = [...new Set(data.map((r) => r.userId))];
+      const unitIds = [...new Set(data.map((r) => r.bookUnitId))];
 
-      const usersData = await Promise.all(
-        uniqueUserIds.map((id) =>
-          getUserById(id)
-            .then((u) => ({ id, user: u }))
-            .catch(() => ({ id, user: null })),
-        ),
-      );
-      const userMap = Object.fromEntries(
-        usersData.map(({ id, user }) => [id, user]),
-      );
+      const [users, units] = await Promise.all([
+        Promise.all(userIds.map((id) => getUserById(id).catch(() => null))),
+        Promise.all(unitIds.map((id) => getBookUnitById(id).catch(() => null))),
+      ]);
 
-      const unitsData = await Promise.all(
-        uniqueUnitIds.map((id) =>
-          getBookUnitById(id)
-            .then(async (unit) => {
-              if (!unit) return { id, book: null };
-              const book = await getBookById(unit.bookId).catch(() => null);
-              return { id, book };
-            })
-            .catch(() => ({ id, book: null })),
-        ),
-      );
-      const unitBookMap = Object.fromEntries(
-        unitsData.map(({ id, book }) => [id, book]),
-      );
+      const userMap = Object.fromEntries(userIds.map((id, i) => [id, users[i]]));
+      const unitMap = Object.fromEntries(unitIds.map((id, i) => [id, units[i]]));
 
-      const enrichedData: EnrichedReservationItem[] = data.map((r) => {
+      const bookIds = [...new Set(units.map((u) => u?.bookId).filter(Boolean) as string[])];
+      const books = await Promise.all(bookIds.map((id) => getBookById(id).catch(() => null)));
+      const bookMap = Object.fromEntries(bookIds.map((id, i) => [id, books[i]]));
+
+      const enriched = data.map((r) => {
         const u = userMap[r.userId];
-        const b = unitBookMap[r.bookUnitId];
+        const bu = unitMap[r.bookUnitId];
+        const b = bu ? bookMap[bu.bookId] : null;
         return {
           ...r,
-          clientName: u?.name || "Unknown User",
+          clientName: u?.name || "Unknown",
           clientEmail: u?.email || "",
           clientPhone: u?.phoneNumber || "none",
-          bookTitle: b?.title || "Unknown Book",
-          bookAuthor: b?.author?.name || "Unknown Author",
-          bookLanguage: b?.language || "Unknown Language",
+          bookTitle: b?.title || "Unknown",
+          bookAuthor: b?.author?.name || "Unknown",
+          bookLanguage: b?.language || "Unknown",
           bookYear: b?.publicationYear || 0,
           bookCoverUri: b?.coverURI || "",
         };
       });
 
-      setAllReservations(enrichedData);
+      setAllReservations(enriched);
       setTotalPages(Math.max(1, pages));
     } catch {
       setError(true);
@@ -117,18 +99,13 @@ export default function RentalsTab() {
     }
   }, [pageNumber, statusFilter, debouncedSearch]);
 
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
-  useEffect(() => {
-    setPageNumber(1);
-  }, [debouncedSearch]);
+  useEffect(() => { setPageNumber(1); }, [debouncedSearch, statusFilter]);
 
   const handleClearFilters = () => {
     setStatusFilter("all");
     setInputValue("");
-    setPageNumber(1);
   };
 
   return (
@@ -137,59 +114,41 @@ export default function RentalsTab() {
         <div className="flex flex-1 max-w mr-4 gap-2">
           <Input
             className="h-10 text-base"
-            placeholder="Search reservations (book, client name or email)..."
+            placeholder="Search reservations..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
           <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5" />
-            <span className="sr-only">Search</span>
           </Button>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label className="whitespace-nowrap">Status</Label>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => {
-                setStatusFilter(v);
-                setPageNumber(1);
-              }}
-            >
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="All statuses" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-            Clear Filters
-          </Button>
+          <Button variant="ghost" size="sm" onClick={handleClearFilters}>Clear</Button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center text-muted-foreground py-8">Loading...</div>
+        <div className="text-center py-8">Loading...</div>
       ) : error ? (
-        <div className="text-destructive py-8">
-          Failed to fetch reservations
-        </div>
+        <div className="text-destructive py-8">Error loading reservations</div>
       ) : (
-        <div className="min-h-150 flex flex-col justify-between">
+        <div className="min-h-[600px] flex flex-col justify-between">
           <RentalsTable reservations={allReservations} onRefresh={fetchData} />
-          <PaginationControls
-            pageNumber={pageNumber}
-            totalPages={totalPages}
-            onPageChange={setPageNumber}
-          />
+          <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>
       )}
     </div>

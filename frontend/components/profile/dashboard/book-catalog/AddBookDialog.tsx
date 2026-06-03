@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "@phosphor-icons/react";
 import { z } from "zod";
 import { toast } from "sonner";
+
 import { getAuthors } from "@/lib/api/authors";
 import { createBook, addBookUnits } from "@/lib/api/books";
 import { uploadBookCover } from "@/lib/api/media";
@@ -40,140 +41,76 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+  } from "@/components/ui/collapsible";
 
-const createBookSchema = z.object({
-  title: z.string().trim().min(1, "Title is required"),
-  description: z.string().trim().min(1, "Description is required"),
-  language: z.string().trim().min(1, "Language is required"),
-  publicationYear: z.number().int().min(1, "Publication year is required"),
-  pagesCount: z.number().int().min(1, "Pages count is required"),
-  repurchasePrice: z.number().min(0, "Repurchase price cannot be negative"),
-  initialCopies: z.number().int().min(0, "Cannot be negative"),
+const schema = z.object({
+  title: z.string().trim().min(1, "Required"),
+  description: z.string().trim().min(1, "Required"),
+  language: z.string().trim().min(1, "Required"),
+  publicationYear: z.number().int().min(1),
+  pagesCount: z.number().int().min(1),
+  repurchasePrice: z.number().min(0),
+  initialCopies: z.number().int().min(0),
   authorId: z.string().optional(),
   publisherId: z.string().optional(),
   categoryId: z.string().optional(),
   originalTitle: z.string().optional(),
   originalLanguage: z.string().optional(),
-  originalPublicationYear: z.number().int().min(1).optional(),
+  originalPublicationYear: z.number().int().optional(),
 });
 
-type CreateBookFormValues = z.infer<typeof createBookSchema>;
+type FormValues = z.infer<typeof schema>;
 
-function nullableString(value?: string) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
-}
-
-interface AddBookDialogProps {
-  onSuccess?: () => void;
-}
-
-export default function AddBookDialog({ onSuccess }: AddBookDialogProps) {
+export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [loadingLookups, setLoadingLookups] = useState(false);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [lookups, setLookups] = useState({ authors: [] as Author[], publishers: [] as Publisher[], categories: [] as Category[] });
+  const [file, setFile] = useState<File | null>(null);
 
-  const form = useForm<CreateBookFormValues>({
-    resolver: zodResolver(createBookSchema),
-    mode: "onSubmit",
-    defaultValues: {
-      title: "",
-      description: "",
-      language: "",
-      publicationYear: new Date().getFullYear(),
-      pagesCount: 1,
-      repurchasePrice: 0,
-      initialCopies: 1,
-      authorId: "",
-      publisherId: "",
-      categoryId: "",
-      originalTitle: "",
-      originalLanguage: "",
-      originalPublicationYear: undefined,
-    },
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: "", description: "", language: "", publicationYear: new Date().getFullYear(), pagesCount: 1, repurchasePrice: 0, initialCopies: 1 },
   });
 
   useEffect(() => {
-    const loadLookups = async () => {
-      setLoadingLookups(true);
+    if (!open) return;
+    (async () => {
       try {
-        const [a, p, c] = await Promise.all([
-          getAuthors(),
-          getPublishers(),
-          getCategories(),
-        ]);
-        setAuthors(a);
-        setPublishers(p);
-        setCategories(c);
-      } catch {
-        toast.error("Failed to load metadata");
-      } finally {
-        setLoadingLookups(false);
-      }
-    };
-
-    if (open) {
-      void loadLookups();
-    }
+        const [a, p, c] = await Promise.all([getAuthors(), getPublishers(), getCategories()]);
+        setLookups({ authors: a, publishers: p, categories: c });
+      } catch { toast.error("Metadata load failed"); }
+    })();
   }, [open]);
 
-  const onSubmit = async (values: CreateBookFormValues) => {
+  const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
-
     const payload = {
-      title: values.title.trim(),
-      description: values.description.trim(),
-      language: values.language.trim(),
-      publicationYear: values.publicationYear,
-      pagesCount: values.pagesCount,
-      repurchasePrice: values.repurchasePrice,
-      categoryIds:
-        values.categoryId && values.categoryId !== "none"
-          ? [values.categoryId]
-          : [],
-      authorId: nullableString(values.authorId),
-      publisherId: nullableString(values.publisherId),
-      originalTitle: nullableString(values.originalTitle),
-      originalLanguage: nullableString(values.originalLanguage),
-      originalPublicationYear:
-        typeof values.originalPublicationYear === "number" &&
-        Number.isFinite(values.originalPublicationYear)
-          ? values.originalPublicationYear
-          : null,
+      ...values,
+      categoryIds: values.categoryId && values.categoryId !== "none" ? [values.categoryId] : [],
+      authorId: values.authorId?.trim() || null,
+      publisherId: values.publisherId?.trim() || null,
+      originalTitle: values.originalTitle?.trim() || null,
+      originalLanguage: values.originalLanguage?.trim() || null,
+      originalPublicationYear: values.originalPublicationYear || null,
       originalPublisherId: null,
     };
 
     try {
-      const createdBook = await createBook(payload);
-
-      if (selectedFile) {
-        try {
-          await uploadBookCover(createdBook.id, selectedFile);
-        } catch {
-          toast.error("Book created, but cover upload failed.");
-        }
-      }
-
-      if (values.initialCopies > 0) {
-        await addBookUnits(createdBook.id, values.initialCopies);
-        toast.success(
-          `Book created with ${values.initialCopies} physical ${values.initialCopies === 1 ? "copy" : "copies"}`,
-        );
-      } else {
-        toast.success("Book created successfully");
-      }
-
+      const book = await createBook(payload);
+      if (file) await uploadBookCover(book.id, file).catch(() => toast.error("Cover upload failed"));
+      if (values.initialCopies > 0) await addBookUnits(book.id, values.initialCopies);
+      
+      toast.success("Book created");
       form.reset();
-      onSuccess?.();
+      setFile(null);
       setOpen(false);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create book",
-      );
+      onSuccess?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Creation failed");
     } finally {
       setSubmitting(false);
     }
@@ -181,226 +118,38 @@ export default function AddBookDialog({ onSuccess }: AddBookDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="h-10 px-4 text-lg" type="button">
-          <PlusIcon />
-          Add new book
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="max-w-2xl p-6" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>Add new book</DialogTitle>
-          <DialogDescription>
-            Create a new book record in the catalog.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form
-          id="add-book-form"
-          className="space-y-4"
-          onSubmit={form.handleSubmit(onSubmit)}
-        >
-          <FieldGroup className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Field data-invalid={!!form.formState.errors.title}>
-              <FieldLabel htmlFor="title">Title</FieldLabel>
-              <Input id="title" {...form.register("title")} />
-              <FieldError errors={[form.formState.errors.title]} />
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.language}>
-              <FieldLabel htmlFor="language">Language</FieldLabel>
-              <Input id="language" {...form.register("language")} />
-              <FieldError errors={[form.formState.errors.language]} />
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.publicationYear}>
-              <FieldLabel htmlFor="publicationYear">
-                Publication year
-              </FieldLabel>
-              <Input
-                id="publicationYear"
-                type="number"
-                {...form.register("publicationYear", {
-                  valueAsNumber: true,
-                })}
-              />
-              <FieldError errors={[form.formState.errors.publicationYear]} />
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.pagesCount}>
-              <FieldLabel htmlFor="pagesCount">Pages count</FieldLabel>
-              <Input
-                id="pagesCount"
-                type="number"
-                {...form.register("pagesCount", {
-                  valueAsNumber: true,
-                })}
-              />
-              <FieldError errors={[form.formState.errors.pagesCount]} />
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.initialCopies}>
-              <FieldLabel htmlFor="initialCopies">
-                Initial copies
-              </FieldLabel>
-              <Input
-                id="initialCopies"
-                type="number"
-                min="0"
-                {...form.register("initialCopies", {
-                  valueAsNumber: true,
-                })}
-              />
-              <FieldError errors={[form.formState.errors.initialCopies]} />
-            </Field>
-
-            <Field data-invalid={!!form.formState.errors.repurchasePrice}>
-              <FieldLabel htmlFor="repurchasePrice">
-                Repurchase price
-              </FieldLabel>
-              <Input
-                id="repurchasePrice"
-                type="number"
-                step="0.01"
-                {...form.register("repurchasePrice", {
-                  valueAsNumber: true,
-                })}
-              />
-              <FieldError errors={[form.formState.errors.repurchasePrice]} />
-            </Field>
-
-            <Field>
-              <FieldLabel>Author</FieldLabel>
-              <Select
-                value={form.watch("authorId") || "none"}
-                onValueChange={(value) =>
-                  form.setValue("authorId", value === "none" ? "" : value)
-                }
-                disabled={loadingLookups}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select author" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No author</SelectItem>
-                  {authors.map((author) => (
-                    <SelectItem key={author.id} value={author.id}>
-                      {author.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field>
-              <FieldLabel>Publisher</FieldLabel>
-              <Select
-                value={form.watch("publisherId") || "none"}
-                onValueChange={(value) =>
-                  form.setValue("publisherId", value === "none" ? "" : value)
-                }
-                disabled={loadingLookups}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select publisher" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No publisher</SelectItem>
-                  {publishers.map((publisher) => (
-                    <SelectItem key={publisher.id} value={publisher.id}>
-                      {publisher.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="categoryId">Category</FieldLabel>
-              <Select
-                disabled={loadingLookups}
-                value={form.watch("categoryId") || "none"}
-                onValueChange={(value) =>
-                  form.setValue("categoryId", value === "none" ? "" : value)
-                }
-              >
-                <SelectTrigger id="categoryId">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="originalTitle">Original title</FieldLabel>
-              <Input id="originalTitle" {...form.register("originalTitle")} />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="originalLanguage">
-                Original language
-              </FieldLabel>
-              <Input
-                id="originalLanguage"
-                {...form.register("originalLanguage")}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="originalPublicationYear">
-                Original publication year
-              </FieldLabel>
-              <Input
-                id="originalPublicationYear"
-                type="number"
-                {...form.register("originalPublicationYear", {
-                  setValueAs: (value) => {
-                    if (value === "" || value === null || value === undefined) {
-                      return undefined;
-                    }
-
-                    return Number(value);
-                  },
-                })}
-              />
-            </Field>
-
-            <ImageUpload
-              id="coverFile"
-              label="Book cover"
-              onFileSelect={setSelectedFile}
-              aspectRatio="cover"
-              labelClassName="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            />
+      <DialogTrigger asChild><Button><PlusIcon /> Add book</Button></DialogTrigger>
+      <DialogContent className="max-w-2xl p-6">
+        <DialogHeader><DialogTitle>Add new book</DialogTitle><DialogDescription>Create a record.</DialogDescription></DialogHeader>
+        <form id="add-book-form" className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field data-invalid={!!form.formState.errors.title}><FieldLabel>Title</FieldLabel><Input {...form.register("title")} /><FieldError>{form.formState.errors.title?.message}</FieldError></Field>
+            <Field><FieldLabel>Author</FieldLabel><Controller name="authorId" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Author" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select>
+            )} /></Field>
+            <Field><FieldLabel>Publisher</FieldLabel><Controller name="publisherId" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Publisher" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select>
+            )} /></Field>
+            <Field><FieldLabel>Category</FieldLabel><Controller name="categoryId" control={form.control} render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+            )} /></Field>
+            <Field><FieldLabel>Language</FieldLabel><Input {...form.register("language")} /></Field>
+            <Field><FieldLabel>Publication Year</FieldLabel><Input type="number" {...form.register("publicationYear", { valueAsNumber: true })} /></Field>
+            <Field><FieldLabel>Pages</FieldLabel><Input type="number" {...form.register("pagesCount", { valueAsNumber: true })} /></Field>
+            <Field><FieldLabel>Repurchase Price ($)</FieldLabel><Input type="number" step="0.01" {...form.register("repurchasePrice", { valueAsNumber: true })} /></Field>
+            <Field><FieldLabel>Initial Copies</FieldLabel><Input type="number" {...form.register("initialCopies", { valueAsNumber: true })} /></Field>
+            <ImageUpload id="coverFile" label="Book cover" onFileSelect={setFile} aspectRatio="cover" labelClassName="text-sm font-medium" />
           </FieldGroup>
-
-          <Field data-invalid={!!form.formState.errors.description}>
-            <FieldLabel htmlFor="description">Description</FieldLabel>
-            <Textarea id="description" {...form.register("description")} />
-            <FieldError errors={[form.formState.errors.description]} />
-          </Field>
+          <Field><FieldLabel>Description</FieldLabel><Textarea {...form.register("description")} /></Field>
+          <Collapsible className="border border-black p-3"><CollapsibleTrigger asChild><Button variant="ghost" size="sm">Original work info (optional)</Button></CollapsibleTrigger><CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+            <Field><FieldLabel>Original Title</FieldLabel><Input {...form.register("originalTitle")} /></Field>
+            <Field><FieldLabel>Original Language</FieldLabel><Input {...form.register("originalLanguage")} /></Field>
+            <Field><FieldLabel>Original Year</FieldLabel><Input type="number" {...form.register("originalPublicationYear", { valueAsNumber: true })} /></Field>
+          </CollapsibleContent></Collapsible>
         </form>
-
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button form="add-book-form" type="submit" disabled={submitting}>
-            {submitting ? "Saving..." : "Create book"}
-          </Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button form="add-book-form" type="submit" disabled={submitting}>{submitting ? "Saving..." : "Create"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

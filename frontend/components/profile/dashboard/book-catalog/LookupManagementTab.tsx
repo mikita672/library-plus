@@ -1,6 +1,6 @@
 "use client";
 
-import { PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import {
   flexRender,
   getCoreRowModel,
@@ -9,7 +9,6 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +20,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -31,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export interface BaseLookupModel {
+interface BaseLookupModel {
   id: string;
   name: string;
 }
@@ -40,13 +38,12 @@ interface LookupManagementTabProps<T extends BaseLookupModel> {
   entityName: string;
   entityNamePlural: string;
   fetchItems: () => Promise<T[]>;
-  createItem: (name: string) => Promise<T | null>;
-  updateItem: (id: string, name: string) => Promise<void>;
-  deleteItem: (id: string) => Promise<void>;
+  addItem: (name: string) => Promise<T>;
+  updateItem: (id: string, name: string) => Promise<boolean>;
+  deleteItem: (id: string) => Promise<boolean>;
 }
 
 function buildColumns<T extends BaseLookupModel>(
-  entityName: string,
   onEdit: (item: T) => void,
   onDelete: (item: T) => void,
 ): ColumnDef<T>[] {
@@ -55,39 +52,24 @@ function buildColumns<T extends BaseLookupModel>(
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => (
-        <div className="max-w-[300px] truncate" title={row.getValue("name")}>
+        <div className="max-w-75 truncate" title={row.getValue("name")}>
           {row.getValue("name")}
         </div>
       ),
     },
     {
       id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(item)}
-              aria-label={`Edit ${item.name}`}
-              className="h-8 w-8 p-0"
-            >
-              <PencilSimpleIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(item)}
-              aria-label={`Delete ${item.name}`}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)} className="h-8 w-8 p-0">
+            <PencilSimpleIcon className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(row.original)} className="h-8 w-8 p-0 text-destructive">
+            <TrashIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
     },
   ];
 }
@@ -96,14 +78,13 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   entityName,
   entityNamePlural,
   fetchItems,
-  createItem,
+  addItem,
   updateItem,
   deleteItem,
 }: LookupManagementTabProps<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<T | null>(null);
   const [nameInput, setNameInput] = useState("");
@@ -112,79 +93,67 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchItems();
-      setItems(data);
+      setItems(await fetchItems());
     } catch {
-      toast.error(`Failed to load ${entityNamePlural.toLowerCase()}`);
+      toast.error(`Failed to load ${entityNamePlural}`);
     } finally {
       setLoading(false);
     }
   }, [fetchItems, entityNamePlural]);
 
-  useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
+  useEffect(() => { void loadItems(); }, [loadItems]);
 
-  const openAddDialog = () => {
+  const openAddDialog = useCallback(() => {
     setEditingItem(null);
     setNameInput("");
     setDialogOpen(true);
-  };
+  }, []);
 
-  const openEditDialog = (item: T) => {
+  const openEditDialog = useCallback((item: T) => {
     setEditingItem(item);
     setNameInput(item.name);
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleDelete = async (item: T) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${item.name}"?`,
-    );
-    if (!confirmed) return;
-
+  const handleDelete = useCallback(async (item: T) => {
+    if (!window.confirm(`Delete ${entityName} "${item.name}"?`)) return;
     try {
-      await deleteItem(item.id);
-      toast.success(`"${item.name}" has been deleted`);
-      void loadItems();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : `Failed to delete ${entityName.toLowerCase()}`,
-      );
+      if (await deleteItem(item.id)) {
+        toast.success(`${entityName} deleted`);
+        await loadItems();
+      }
+    } catch {
+      toast.error(`Error deleting ${entityName}`);
     }
-  };
+  }, [entityName, deleteItem, loadItems]);
 
   const handleSubmit = async () => {
-    const trimmed = nameInput.trim();
-    if (!trimmed) return;
-
+    if (!nameInput.trim()) return;
     setSubmitting(true);
     try {
       if (editingItem) {
-        await updateItem(editingItem.id, trimmed);
-        toast.success(`"${editingItem.name}" updated`);
+        if (await updateItem(editingItem.id, nameInput.trim())) {
+          toast.success(`${entityName} updated`);
+          await loadItems();
+          setDialogOpen(false);
+        }
       } else {
-        await createItem(trimmed);
-        toast.success(`${entityName} "${trimmed}" created`);
+        await addItem(nameInput.trim());
+        toast.success(`${entityName} created`);
+        await loadItems();
+        setDialogOpen(false);
       }
-      setDialogOpen(false);
-      void loadItems();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : `Failed to save ${entityName.toLowerCase()}`,
-      );
+    } catch {
+      toast.error(`Error saving ${entityName}`);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const columns = buildColumns<T>(entityName, openEditDialog, handleDelete);
+  const filteredItems = useMemo(() => items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())), [items, searchQuery]);
+  
+  const columns = useMemo(() => buildColumns<T>(openEditDialog, handleDelete), [openEditDialog, handleDelete]);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [items, searchQuery]);
 
   const table = useReactTable({
     data: filteredItems,
@@ -196,59 +165,38 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-1 max-w mr-4 gap-2">
-          <Input
-            className="h-10 text-base"
-            placeholder={`Search ${entityNamePlural.toLowerCase()}...`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <Input className="h-10 text-base" placeholder={`Search ${entityNamePlural.toLowerCase()}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5" />
-            <span className="sr-only">Search</span>
           </Button>
         </div>
         <Button className="h-10 px-4 text-lg" onClick={openAddDialog}>
-          <PlusIcon />
-          Add {entityName.toLowerCase()}
+          <PlusIcon /> Add {entityName.toLowerCase()}
         </Button>
       </div>
 
       {loading ? (
-        <div className="text-center text-muted-foreground">Loading...</div>
+        <div className="text-center py-8">Loading...</div>
       ) : !filteredItems.length ? (
-        <div className="text-center text-muted-foreground py-8">
-          {searchQuery
-            ? `No ${entityNamePlural.toLowerCase()} matching "${searchQuery}"`
-            : `No ${entityNamePlural.toLowerCase()} found.`}
+        <div className="text-center py-8 text-muted-foreground">
+          {searchQuery ? `No matches for "${searchQuery}"` : `No ${entityNamePlural.toLowerCase()} found.`}
         </div>
       ) : (
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
+            {table.getHeaderGroups().map(hg => (
+              <TableRow key={hg.id}>
+                {hg.headers.map(h => (
+                  <TableHead key={h.id}>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</TableHead>
                 ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
+            {table.getRowModel().rows.map(row => (
               <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext(),
-                    )}
-                  </TableCell>
+                {row.getVisibleCells().map(cell => (
+                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                 ))}
               </TableRow>
             ))}
@@ -257,54 +205,17 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-106.25">
           <DialogHeader>
-            <DialogTitle>
-              {editingItem ? `Edit ${entityName}` : `Add ${entityName}`}
-            </DialogTitle>
-            <DialogDescription>
-              {editingItem
-                ? `Update the ${entityName.toLowerCase()} name below.`
-                : `Enter the name of the new ${entityName.toLowerCase()}.`}
-            </DialogDescription>
+            <DialogTitle>{editingItem ? "Edit" : "Add"} {entityName}</DialogTitle>
+            <DialogDescription>Enter the name of the {entityName.toLowerCase()}.</DialogDescription>
           </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor={`${entityName.toLowerCase()}-name`} className="text-right">
-                Name
-              </Label>
-              <Input
-                id={`${entityName.toLowerCase()}-name`}
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                className="col-span-3"
-                placeholder={`Enter ${entityName.toLowerCase()} name`}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void handleSubmit();
-                  }
-                }}
-              />
-            </div>
+          <div className="py-4">
+            <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Name" onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
           </div>
-
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={submitting || !nameInput.trim()}>
-              {submitting
-                ? "Saving..."
-                : editingItem
-                  ? "Save Changes"
-                  : "Create"}
-            </Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>{submitting ? "Saving..." : editingItem ? "Save" : "Create"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

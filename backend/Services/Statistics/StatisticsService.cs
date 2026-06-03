@@ -19,31 +19,30 @@ public class StatisticsService(IMongoDatabase db)
 
     public async Task<StatisticsResponse> GetStatistics(StatisticsRequest request)
     {
-        var totalUnitsCount = await _bookUnits.CountDocumentsAsync(_ => true);
-        var totalMembersCount = await _users.CountDocumentsAsync(u => !u.IsDeleted);
-        var booksRentedCount = await _reservations.CountDocumentsAsync(r => r.Status == "Taken");
-        var activeReservationsCount = await _reservations.CountDocumentsAsync(r => r.Status == "Taken" || r.Status == "Reserved");
-        var booksInStock = (int)Math.Max(0, totalUnitsCount - activeReservationsCount);
-        var mostPopularBook = await _books.Find(_ => true)
-            .SortByDescending(b => b.Popularity)
-            .Project(b => b.Title)
-            .FirstOrDefaultAsync() ?? "N/A";
         var from = request.From.ToUniversalTime();
         var to = request.To.ToUniversalTime();
+
+        var totalUnitsTask = _bookUnits.CountDocumentsAsync(_ => true);
+        var totalMembersTask = _users.CountDocumentsAsync(u => !u.IsDeleted);
+        var booksRentedTask = _reservations.CountDocumentsAsync(r => r.Status == "Taken");
+        
+        var activeResTask = _reservations.CountDocumentsAsync(r => r.Status == "Taken" || r.Status == "Reserved");
+
+        var mostPopularBookTask = _books.Find(_ => true)
+            .SortByDescending(b => b.Popularity)
+            .Project(b => b.Title)
+            .FirstOrDefaultAsync();
+
         var activeUsersFilter = Builders<ReservationModel>.Filter.Or(
-            Builders<ReservationModel>.Filter.And(
-                Builders<ReservationModel>.Filter.Gte(r => r.CreatedAt, from),
-                Builders<ReservationModel>.Filter.Lte(r => r.CreatedAt, to)
-            ),
-            Builders<ReservationModel>.Filter.And(
-                Builders<ReservationModel>.Filter.Gte(r => r.ReturnedDate, from),
-                Builders<ReservationModel>.Filter.Lte(r => r.ReturnedDate, to)
-            )
+            Builders<ReservationModel>.Filter.And(Builders<ReservationModel>.Filter.Gte(r => r.CreatedAt, from), Builders<ReservationModel>.Filter.Lte(r => r.CreatedAt, to)),
+            Builders<ReservationModel>.Filter.And(Builders<ReservationModel>.Filter.Gte(r => r.ReturnedDate, from), Builders<ReservationModel>.Filter.Lte(r => r.ReturnedDate, to))
         );
-        var activeUsersInPeriod = await _reservations.Distinct(r => r.UserId, activeUsersFilter).ToListAsync();
-        var newMembersCount = await _users.CountDocumentsAsync(u => u.JoinedAt >= from && u.JoinedAt <= to);
-        var newBooksCount = await _books.CountDocumentsAsync(b => b.CreatedAt >= from && b.CreatedAt <= to);
-        var mostPopularCategoryName = await GetMostPopularCategory(from, to);
+        var activeUsersTask = _reservations.DistinctAsync(r => r.UserId, activeUsersFilter);
+
+        var newMembersTask = _users.CountDocumentsAsync(u => u.JoinedAt >= from && u.JoinedAt <= to);
+        var newBooksTask = _books.CountDocumentsAsync(b => b.CreatedAt >= from && b.CreatedAt <= to);
+        var popularCategoryTask = GetMostPopularCategoryName(from, to);
+
         var delayedFilter = Builders<ReservationModel>.Filter.Or(
             Builders<ReservationModel>.Filter.And(
                 Builders<ReservationModel>.Filter.Ne(r => r.ReturnedDate, null),
@@ -58,66 +57,49 @@ public class StatisticsService(IMongoDatabase db)
                 Builders<ReservationModel>.Filter.Lte(r => r.EndDate, to)
             )
         );
-        var delayedReturnsCount = await _reservations.CountDocumentsAsync(delayedFilter);
+        var delayedReturnsTask = _reservations.CountDocumentsAsync(delayedFilter);
+
+        await Task.WhenAll(
+            totalUnitsTask, totalMembersTask, booksRentedTask, activeResTask, 
+            mostPopularBookTask, newMembersTask, newBooksTask, popularCategoryTask, delayedReturnsTask
+        );
+
+        var activeUsersCursor = await activeUsersTask;
+        var activeUsersList = await activeUsersCursor.ToListAsync();
 
         return new StatisticsResponse(
-            totalUnitsCount,
-            totalMembersCount,
-            booksRentedCount,
-            booksInStock,
-            mostPopularBook,
-            activeUsersInPeriod.Count,
-            newMembersCount,
-            newBooksCount,
-            mostPopularCategoryName,
-            delayedReturnsCount
+            await totalUnitsTask,
+            await totalMembersTask,
+            await booksRentedTask,
+            (int)Math.Max(0, await totalUnitsTask - await activeResTask),
+            await mostPopularBookTask ?? "N/A",
+            activeUsersList.Count,
+            await newMembersTask,
+            await newBooksTask,
+            await popularCategoryTask,
+            await delayedReturnsTask
         );
     }
 
-    private async Task<string> GetMostPopularCategory(DateTime from, DateTime to)
+    private async Task<string> GetMostPopularCategoryName(DateTime from, DateTime to)
     {
         var pipeline = new BsonDocument[]
         {
-            new BsonDocument("$match", new BsonDocument
-            {
-                { "createdAt", new BsonDocument { { "$gte", from }, { "$lte", to } } }
-            }),
-            new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "bookUnits" },
-                { "localField", "bookUnitId" },
-                { "foreignField", "_id" },
-                { "as", "unit" }
-            }),
-            new BsonDocument("$unwind", "$unit"),
-            new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "books" },
-                { "localField", "unit.bookId" },
-                { "foreignField", "_id" },
-                { "as", "book" }
-            }),
-            new BsonDocument("$unwind", "$book"),
-            new BsonDocument("$unwind", "$book.categoryIds"),
-            new BsonDocument("$group", new BsonDocument
-            {
-                { "_id", "$book.categoryIds" },
-                { "count", new BsonDocument("$sum", 1) }
-            }),
+            new BsonDocument("$match", new BsonDocument("createdAt", new BsonDocument { { "$gte", from }, { "$lte", to } })),
+            new BsonDocument("$lookup", new BsonDocument { { "from", "bookUnits" }, { "localField", "bookUnitId" }, { "foreignField", "_id" }, { "as", "u" } }),
+            new BsonDocument("$unwind", "$u"),
+            new BsonDocument("$lookup", new BsonDocument { { "from", "books" }, { "localField", "u.bookId" }, { "foreignField", "_id" }, { "as", "b" } }),
+            new BsonDocument("$unwind", "$b"),
+            new BsonDocument("$unwind", "$b.categoryIds"),
+            new BsonDocument("$group", new BsonDocument { { "_id", "$b.categoryIds" }, { "count", new BsonDocument("$sum", 1) } }),
             new BsonDocument("$sort", new BsonDocument("count", -1)),
             new BsonDocument("$limit", 1),
-            new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "categories" },
-                { "localField", "_id" },
-                { "foreignField", "_id" },
-                { "as", "category" }
-            }),
-            new BsonDocument("$unwind", "$category"),
-            new BsonDocument("$project", new BsonDocument("name", "$category.name"))
+            new BsonDocument("$lookup", new BsonDocument { { "from", "categories" }, { "localField", "_id" }, { "foreignField", "_id" }, { "as", "c" } }),
+            new BsonDocument("$unwind", "$c"),
+            new BsonDocument("$project", new BsonDocument("n", "$c.name"))
         };
 
         var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
-        return result != null ? result["name"].AsString : "N/A";
+        return result != null ? result["n"].AsString : "N/A";
     }
 }
