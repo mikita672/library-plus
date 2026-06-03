@@ -70,18 +70,20 @@ public static class ReservationEndpoints
         group.MapGet("/all", [Authorize] async (
             ReservationService reservationService,
             [FromQuery] int pageNumber,
-            [FromQuery] string? status
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
         ) =>
         {
-            return await reservationService.GetAllReservations(pageNumber, status);
+            return await reservationService.GetAllReservations(pageNumber, status, searchToken);
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapGet("/all/pages", [Authorize] async (
             ReservationService reservationService,
-            [FromQuery] string? status
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
         ) =>
         {
-            return await reservationService.GetAllReservationsPageCount(status);
+            return await reservationService.GetAllReservationsPageCount(status, searchToken);
         }).AddEndpointFilter<AdminUserFilter>();
 
     }

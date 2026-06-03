@@ -1,6 +1,9 @@
+using LibraryPlus.Models.Book;
+using LibraryPlus.Models.User;
 using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Reservation;
 using LibraryPlus.Services.Book;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -9,6 +12,9 @@ namespace LibraryPlus.Services.Reservation;
 public class ReservationService(IMongoDatabase db, BookService bookService)
 {
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
+    private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
+    private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
+    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
     private readonly BookService _bookService = bookService;
 
     public async Task<ReservationModel?> CreateReservation(string userId, CreateReservationRequest createReservationRequest)
@@ -84,28 +90,79 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         return res.MatchedCount == 1;
     }
 
-    public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null)
+    public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null, string? searchToken = null)
     {
-        var query = _reservations.AsQueryable().AsQueryable();
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            query = query.Where(r => r.Status == status);
-        }
-        return await query
-            .OrderByDescending(r => r.CreatedAt)
-            .Skip(8 * (page - 1))
-            .Take(8)
-            .ToListAsync();
+        var pipeline = CreateFilteredAggregationPipeline(status, searchToken);
+
+        pipeline.Add(new BsonDocument("$sort", new BsonDocument("createdAt", -1)));
+        pipeline.Add(new BsonDocument("$skip", 8 * (page - 1)));
+        pipeline.Add(new BsonDocument("$limit", 8));
+
+        var results = await _reservations.Aggregate<ReservationModel>(PipelineDefinition<ReservationModel, ReservationModel>.Create(pipeline)).ToListAsync();
+        return results;
     }
 
-    public async Task<int> GetAllReservationsPageCount(string? status = null)
+    public async Task<int> GetAllReservationsPageCount(string? status = null, string? searchToken = null)
     {
-        var query = _reservations.AsQueryable().AsQueryable();
+        var pipeline = CreateFilteredAggregationPipeline(status, searchToken);
+
+        pipeline.Add(new BsonDocument("$count", "totalCount"));
+
+        var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
+        if (result == null) return 1;
+
+        var count = result["totalCount"].AsInt32;
+        return (int)Math.Ceiling((double)count / 8);
+    }
+
+    private List<BsonDocument> CreateFilteredAggregationPipeline(string? status = null, string? searchToken = null)
+    {
+        var pipeline = new List<BsonDocument>();
+
         if (!string.IsNullOrWhiteSpace(status))
         {
-            query = query.Where(r => r.Status == status);
+            pipeline.Add(new BsonDocument("$match", new BsonDocument("status", status)));
         }
-        var count = await query.CountAsync();
-        return (int)Math.Ceiling((double)count / 8);
+
+        if (!string.IsNullOrWhiteSpace(searchToken))
+        {
+            // Join with Users
+            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "users" },
+                { "localField", "userId" },
+                { "foreignField", "_id" },
+                { "as", "user_info" }
+            }));
+
+            // Join with BookUnits to get BookId
+            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "bookUnits" },
+                { "localField", "bookUnitId" },
+                { "foreignField", "_id" },
+                { "as", "unit_info" }
+            }));
+            pipeline.Add(new BsonDocument("$unwind", "$unit_info"));
+
+            // Join with Books to get title
+            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "books" },
+                { "localField", "unit_info.bookId" },
+                { "foreignField", "_id" },
+                { "as", "book_info" }
+            }));
+
+            var regex = new BsonRegularExpression(searchToken, "i");
+            pipeline.Add(new BsonDocument("$match", new BsonDocument("$or", new BsonArray
+            {
+                new BsonDocument("user_info.name", regex),
+                new BsonDocument("user_info.email", regex),
+                new BsonDocument("book_info.title", regex)
+            })));
+        }
+
+        return pipeline;
     }
 }

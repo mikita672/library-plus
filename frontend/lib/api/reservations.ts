@@ -3,6 +3,7 @@ import { ReservationItem } from "@/types/reservation/Reservation";
 export interface GetReservationsParams {
   pageNumber: number;
   status?: string;
+  searchToken?: string;
 }
 
 export async function getReservations(
@@ -11,6 +12,7 @@ export async function getReservations(
   const sp = new URLSearchParams();
   sp.set("pageNumber", String(params.pageNumber));
   if (params.status) sp.set("status", params.status);
+  if (params.searchToken) sp.set("searchToken", params.searchToken);
 
   const res = await fetch(`/api/reservations/all?${sp.toString()}`, {
     method: "GET",
@@ -25,6 +27,7 @@ export async function getReservationPages(
 ): Promise<number> {
   const sp = new URLSearchParams();
   if (params.status) sp.set("status", params.status);
+  if (params.searchToken) sp.set("searchToken", params.searchToken);
 
   const res = await fetch(`/api/reservations/all/pages?${sp.toString()}`, {
     method: "GET",
