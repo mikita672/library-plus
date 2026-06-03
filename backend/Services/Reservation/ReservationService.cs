@@ -126,7 +126,6 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
 
         if (!string.IsNullOrWhiteSpace(searchToken))
         {
-            // Join with Users
             pipeline.Add(new BsonDocument("$lookup", new BsonDocument
             {
                 { "from", "users" },
@@ -135,7 +134,6 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
                 { "as", "user_info" }
             }));
 
-            // Join with BookUnits to get BookId
             pipeline.Add(new BsonDocument("$lookup", new BsonDocument
             {
                 { "from", "bookUnits" },
@@ -145,7 +143,6 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
             }));
             pipeline.Add(new BsonDocument("$unwind", "$unit_info"));
 
-            // Join with Books to get title
             pipeline.Add(new BsonDocument("$lookup", new BsonDocument
             {
                 { "from", "books" },

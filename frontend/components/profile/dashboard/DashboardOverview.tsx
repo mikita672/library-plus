@@ -87,37 +87,17 @@ export default function DashboardOverview() {
           <Spinner className="h-10 w-10" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-0 border-l border-t border-black">
-          <div className="border-r border-b border-black">
-            <StatCard title="Total books amount" value={stats?.totalBooksAmount ?? 0} subValue="All time" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Total Members" value={stats?.totalMembers ?? 0} subValue="All time" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Books rented" value={stats?.booksRented ?? 0} subValue="Current" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Books in stock" value={stats?.booksInStock ?? 0} subValue="Current" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Most popular book" value={stats?.mostPopularBook ?? "N/A"} subValue="All time" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="User count" value={stats?.userCount ?? 0} subValue="Active in period" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="New members" value={stats?.newMembers ?? 0} subValue="Joined in period" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="New books" value={stats?.newBooks ?? 0} subValue="Added in period" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Most popular category" value={stats?.mostPopularCategory ?? "N/A"} subValue="In period" />
-          </div>
-          <div className="border-r border-b border-black">
-            <StatCard title="Return delayed" value={stats?.returnDelayed ?? 0} subValue="In period" />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatCard title="Total books amount" value={stats?.totalBooksAmount ?? 0} subValue="All time" />
+          <StatCard title="Total Members" value={stats?.totalMembers ?? 0} subValue="All time" />
+          <StatCard title="Books rented" value={stats?.booksRented ?? 0} subValue="Current" />
+          <StatCard title="Books in stock" value={stats?.booksInStock ?? 0} subValue="Current" />
+          <StatCard title="Most popular book" value={stats?.mostPopularBook ?? "N/A"} subValue="All time" />
+          <StatCard title="User count" value={stats?.userCount ?? 0} subValue="Active in period" />
+          <StatCard title="New members" value={stats?.newMembers ?? 0} subValue="Joined in period" />
+          <StatCard title="New books" value={stats?.newBooks ?? 0} subValue="Added in period" />
+          <StatCard title="Most popular category" value={stats?.mostPopularCategory ?? "N/A"} subValue="In period" />
+          <StatCard title="Return delayed" value={stats?.returnDelayed ?? 0} subValue="In period" />
         </div>
       )}
     </div>

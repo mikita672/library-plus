@@ -10,8 +10,8 @@ namespace LibraryPlus.Endpoints;
 public static class MediaEndpoints
 {
     private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
-    private const long MaxBookCoverSize = 5 * 1024 * 1024; // 5 MB
-    private const long MaxAvatarSize = 2 * 1024 * 1024; // 2 MB
+    private const long MaxBookCoverSize = 5 * 1024 * 1024;
+    private const long MaxAvatarSize = 2 * 1024 * 1024;
 
     public static void MapMediaEndpoints(this IEndpointRouteBuilder app)
     {
