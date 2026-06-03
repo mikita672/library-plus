@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type SubmitEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { getBookById, getBookUnitById } from "@/lib/api/books";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/reservations";
 import { getUserById } from "@/lib/api/users";
 import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import RentalsTable from "./RentalsTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -44,8 +45,8 @@ export default function RentalsTab() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [searchToken, setSearchToken] = useState("");
   const [inputValue, setInputValue] = useState("");
+  const debouncedSearch = useDebounce(inputValue, 500);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -54,7 +55,7 @@ export default function RentalsTab() {
       const params: GetReservationsParams = {
         pageNumber,
         ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-        ...(searchToken ? { searchToken } : {}),
+        ...(debouncedSearch ? { searchToken: debouncedSearch } : {}),
       };
 
       const [data, pages] = await Promise.all([
@@ -114,21 +115,18 @@ export default function RentalsTab() {
     } finally {
       setLoading(false);
     }
-  }, [pageNumber, statusFilter, searchToken]);
+  }, [pageNumber, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     void fetchData();
   }, [fetchData]);
 
-  const handleSearch = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSearchToken(inputValue);
+  useEffect(() => {
     setPageNumber(1);
-  };
+  }, [debouncedSearch]);
 
   const handleClearFilters = () => {
     setStatusFilter("all");
-    setSearchToken("");
     setInputValue("");
     setPageNumber(1);
   };
@@ -136,18 +134,18 @@ export default function RentalsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <form onSubmit={handleSearch} className="flex flex-1 max-w mr-4 gap-2">
+        <div className="flex flex-1 max-w mr-4 gap-2">
           <Input
             className="h-10 text-base"
             placeholder="Search reservations (book, client name or email)..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
-          <Button type="submit" variant="outline" className="h-10 w-10 p-0">
+          <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
-        </form>
+        </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -185,7 +183,7 @@ export default function RentalsTab() {
           Failed to fetch reservations
         </div>
       ) : (
-        <div className="min-h-[600px] flex flex-col justify-between">
+        <div className="min-h-150 flex flex-col justify-between">
           <RentalsTable reservations={allReservations} onRefresh={fetchData} />
           <PaginationControls
             pageNumber={pageNumber}
