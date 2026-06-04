@@ -4,6 +4,7 @@ import { cartContext } from "@/context/cartContext";
 import { BookCard } from "@/types/book/Book";
 import { TrashIcon } from "@phosphor-icons/react";
 import { useContext, useEffect, useState } from "react";
+import Image from "next/image";
 
 interface Props {
     ids: string[],
@@ -50,11 +51,15 @@ function CartList({ ids }: Props) {
             className="w-full bg-background grid grid-cols-6 gap-2 p-2"
         >
             <div className="h-full col-span-5 flex items-center gap-2">
-                <img
-                    src={book.coverURI ?? "/images/book-placeholder.png"}
-                    className="w-full max-w-[64px] h-[64px] object-contain"
-                    alt="Book cover"
-                />
+                <div className="relative w-full max-w-[64px] h-[64px]">
+                    <Image
+                        src={book.coverURI ?? "/images/book-placeholder.png"}
+                        fill
+                        unoptimized={!!book.coverURI}
+                        className="object-contain"
+                        alt="Book cover"
+                    />
+                </div>
 
                 <div className="h-full flex flex-col justify-around">
                     <p className="font-bold">{book.title}</p>

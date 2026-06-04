@@ -20,7 +20,7 @@ import { useContext } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-export default function page() {
+export default function PasswordResetPage() {
   const form = useForm<PasswordResetFormSchema>({
     resolver: zodResolver(passwordResetFormSchema),
     mode: "onChange",

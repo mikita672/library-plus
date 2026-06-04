@@ -22,7 +22,7 @@ import { useContext, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-export default function page() {
+export default function LoginPage() {
   const form = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
     mode: "onChange",
@@ -32,15 +32,16 @@ export default function page() {
     },
   });
   const router = useRouter();
-  const { login, refreshUser } = useContext(userContext);
+  const { login, refreshUser, refreshFullUser } = useContext(userContext);
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data: LoginFormSchema) => {
     const error = await login(data);
     if (error === null) {
+      await refreshUser();
+      await refreshFullUser();
       toast.success("Logged in successfully");
       router.replace("/");
-      await refreshUser();
     } else {
       toast.error("Failed to login", {
         description: `Reason: ${error}`,

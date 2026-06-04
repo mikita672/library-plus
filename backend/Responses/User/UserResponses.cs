@@ -4,20 +4,48 @@ namespace LibraryPlus.Responses.User;
 
 public record MeResponse(
     string Email,
+    string? Name,
     string? PhoneNumber,
     string? AvatarUrl,
-    DateTime JoinedAt
+    DateTime JoinedAt,
+    bool IsAdmin
 )
 {
     public static MeResponse FromModel(UserModel user)
     {
         return new MeResponse(
             user.Email,
+            user.Name,
             user.PhoneNumber,
             user.AvatarUrl,
-            user.JoinedAt
+            user.JoinedAt,
+            user.IsAdmin
         );
     }
 };
 
-public record MeShortResponse(string Email, string? Name, string? AvatarUrl);
+public record MeShortResponse(string Email, string? Name, string? AvatarUrl, string? PhoneNumber);
+
+public record AdminUserResponse(
+    string Id,
+    string Email,
+    string? Name,
+    string? PhoneNumber,
+    DateTime JoinedAt,
+    bool IsDeleted,
+    bool IsAdmin
+)
+{
+    public static AdminUserResponse FromModel(UserModel user)
+    {
+        return new AdminUserResponse(
+            user.Id,
+            user.Email,
+            user.Name,
+            user.PhoneNumber,
+            user.JoinedAt,
+            user.IsDeleted,
+            user.IsAdmin
+        );
+    }
+}

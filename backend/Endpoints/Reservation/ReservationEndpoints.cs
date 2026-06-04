@@ -58,5 +58,33 @@ public static class ReservationEndpoints
             await reservationService.HandleReturned(id, handleReturnRequest);
         }).AddEndpointFilter<AdminUserFilter>();
 
+        group.MapPatch("/reservation/{id}/status", [Authorize] async (
+            ReservationService reservationService,
+            UpdateStatusRequest updateStatusRequest,
+            string id
+        ) =>
+        {
+            await reservationService.UpdateStatus(id, updateStatusRequest.Status);
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/all", [Authorize] async (
+            ReservationService reservationService,
+            [FromQuery] int pageNumber,
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            return await reservationService.GetAllReservations(pageNumber, status, searchToken);
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/all/pages", [Authorize] async (
+            ReservationService reservationService,
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            return await reservationService.GetAllReservationsPageCount(status, searchToken);
+        }).AddEndpointFilter<AdminUserFilter>();
+
     }
 }

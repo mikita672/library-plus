@@ -7,7 +7,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -114,6 +113,7 @@ function ChangePassword() {
                     {...field}
                     id={field.name}
                     type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Enter your current password"
                     autoComplete="current-password"
                     aria-invalid={fieldState.invalid}
                   />
@@ -145,6 +145,7 @@ function ChangePassword() {
                     {...field}
                     id={field.name}
                     type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter your new password"
                     autoComplete="new-password"
                     aria-invalid={fieldState.invalid}
                   />
@@ -178,6 +179,7 @@ function ChangePassword() {
                     {...field}
                     id={field.name}
                     type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your new password"
                     autoComplete="new-password"
                     aria-invalid={fieldState.invalid}
                   />

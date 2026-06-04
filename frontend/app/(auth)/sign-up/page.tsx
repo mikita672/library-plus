@@ -22,7 +22,7 @@ import { useContext, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-export default function page() {
+export default function SignUpPage() {
   const form = useForm<SignUpFormSchema>({
     resolver: zodResolver(signUpformSchema),
     mode: "onChange",
@@ -32,7 +32,7 @@ export default function page() {
       passwordConfirmation: "",
     },
   });
-  const { signup, login, refreshUser } = useContext(userContext);
+  const { signup, login, refreshUser, refreshFullUser } = useContext(userContext);
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
@@ -46,9 +46,10 @@ export default function page() {
     if (error === null) {
       const loginError = await login(data);
       if (loginError === null) {
+        await refreshUser();
+        await refreshFullUser();
         toast.success("Logged in successfully");
         router.replace("/");
-        await refreshUser();
       } else {
         toast.success("Signed up successfully");
         router.push("/login");

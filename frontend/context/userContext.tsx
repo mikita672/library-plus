@@ -1,7 +1,11 @@
-import { LoginFormSchema, PasswordResetFormSchema, SignUpFormSchema } from "@/forms/auth";
+import {
+  LoginFormSchema,
+  PasswordResetFormSchema,
+  SignUpFormSchema,
+} from "@/forms/auth";
 import { AuthResponseDTO } from "@/types/auth/dto";
 import { FullUserData, UserData } from "@/types/user/UserData";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
 
 export interface IUserContext {
   userData: UserData | null;
@@ -11,8 +15,9 @@ export interface IUserContext {
   signup: ({ email, password }: SignUpFormSchema) => Promise<string | null>;
   logout: () => Promise<string | null>;
   resetPassword: ({ email }: PasswordResetFormSchema) => Promise<string | null>;
-  refreshUser: () => Promise<void>;
-  refreshFullUser: () => Promise<void>;
+  refreshUser: (showLoading?: boolean) => Promise<void>;
+  refreshFullUser: (showLoading?: boolean) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
 }
 
 export const userContext = createContext({} as IUserContext);
@@ -22,37 +27,50 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [fullUserData, setFullUserData] = useState<FullUserData | null>(null);
 
-  const refreshUser = async () => {
-    setIsLoading(true);
-    const response = await fetch("/api/users/meShort", {
-      method: "GET",
-    });
+  const refreshUser = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    try {
+      const response = await fetch("/api/users/meShort", {
+        method: "GET",
+      });
 
-    if (response.ok) {
-      setUserData(await response.json());
-    } else {
+      if (response.ok) {
+        setUserData(await response.json());
+      } else {
+        setUserData(null);
+      }
+    } catch {
       setUserData(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  };
-
-  const refreshFullUser = async () => {
-    setIsLoading(true);
-    const response = await fetch("/api/users/me", { method: "GET" });
-
-    if (response.ok) {
-      setFullUserData(await response.json());
-    } else {
-      setFullUserData(null);
-    }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    refreshUser();
   }, []);
 
-  const login = async ({
+  const refreshFullUser = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    try {
+      const response = await fetch("/api/users/me", { method: "GET" });
+
+      if (response.ok) {
+        setFullUserData(await response.json());
+      } else {
+        setFullUserData(null);
+      }
+    } catch {
+      setFullUserData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      void refreshUser(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [refreshUser]);
+
+  const login = useCallback(async ({
     email,
     password,
   }: LoginFormSchema): Promise<string | null> => {
@@ -69,9 +87,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return "Bad credentials";
     }
     return null;
-  };
+  }, []);
 
-  const signup = async ({
+  const signup = useCallback(async ({
     email,
     password,
   }: SignUpFormSchema): Promise<string | null> => {
@@ -85,13 +103,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!response.ok) {
-      const data: AuthResponseDTO = await response.json().catch(() => { });
-      return data.message ?? "something went wrong";
+      const data: AuthResponseDTO = await response.json().catch(() => {});
+      return data?.message ?? "something went wrong";
     }
     return null;
-  };
+  }, []);
 
-  const logout = async (): Promise<string | null> => {
+  const logout = useCallback(async (): Promise<string | null> => {
     const response = await fetch("/api/auth/logout", {
       method: "POST",
       headers: {
@@ -100,15 +118,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!response.ok) {
-      const data: AuthResponseDTO = await response.json().catch(() => { });
+      const data: AuthResponseDTO = await response.json().catch(() => {});
       return data.message ?? "something went wrong";
     }
 
     setUserData(null);
+    setFullUserData(null);
     return null;
-  };
+  }, []);
 
-  const resetPassword = async ({ email }: PasswordResetFormSchema): Promise<string | null> => {
+  const resetPassword = useCallback(async ({
+    email,
+  }: PasswordResetFormSchema): Promise<string | null> => {
     const response = await fetch("/api/auth/reset-password", {
       method: "PATCH",
       headers: {
@@ -125,22 +146,44 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return "Unknown error";
     }
     return null;
-  }
+  }, []);
+
+  const updateName = useCallback(async (newName: string) => {
+    await fetch("/api/users/updateName", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newName }),
+    });
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    userData,
+    fullUserData,
+    isLoading,
+    login,
+    signup,
+    logout,
+    refreshUser,
+    refreshFullUser,
+    resetPassword,
+    updateName,
+  }), [
+    userData,
+    fullUserData,
+    isLoading,
+    login,
+    signup,
+    logout,
+    refreshUser,
+    refreshFullUser,
+    resetPassword,
+    updateName,
+  ]);
 
   return (
-    <userContext.Provider
-      value={{
-        userData,
-        fullUserData,
-        isLoading,
-        login,
-        signup,
-        logout,
-        refreshUser,
-        refreshFullUser,
-        resetPassword,
-      }}
-    >
+    <userContext.Provider value={contextValue}>
       {children}
     </userContext.Provider>
   );

@@ -2,6 +2,7 @@
 
 import { UserCircleIcon } from '@phosphor-icons/react';
 import React from 'react'
+import Image from "next/image";
 
 interface Props {
     avatarUrl: string | null;
@@ -10,7 +11,9 @@ interface Props {
 function HeaderUserMenuAvatar({ avatarUrl } : Props) {
   return avatarUrl === null ?
     <UserCircleIcon className="h-8 w-8" /> :
-    <img className="h-8 w-8 rounded-full" src={avatarUrl} />
+    <div className="relative h-8 w-8 overflow-hidden rounded-full">
+      <Image src={avatarUrl} alt="User avatar" fill className="object-cover" unoptimized />
+    </div>
 }
 
 export default HeaderUserMenuAvatar;

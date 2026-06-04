@@ -1,12 +1,9 @@
 "use client"
 
 import { ArrowsClockwiseIcon, BookBookmarkIcon, CalendarDotsIcon, PackageIcon } from '@phosphor-icons/react'
-import { useTheme } from 'next-themes'
 import InformationCard from './InformationCard';
 
 function HowDoWeOperateSecton() {
-  const theme = useTheme();
-
   return (
     <div className="w-full p-4 lg:p-12 flex flex-col justify-center items-center gap-4 overflow-hidden bg-[url(/images/howDoWeOperateSectionBackground.jpg)] bg-center bg-no-repeat bg-cover bg-fixed">
       <span className="text-xl text-light font-bold">How dow we operate?</span>

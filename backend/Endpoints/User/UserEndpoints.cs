@@ -21,14 +21,25 @@ public static class UserEndpoints
         {
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
-            return new MeShortResponse(user.Email, user.Name, user.AvatarUrl);
+            return new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrl(user.AvatarUrl), user.PhoneNumber);
+        });
+
+        group.MapGet("/user/{id}", [Authorize] async (string id, UserService userService) =>
+        {
+            var user = await userService.GetUserById(id);
+            if (user == null)
+            {
+                return Results.NotFound();
+            }
+            return Results.Ok(new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrl(user.AvatarUrl), user.PhoneNumber));
         });
 
         group.MapGet("/me", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
-            return MeResponse.FromModel(user);
+            var response = MeResponse.FromModel(user);
+            return response with { AvatarUrl = userService.GetAvatarUrl(user.AvatarUrl) };
         });
 
         group.MapPatch("/updatePhoneNumber", [Authorize] async (
@@ -38,6 +49,24 @@ public static class UserEndpoints
         {
             var userId = claims.FindFirstValue("sub")!;
             await userService.UpdatePhoneNumber(userId, updatePhoneNumberDto.NewPhoneNumber);
+        });
+
+        group.MapPatch("/updateName", [Authorize] async (
+            ClaimsPrincipal claims,
+            UserService userService,
+            [FromBody] UpdateNameRequest updateNameDto) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            await userService.UpdateName(userId, updateNameDto.NewName);
+        });
+
+        group.MapPatch("/updateProfile", [Authorize] async (
+            ClaimsPrincipal claims,
+            UserService userService,
+            [FromBody] UpdateProfileRequest updateProfileDto) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            await userService.UpdateProfile(userId, updateProfileDto.Name, updateProfileDto.PhoneNumber);
         });
 
         group.MapPatch("/updatePassword", [Authorize] async (
@@ -88,5 +117,45 @@ public static class UserEndpoints
 
             return deleted ? Results.NoContent() : Results.NotFound();
         });
+
+        group.MapGet("/all", [Authorize] async (
+            UserService userService,
+            [FromQuery] int pageNumber,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            var users = await userService.GetUsers(pageNumber, searchToken);
+            return Results.Ok(users.Select(AdminUserResponse.FromModel));
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/all/pages", [Authorize] async (
+            UserService userService,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            var pages = await userService.GetUsersPages(searchToken);
+            return Results.Ok(pages);
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPatch("/user/{id}/delete", [Authorize] async (
+            string id,
+            UserService userService,
+            RefreshTokenService refreshTokenService) =>
+        {
+            var deleted = await userService.SoftDeleteUser(id);
+            if (deleted)
+            {
+                await refreshTokenService.RemoveRefreshTokensForUser(id);
+            }
+            return deleted ? Results.NoContent() : Results.NotFound();
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPatch("/user/{id}/restore", [Authorize] async (
+            string id,
+            UserService userService) =>
+        {
+            var restored = await userService.RestoreUser(id);
+            return restored ? Results.NoContent() : Results.NotFound();
+        }).AddEndpointFilter<AdminUserFilter>();
     }
 }

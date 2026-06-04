@@ -7,7 +7,10 @@ function HeaderActionThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   if (!mounted) return <MoonIcon className="w-6 h-6" />;

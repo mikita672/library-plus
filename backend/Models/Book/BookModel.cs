@@ -27,4 +27,5 @@ public class BookModel
     public string? OriginalPublisherId { get; set; }
     public uint Popularity { get; set; }
     public string? CoverURI { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
