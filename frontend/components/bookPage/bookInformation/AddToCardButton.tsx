@@ -25,18 +25,12 @@ function AddToCardButton({ id, isAvailable }: Props) {
                         className="w-fit px-12 py-6 font-bold text-2xl bg-primary cursor-pointer"
                         onClick={() => removeBook(id)}
                     >Added to cart!</Button> :
-                    (
-                        isAvailable ?
-                            <Button
-                                className="w-fit px-12 py-6 font-bold text-2xl bg-primary cursor-pointer"
-                                onClick={() => {
-                                    addBook(id);
-                                }}
-                            >Add to your cart!</Button> :
-                            <Button
-                                className="w-fit px-12 py-6 font-bold text-2xl bg-accent cursor-not-allowed text-foreground opacity-50"
-                            >Add to your cart!</Button>
-                    )
+                    <Button
+                        className="w-fit px-12 py-6 font-bold text-2xl bg-primary cursor-pointer"
+                        onClick={() => {
+                            addBook(id);
+                        }}
+                    >Add to your cart!</Button>
             }
 
             <Link href="/return-policies">

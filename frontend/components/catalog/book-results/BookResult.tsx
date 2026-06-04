@@ -22,9 +22,9 @@ function BookResult({ book }: Props) {
             />
 
             <div className="w-full">
-                <p>{book.title}</p>
+                <p>{book.title.length > 36 ? book.title.substring(0, 33) + '...' : book.title}</p>
                 <p className="opacity-50">Language: {book.language}</p>
-                {book.authorName === null ? <></> : <p className="opacity-50">Author: {book.authorName}</p>}
+                <p className="opacity-50">Author: {book.authorName ?? "Unknown"}</p>
                 <p className="opacity-50">Publication year: {book.originalPublicationYear ?? book.publicationYear}</p>
                 {book.isAvailable ?
                     <p>Available now</p> : <p className="text-destructive">Not Available</p>}
@@ -38,17 +38,11 @@ function BookResult({ book }: Props) {
                         }}>
                             Added to cart
                         </Button> :
-                        (
-                            book.isAvailable ?
-                                <Button className="w-full bg-primary cursor-pointer" onClick={() => {
-                                    addBook(book.id);
-                                }}>
-                                    Rent now
-                                </Button> :
-                                <Button className="w-full bg-accent text-foreground cursor-not-allowed opacity-50">
-                                    Rent now
-                                </Button>
-                        )
+                        <Button className="w-full bg-primary cursor-pointer" onClick={() => {
+                            addBook(book.id);
+                        }}>
+                            Rent now
+                        </Button>
                     }
                 </Link>
 
