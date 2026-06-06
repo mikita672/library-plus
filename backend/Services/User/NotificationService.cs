@@ -1,6 +1,7 @@
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
 using LibraryPlus.Responses.User;
+using MailKit;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -9,22 +10,49 @@ namespace LibraryPlus.Services.User;
 public class NotificationService(IMongoDatabase db)
 {
     private readonly IMongoCollection<NotificationModel> _notifications = db.GetCollection<NotificationModel>("notifications");
+    private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
     private readonly IMongoCollection<UserNotificationModel> _userNotifications = db.GetCollection<UserNotificationModel>("userNotifications");
 
-    public async Task<NotificationModel> CreateNotification(NotificationRequest notificationBody)
+    public async Task<NotificationModel> CreateNotification(string subject, string text)
     {
         var notification = new NotificationModel
         {
-            Subject = notificationBody.Subject,
-            Text = notificationBody.Text,
+            Subject = subject,
+            Text = text,
         };
         await _notifications.InsertOneAsync(notification);
         return notification;
     }
 
+    public async Task SendAdminNotification(string userId, string message)
+    {
+        var admin = await _users.AsQueryable()
+            .Where(u => u.IsAdmin)
+            .Take(1)
+            .FirstOrDefaultAsync();
+        if (admin == null)
+        {
+            return;
+        }
+        var user = await _users.AsQueryable()
+            .Where(u => u.Id == userId)
+            .FirstOrDefaultAsync();
+        if (user == null)
+        {
+            return;
+        }
+        var notification = await CreateNotification($"Contact request (from: {user.Email})", message);
+        await _userNotifications.InsertOneAsync(new UserNotificationModel
+        {
+            UserId = admin.Id,
+            NotificationId = notification.Id,
+            CreatedAt = DateTime.UtcNow,
+        });
+    }
+
     public async Task SendOneUserNotification(string userId, NotificationRequest notificationBody)
     {
-        var notification = await CreateNotification(notificationBody);
+        var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
         await _userNotifications.InsertOneAsync(new UserNotificationModel
         {
             UserId = userId,
@@ -35,7 +63,7 @@ public class NotificationService(IMongoDatabase db)
 
     public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationRequest notificationBody)
     {
-        var notification = await CreateNotification(notificationBody);
+        var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
         var userNotifications = userIds.Select(id => new UserNotificationModel
         {
             UserId = id,

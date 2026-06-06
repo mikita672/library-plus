@@ -14,6 +14,7 @@ using LibraryPlus.Services.Mail;
 using LibraryPlus.Services.Storage;
 using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
+using LibraryPlus.Endpoints.Misc;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -91,5 +92,6 @@ app.MapBookEndpoints();
 app.MapReservationEndpoints();
 app.MapMediaEndpoints();
 app.MapStatisticsEndpoints();
+app.MapMiscEndpoints();
 
 app.Run();
