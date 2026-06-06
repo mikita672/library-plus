@@ -102,7 +102,7 @@ const columns: ColumnDef<EnrichedReservationItem>[] = [
       return (
         <div className="flex items-center gap-4 py-2">
           {coverUri ? (
-            <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-sm border">
+            <div className="relative h-16 w-12 shrink-0 overflow-hidden border">
               <Image
                 src={coverUri}
                 alt={title}
@@ -112,7 +112,7 @@ const columns: ColumnDef<EnrichedReservationItem>[] = [
               />
             </div>
           ) : (
-            <div className="h-16 w-12 shrink-0 bg-muted rounded-sm border flex items-center justify-center">
+            <div className="h-16 w-12 shrink-0 bg-muted border flex items-center justify-center">
               <span className="text-xs text-muted-foreground">No img</span>
             </div>
           )}
@@ -180,14 +180,14 @@ export default function UserRentalsTable({
 
   if (!reservations.length) {
     return (
-      <div className="text-center text-muted-foreground py-12 bg-muted/20 rounded-lg border border-dashed">
+      <div className="text-center text-muted-foreground py-12">
         You do not have any rentals yet.
       </div>
     );
   }
 
   return (
-    <div className="w-full overflow-hidden border rounded-md">
+    <div className="w-full overflow-hidden">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
