@@ -33,7 +33,6 @@ public static class ReservationEndpoints
         group.MapGet("/", [Authorize] async (
             ReservationService reservationService,
             ClaimsPrincipal claims,
-            [FromBody] CreateReservationRequest createReservationRequest,
             [FromQuery] int pageNumber
         ) =>
         {
