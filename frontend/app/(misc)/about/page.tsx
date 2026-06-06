@@ -3,7 +3,7 @@ import React from 'react'
 
 function AboutPage() {
     return (
-        <div className="min-h-[70vh] px-7">
+        <>
             <p className="font-bold text-xl">About Library+</p>
             <p>This project was made by <a className="underline text-primary" href="https://github.com/justkinou">Andrii Bialkovskyi</a> and <a className="underline text-primary" href="https://github.com/mikita672">Mikita Dzeviatau</a> for the 'Designing dynamic websites', 'Basics of containerization' and '.NET platform' courses @ Łódź University of Technology</p>
             <Separator className="my-8" />
@@ -34,7 +34,7 @@ function AboutPage() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </>
     )
 }
 
