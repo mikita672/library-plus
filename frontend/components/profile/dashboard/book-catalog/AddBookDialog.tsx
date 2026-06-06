@@ -118,8 +118,8 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><PlusIcon /> Add book</Button></DialogTrigger>
-      <DialogContent className="max-w-2xl p-6">
+      <DialogTrigger asChild><Button className="h-10 px-4 text-lg"><PlusIcon /> Add book</Button></DialogTrigger>
+      <DialogContent className="sm:max-w-2xl p-6">
         <DialogHeader><DialogTitle>Add new book</DialogTitle><DialogDescription>Create a record.</DialogDescription></DialogHeader>
         <form id="add-book-form" className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-3">

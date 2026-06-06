@@ -132,11 +132,12 @@ function buildColumns(
     },
     {
       id: "actions",
+      header: () => <div className="text-right">Actions</div>,
       enableHiding: false,
       cell: ({ row }) => {
         const book = row.original;
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-end">
             <Button
               variant="ghost"
               size="sm"
