@@ -124,3 +124,8 @@
   --sidebar-border: #fdffff20;
   --sidebar-ring: #589662;
 }
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
