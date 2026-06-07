@@ -100,7 +100,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader><DialogTitle>Edit Book</DialogTitle><DialogDescription>Update details.</DialogDescription></DialogHeader>
         {loading ? <div className="py-10 text-center">Loading...</div> : (
           <div className="grid gap-4 py-4">

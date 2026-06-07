@@ -111,7 +111,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
 
   return (
     <Dialog open={!!reservation} onOpenChange={o => !o && onClose()}>
-      <DialogContent className="max-w-4xl rounded-none border-none p-8">
+      <DialogContent className="sm:max-w-5xl w-[95vw] rounded-none border-none p-8">
         <DialogHeader className="hidden"><DialogTitle>Manage</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
           <div className="space-y-4">

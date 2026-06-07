@@ -59,9 +59,9 @@ function buildColumns<T extends BaseLookupModel>(
     },
     {
       id: "actions",
-      header: "Actions",
+      header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end">
           <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)} className="h-8 w-8 p-0">
             <PencilSimpleIcon className="h-4 w-4" />
           </Button>
@@ -205,7 +205,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-106.25">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit" : "Add"} {entityName}</DialogTitle>
             <DialogDescription>Enter the name of the {entityName.toLowerCase()}.</DialogDescription>
