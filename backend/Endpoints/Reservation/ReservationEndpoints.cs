@@ -33,12 +33,24 @@ public static class ReservationEndpoints
         group.MapGet("/", [Authorize] async (
             ReservationService reservationService,
             ClaimsPrincipal claims,
-            [FromBody] CreateReservationRequest createReservationRequest,
-            [FromQuery] int pageNumber
+            [FromQuery] int pageNumber,
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
-            return await reservationService.GetUserReservations(userId, pageNumber);
+            return await reservationService.GetUserReservations(userId, pageNumber, status, searchToken);
+        });
+
+        group.MapGet("/pages", [Authorize] async (
+            ReservationService reservationService,
+            ClaimsPrincipal claims,
+            [FromQuery] string? status,
+            [FromQuery] string? searchToken
+        ) =>
+        {
+            var userId = claims.FindFirstValue("sub")!;
+            return await reservationService.GetUserReservationsPageCount(userId, status, searchToken);
         });
 
         group.MapPatch("/reservation/{id}/take", [Authorize] async (

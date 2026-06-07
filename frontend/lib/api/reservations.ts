@@ -1,4 +1,4 @@
-import { ReservationItem } from "@/types/reservation/Reservation";
+import { EnrichedReservationItem, ReservationItem } from "@/types/reservation/Reservation";
 
 export interface GetReservationsParams {
   pageNumber: number;
@@ -20,6 +20,37 @@ export async function getReservations(
   });
   if (!res.ok) return [];
   return res.json() as Promise<ReservationItem[]>;
+}
+
+export async function getUserReservations(
+  params: GetReservationsParams,
+): Promise<ReservationItem[]> {
+  const sp = new URLSearchParams();
+  sp.set("pageNumber", String(params.pageNumber));
+  if (params.status) sp.set("status", params.status);
+  if (params.searchToken) sp.set("searchToken", params.searchToken);
+
+  const res = await fetch(`/api/reservations?${sp.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<ReservationItem[]>;
+}
+
+export async function getUserReservationPages(
+  params: GetReservationsParams,
+): Promise<number> {
+  const sp = new URLSearchParams();
+  if (params.status) sp.set("status", params.status);
+  if (params.searchToken) sp.set("searchToken", params.searchToken);
+
+  const res = await fetch(`/api/reservations/pages?${sp.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return 1;
+  return res.json() as Promise<number>;
 }
 
 export async function getReservationPages(

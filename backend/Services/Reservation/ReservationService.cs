@@ -44,13 +44,26 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         return reservation;
     }
 
-    public async Task<IList<ReservationModel>> GetUserReservations(string userId, int page)
+    public async Task<IList<ReservationModel>> GetUserReservations(string userId, int page, string? status = null, string? searchToken = null)
     {
-        return await _reservations.Find(r => r.UserId == userId)
-            .SortByDescending(r => r.CreatedAt)
-            .Skip(PAGE_SIZE * (page - 1))
-            .Limit(PAGE_SIZE)
-            .ToListAsync();
+        var pipeline = CreateFilteredPipeline(status, searchToken, userId);
+
+        pipeline.Add(new BsonDocument("$sort", new BsonDocument("createdAt", -1)));
+        pipeline.Add(new BsonDocument("$skip", PAGE_SIZE * (page - 1)));
+        pipeline.Add(new BsonDocument("$limit", PAGE_SIZE));
+
+        return await _reservations.Aggregate<ReservationModel>(PipelineDefinition<ReservationModel, ReservationModel>.Create(pipeline)).ToListAsync();
+    }
+
+    public async Task<int> GetUserReservationsPageCount(string userId, string? status = null, string? searchToken = null)
+    {
+        var pipeline = CreateFilteredPipeline(status, searchToken, userId);
+        pipeline.Add(new BsonDocument("$count", "total"));
+
+        var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
+        if (result == null) return 1;
+
+        return (int)Math.Ceiling(result["total"].AsInt32 / (double)PAGE_SIZE);
     }
 
     public async Task<bool> HandleTaken(string id)
@@ -107,11 +120,16 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         return (int)Math.Ceiling(result["total"].AsInt32 / (double)PAGE_SIZE);
     }
 
-    private List<BsonDocument> CreateFilteredPipeline(string? status, string? searchToken)
+    private List<BsonDocument> CreateFilteredPipeline(string? status, string? searchToken, string? userId = null)
     {
         var pipeline = new List<BsonDocument>();
 
-        if (!string.IsNullOrWhiteSpace(status))
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            pipeline.Add(new BsonDocument("$match", new BsonDocument("userId", ObjectId.Parse(userId))));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && status.ToLower() != "all")
         {
             pipeline.Add(new BsonDocument("$match", new BsonDocument("status", status)));
         }
