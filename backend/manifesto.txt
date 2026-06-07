@@ -1,0 +1,7 @@
+Library Policies:
+- Late Penalty: $1 per day for late returns, up to 30 days.
+- Repurchase: After 30 days late, you must pay the book's repurchase price.
+- Keeping the book: If you pay the 30 days of late fees AND the repurchase price, you can keep the book. If you only pay late fees, you must return the book.
+- Book Pickup: You must pick up books in person at the library. We do not offer shipping.
+- Book Return: You must return books in person at the library. We do not offer shipping.
+- Payment Methods: You can pay penalties using card or cash at the library.

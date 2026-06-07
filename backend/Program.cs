@@ -55,6 +55,7 @@ catch
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton(db);
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<JwtService>();
