@@ -13,6 +13,7 @@ export default function PublishersTab() {
     <LookupManagementTab
       entityName="Publisher"
       entityNamePlural="Publishers"
+      paramKey="publisherId"
       fetchItems={getPublishers}
       createItem={createPublisher}
       updateItem={updatePublisher}

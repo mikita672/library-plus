@@ -14,8 +14,15 @@ import { z } from "zod";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
-  name: z.string().trim().min(1, "Name cannot be empty"),
-  phone: z.string().trim().regex(/^\d{9}$/, "Phone number must be exactly 9 digits"),
+  name: z.string().trim(),
+  phone: z.string().trim(),
+}).superRefine((data, ctx) => {
+  if (!data.name && !data.phone) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Either Name or Phone must be provided", path: ["name"] });
+  }
+  if (data.phone && !/^\d{9}$/.test(data.phone)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Phone number must be exactly 9 digits", path: ["phone"] });
+  }
 });
 
 type Props = {

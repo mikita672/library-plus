@@ -41,6 +41,13 @@ public class PublisherService(IMongoDatabase db)
         return await _publishers.AsQueryable().ToListAsync();
     }
 
+    public async Task<IList<PublisherModel>> GetPublishersByIds(IList<string?> ids)
+    {
+        return await _publishers.AsQueryable()
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
+    }
+
     public async Task DeletePublisher(string id)
     {
         await _publishers.FindOneAndDeleteAsync(

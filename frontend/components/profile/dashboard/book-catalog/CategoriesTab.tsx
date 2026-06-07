@@ -13,6 +13,7 @@ export default function CategoriesTab() {
     <LookupManagementTab
       entityName="Category"
       entityNamePlural="Categories"
+      paramKey="categoryIds"
       fetchItems={getCategories}
       createItem={createCategory}
       updateItem={updateCategory}

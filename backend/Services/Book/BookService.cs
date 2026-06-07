@@ -22,7 +22,7 @@ public class BookService(
     private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
     private readonly IObjectStorageService _storageService = storageService;
-    private const int PAGE_SIZE = 12;
+    private const int PAGE_SIZE = 6;
 
     public async Task<BookModel> CreateBook(CreateBookRequest request)
     {
@@ -74,9 +74,13 @@ public class BookService(
         uint? minYear, uint? maxYear, bool? available)
     {
         var query = _books.AsQueryable()
-            .Where(b => b.Title.ToLower().Contains((token ?? "").ToLower()))
             .Where(b => b.PublicationYear >= (minYear ?? 0))
             .Where(b => b.PublicationYear <= (maxYear ?? (uint)DateTime.Now.Year));
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            query = query.Where(b => b.Title.ToLower().Contains(token.ToLower()));
+        }
 
         if (authorId != null) query = query.Where(b => b.AuthorId == authorId);
         if (publisherId != null) query = query.Where(b => b.PublisherId == publisherId);
@@ -84,12 +88,35 @@ public class BookService(
 
         if (available != null)
         {
-            var reserved = await _reservations.Find(r => r.ReturnedDate == null).Project(r => r.BookUnitId).ToListAsync();
-            var availableIds = await _bookUnits.Find(bu => !reserved.Contains(bu.Id)).Project(bu => bu.BookId).ToListAsync();
-            query = query.Where(b => availableIds.Distinct().Contains(b.Id) == available);
+            var availableIds = await GetAvailableBookIds();
+            query = query.Where(b => availableIds.Contains(b.Id) == available);
         }
 
         return query;
+    }
+
+    private async Task<HashSet<string>> GetAvailableBookIds()
+    {
+        var takenIds = await _reservations.Find(r => r.ReturnedDate == null).Project(r => r.BookUnitId).ToListAsync();
+        var allUnits = await _bookUnits.Find(bu => !takenIds.Contains(bu.Id)).ToListAsync();
+        var availableBookIds = new HashSet<string>();
+
+        foreach (var unit in allUnits)
+        {
+            if (availableBookIds.Contains(unit.BookId)) continue;
+            
+            var latestReservation = await _reservations.Find(r => r.BookUnitId == unit.Id && r.ReturnedDate != null)
+                .SortByDescending(r => r.CreatedAt)
+                .FirstOrDefaultAsync();
+            
+            var condition = latestReservation?.BookConditionUponReturn?.ToLower() ?? "good";
+            if (condition.Contains("good") || condition.Contains("minor"))
+            {
+                availableBookIds.Add(unit.BookId);
+            }
+        }
+        
+        return availableBookIds;
     }
 
     public async Task<IList<BookCardResponse>> SearchBooks(
@@ -122,19 +149,25 @@ public class BookService(
 
     private async Task<IList<BookCardResponse>> MapToCards(List<BookModel> books)
     {
-        var authorIds = books.Select(b => b.AuthorId).OfType<string>().Distinct().ToList();
-        var catIds = books.SelectMany(b => b.CategoryIds ?? []).Distinct().ToList();
+        var authorIds = books.Select(b => b.AuthorId).OfType<string>().Distinct().ToList<string?>();
+        var catIds = books.SelectMany(b => b.CategoryIds ?? []).Distinct().ToList<string?>();
+        var publisherIds = books.Select(b => b.PublisherId).OfType<string>().Distinct().ToList<string?>();
 
-        var authors = await _authorService.GetAuthorsByIds(authorIds);
-        var categories = await _categoryService.GetCategoriesByIds(catIds);
+        var authorsTask = _authorService.GetAuthorsByIds(authorIds);
+        var categoriesTask = _categoryService.GetCategoriesByIds(catIds);
+        var publishersTask = _publisherService.GetPublishersByIds(publisherIds);
 
-        var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
-        var catMap = categories.ToDictionary(c => c.Id, c => c.Name);
+        await Task.WhenAll(authorsTask, categoriesTask, publishersTask);
+
+        var authorMap = authorsTask.Result.ToDictionary(a => a.Id, a => a.Name);
+        var catMap = categoriesTask.Result.ToDictionary(c => c.Id, c => c.Name);
+        var pubMap = publishersTask.Result.ToDictionary(p => p.Id, p => p.Name);
 
         return await Task.WhenAll([.. books.Select(async b => new BookCardResponse(
             b.Id, b.Title, b.Language,
             b.AuthorId != null && authorMap.TryGetValue(b.AuthorId, out var n) ? n : null,
             b.CategoryIds?.Count > 0 && catMap.TryGetValue(b.CategoryIds[0], out var c) ? c : null,
+            b.PublisherId != null && pubMap.TryGetValue(b.PublisherId, out var p) ? p : null,
             b.PublicationYear, b.OriginalPublicationYear,
             _storageService.GetPublicUrl(b.CoverURI),
             (await GetAvailableBookUnitForBook(b.Id)) != null
@@ -145,6 +178,7 @@ public class BookService(
     public async Task DeleteBook(string id) => await _books.DeleteOneAsync(b => b.Id == id);
     public async Task<BookUnitModel> AddBookUnit(string bookId) { var bu = new BookUnitModel { BookId = bookId }; await _bookUnits.InsertOneAsync(bu); return bu; }
     public async Task DeleteBookUnit(string id) => await _bookUnits.DeleteOneAsync(bu => bu.Id == id);
+    public async Task<IList<BookUnitModel>> GetBookUnitsForBook(string bookId) => await _bookUnits.Find(bu => bu.BookId == bookId).ToListAsync();
     public async Task<BookUnitModel?> GetBookUnitById(string id) => await _bookUnits.Find(bu => bu.Id == id).FirstOrDefaultAsync();
 
     public async Task<BookPreviewResponse?> GetBookPreviewById(string id)
@@ -178,7 +212,22 @@ public class BookService(
     public async Task<BookUnitModel?> GetAvailableBookUnitForBook(string bookId)
     {
         var takenIds = await _reservations.Find(r => r.ReturnedDate == null).Project(r => r.BookUnitId).ToListAsync();
-        return await _bookUnits.Find(bu => bu.BookId == bookId && !takenIds.Contains(bu.Id)).FirstOrDefaultAsync();
+        var availableUnits = await _bookUnits.Find(bu => bu.BookId == bookId && !takenIds.Contains(bu.Id)).ToListAsync();
+        
+        foreach (var unit in availableUnits)
+        {
+            var latestReservation = await _reservations.Find(r => r.BookUnitId == unit.Id && r.ReturnedDate != null)
+                .SortByDescending(r => r.CreatedAt)
+                .FirstOrDefaultAsync();
+            
+            var condition = latestReservation?.BookConditionUponReturn?.ToLower() ?? "good";
+            if (condition.Contains("good") || condition.Contains("minor"))
+            {
+                return unit;
+            }
+        }
+        
+        return null;
     }
 
     public async Task<IList<BookCardResponse>> GetBooksByAuthor(string id, string? excludedId)

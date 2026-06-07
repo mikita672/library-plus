@@ -30,24 +30,22 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     const addBook = (id: string) => {
-        if (bookIds === null) {
-            return;
-        }
-        if (bookIds.includes(id)) {
-            return;
-        }
-        const newBookIds = [...bookIds, id];
-        setBookIds(newBookIds);
-        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
+        setBookIds(prev => {
+            if (prev === null) return null;
+            if (prev.includes(id)) return prev;
+            const newBookIds = [...prev, id];
+            localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
+            return newBookIds;
+        });
     }
 
     const removeBook = (id: string) => {
-        if (bookIds === null) {
-            return;
-        }
-        const newBookIds = bookIds.filter(bookId => bookId !== id);
-        setBookIds(newBookIds);
-        localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
+        setBookIds(prev => {
+            if (prev === null) return null;
+            const newBookIds = prev.filter(bookId => bookId !== id);
+            localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
+            return newBookIds;
+        });
     }
 
     return (

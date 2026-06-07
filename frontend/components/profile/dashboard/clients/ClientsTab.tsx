@@ -57,7 +57,7 @@ export default function ClientsTab() {
       ) : error ? (
         <div className="text-destructive py-8">Error loading clients</div>
       ) : (
-        <div className="min-h-150 flex flex-col justify-between">
+        <div className="flex flex-col justify-between">
           <ClientsTable users={users} onRefresh={refetch} />
           <PaginationControls
             pageNumber={pageNumber}

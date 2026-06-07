@@ -13,6 +13,7 @@ export default function AuthorsTab() {
     <LookupManagementTab
       entityName="Author"
       entityNamePlural="Authors"
+      paramKey="authorId"
       fetchItems={getAuthors}
       createItem={createAuthor}
       updateItem={updateAuthor}
