@@ -9,7 +9,6 @@ public record UserNotificationCountResponse(
 
 public record UserNotificationResponse(
     string Id,
-    string Subject,
     string Text,
     bool IsRead,
     DateTime CreatedAt

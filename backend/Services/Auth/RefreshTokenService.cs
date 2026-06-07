@@ -11,14 +11,27 @@ public class RefreshTokenService
     private readonly IMongoCollection<RefreshTokenModel> _refreshTokens;
     private readonly UserService _userService;
 
+    private static bool _indexesCreated = false;
+    private static readonly object _lock = new();
+
     public RefreshTokenService(IMongoDatabase db, UserService userService)
     {
         _refreshTokens = db.GetCollection<RefreshTokenModel>("refreshTokens");
         _userService = userService;
 
-        var indexKeys = Builders<RefreshTokenModel>.IndexKeys.Ascending(t => t.ExpiryDate);
-        var indexOptions = new CreateIndexOptions { ExpireAfter = TimeSpan.Zero };
-        _refreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshTokenModel>(indexKeys, indexOptions));
+        if (!_indexesCreated)
+        {
+            lock (_lock)
+            {
+                if (!_indexesCreated)
+                {
+                    var indexKeys = Builders<RefreshTokenModel>.IndexKeys.Ascending(t => t.ExpiryDate);
+                    var indexOptions = new CreateIndexOptions { ExpireAfter = TimeSpan.Zero };
+                    _refreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshTokenModel>(indexKeys, indexOptions));
+                    _indexesCreated = true;
+                }
+            }
+        }
     }
 
     public async Task<UserModel?> GetUserByRefreshToken(string refreshTokenPlain)

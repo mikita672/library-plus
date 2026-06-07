@@ -18,8 +18,8 @@ public static class BookEndpoints
             [FromQuery] string? authorId,
             [FromQuery] string? publisherId,
             [FromQuery] string[]? categoryIds,
-            [FromQuery] uint? minPublicationYear,
-            [FromQuery] uint? maxPublicationYear,
+            [FromQuery] int? minPublicationYear,
+            [FromQuery] int? maxPublicationYear,
             [FromQuery] bool? isAvailable,
             [FromQuery] int? pageNumber,
             [FromQuery] string? sortBy,
@@ -55,8 +55,8 @@ public static class BookEndpoints
             [FromQuery] string? authorId,
             [FromQuery] string? publisherId,
             [FromQuery] string[]? categoryIds,
-            [FromQuery] uint? minPublicationYear,
-            [FromQuery] uint? maxPublicationYear,
+            [FromQuery] int? minPublicationYear,
+            [FromQuery] int? maxPublicationYear,
             [FromQuery] bool? isAvailable,
             BookService bookService
         ) =>

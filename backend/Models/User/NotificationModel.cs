@@ -1,13 +1,10 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace LibraryPlus.Models.User;
 
-[BsonIgnoreExtraElements]
 public class NotificationModel
 {
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
-    public string Subject { get; set; } = null!;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string? ReceiverId { get; set; }
     public string Text { get; set; } = null!;
+    public bool IsRead { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

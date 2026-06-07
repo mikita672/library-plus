@@ -3,69 +3,50 @@ using LibraryPlus.Models.Reservation;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.Statistics;
 using LibraryPlus.Responses.Statistics;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using LibraryPlus.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.Statistics;
 
-public class StatisticsService(IMongoDatabase db)
+public class StatisticsService(ApplicationDbContext db)
 {
-    private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
-    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
-    private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
-    private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
-    private readonly IMongoCollection<CategoryModel> _categories = db.GetCollection<CategoryModel>("categories");
+    private readonly ApplicationDbContext _db = db;
 
     public async Task<StatisticsResponse> GetStatistics(StatisticsRequest request)
     {
-        var from = request.From.ToUniversalTime();
-        var to = request.To.ToUniversalTime();
+        var startDate = request.From.ToUniversalTime();
+        var endDate = request.To.ToUniversalTime();
 
-        var totalUnitsTask = _bookUnits.CountDocumentsAsync(_ => true);
-        var totalMembersTask = _users.CountDocumentsAsync(u => !u.IsDeleted);
-        var booksRentedTask = _reservations.CountDocumentsAsync(r => r.Status == "Taken");
+        var totalUnitsTask = _db.BookUnits.CountAsync();
+        var totalMembersTask = _db.Users.CountAsync(u => !u.IsDeleted);
+        var booksRentedTask = _db.Reservations.CountAsync(r => r.Status == "Taken");
         
-        var activeResTask = _reservations.CountDocumentsAsync(r => r.Status == "Taken" || r.Status == "Reserved");
+        var activeResTask = _db.Reservations.CountAsync(r => r.Status == "Taken" || r.Status == "Reserved");
 
-        var mostPopularBookTask = _books.Find(_ => true)
-            .SortByDescending(b => b.Popularity)
-            .Project(b => b.Title)
+        var mostPopularBookTask = _db.Books
+            .OrderByDescending(b => b.Popularity)
+            .Select(b => b.Title)
             .FirstOrDefaultAsync();
 
-        var activeUsersFilter = Builders<ReservationModel>.Filter.Or(
-            Builders<ReservationModel>.Filter.And(Builders<ReservationModel>.Filter.Gte(r => r.CreatedAt, from), Builders<ReservationModel>.Filter.Lte(r => r.CreatedAt, to)),
-            Builders<ReservationModel>.Filter.And(Builders<ReservationModel>.Filter.Gte(r => r.ReturnedDate, from), Builders<ReservationModel>.Filter.Lte(r => r.ReturnedDate, to))
-        );
-        var activeUsersTask = _reservations.DistinctAsync(r => r.UserId, activeUsersFilter);
+        var activeUsersCountTask = _db.Reservations
+            .Where(r => (r.CreatedAt >= startDate && r.CreatedAt <= endDate) || (r.ReturnedDate >= startDate && r.ReturnedDate <= endDate))
+            .Select(r => r.UserId)
+            .Distinct()
+            .CountAsync();
 
-        var newMembersTask = _users.CountDocumentsAsync(u => u.JoinedAt >= from && u.JoinedAt <= to);
-        var newBooksTask = _books.CountDocumentsAsync(b => b.CreatedAt >= from && b.CreatedAt <= to);
-        var popularCategoryTask = GetMostPopularCategoryName(from, to);
+        var newMembersTask = _db.Users.CountAsync(u => u.JoinedAt >= startDate && u.JoinedAt <= endDate);
+        var newBooksTask = _db.Books.CountAsync(b => b.CreatedAt >= startDate && b.CreatedAt <= endDate);
+        var popularCategoryTask = GetMostPopularCategoryName(startDate, endDate);
 
-        var delayedFilter = Builders<ReservationModel>.Filter.Or(
-            Builders<ReservationModel>.Filter.And(
-                Builders<ReservationModel>.Filter.Ne(r => r.ReturnedDate, null),
-                Builders<ReservationModel>.Filter.Where(r => r.ReturnedDate > r.EndDate),
-                Builders<ReservationModel>.Filter.Gte(r => r.ReturnedDate, from),
-                Builders<ReservationModel>.Filter.Lte(r => r.ReturnedDate, to)
-            ),
-            Builders<ReservationModel>.Filter.And(
-                Builders<ReservationModel>.Filter.Eq(r => r.ReturnedDate, null),
-                Builders<ReservationModel>.Filter.Lt(r => r.EndDate, DateTime.UtcNow),
-                Builders<ReservationModel>.Filter.Gte(r => r.EndDate, from),
-                Builders<ReservationModel>.Filter.Lte(r => r.EndDate, to)
-            )
+        var delayedReturnsTask = _db.Reservations.CountAsync(r => 
+            (r.ReturnedDate != null && r.ReturnedDate > r.EndDate && r.ReturnedDate >= startDate && r.ReturnedDate <= endDate) ||
+            (r.ReturnedDate == null && r.EndDate < DateTime.UtcNow && r.EndDate >= startDate && r.EndDate <= endDate)
         );
-        var delayedReturnsTask = _reservations.CountDocumentsAsync(delayedFilter);
 
         await Task.WhenAll(
             totalUnitsTask, totalMembersTask, booksRentedTask, activeResTask, 
-            mostPopularBookTask, newMembersTask, newBooksTask, popularCategoryTask, delayedReturnsTask
+            mostPopularBookTask, activeUsersCountTask, newMembersTask, newBooksTask, popularCategoryTask, delayedReturnsTask
         );
-
-        var activeUsersCursor = await activeUsersTask;
-        var activeUsersList = await activeUsersCursor.ToListAsync();
 
         return new StatisticsResponse(
             await totalUnitsTask,
@@ -73,7 +54,7 @@ public class StatisticsService(IMongoDatabase db)
             await booksRentedTask,
             (int)Math.Max(0, await totalUnitsTask - await activeResTask),
             await mostPopularBookTask ?? "N/A",
-            activeUsersList.Count,
+            await activeUsersCountTask,
             await newMembersTask,
             await newBooksTask,
             await popularCategoryTask,
@@ -81,25 +62,20 @@ public class StatisticsService(IMongoDatabase db)
         );
     }
 
-    private async Task<string> GetMostPopularCategoryName(DateTime from, DateTime to)
+    private async Task<string> GetMostPopularCategoryName(DateTime startDate, DateTime endDate)
     {
-        var pipeline = new BsonDocument[]
-        {
-            new BsonDocument("$match", new BsonDocument("createdAt", new BsonDocument { { "$gte", from }, { "$lte", to } })),
-            new BsonDocument("$lookup", new BsonDocument { { "from", "bookUnits" }, { "localField", "bookUnitId" }, { "foreignField", "_id" }, { "as", "u" } }),
-            new BsonDocument("$unwind", "$u"),
-            new BsonDocument("$lookup", new BsonDocument { { "from", "books" }, { "localField", "u.bookId" }, { "foreignField", "_id" }, { "as", "b" } }),
-            new BsonDocument("$unwind", "$b"),
-            new BsonDocument("$unwind", "$b.categoryIds"),
-            new BsonDocument("$group", new BsonDocument { { "_id", "$b.categoryIds" }, { "count", new BsonDocument("$sum", 1) } }),
-            new BsonDocument("$sort", new BsonDocument("count", -1)),
-            new BsonDocument("$limit", 1),
-            new BsonDocument("$lookup", new BsonDocument { { "from", "categories" }, { "localField", "_id" }, { "foreignField", "_id" }, { "as", "c" } }),
-            new BsonDocument("$unwind", "$c"),
-            new BsonDocument("$project", new BsonDocument("n", "$c.name"))
-        };
+        var result = await (from r in _db.Reservations
+                     join bu in _db.BookUnits on r.BookUnitId equals bu.Id
+                     join b in _db.Books on bu.BookId equals b.Id
+                     where r.CreatedAt >= startDate && r.CreatedAt <= endDate
+                     from categoryId in b.CategoryIds
+                     group categoryId by categoryId into g
+                     orderby g.Count() descending
+                     select g.Key).FirstOrDefaultAsync();
 
-        var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
-        return result != null ? result["n"].AsString : "N/A";
+        if (result == null) return "N/A";
+
+        var category = await _db.Categories.FirstOrDefaultAsync(c => c.Id == result);
+        return category?.Name ?? "N/A";
     }
 }

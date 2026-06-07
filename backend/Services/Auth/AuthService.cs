@@ -27,7 +27,12 @@ public class AuthService(
     public async Task<TokenResponse?> LoginAsync(LoginRequest request)
     {
         var user = await _userService.VerifyUserLogin(request.Email, request.Password);
-        if (user == null || user.IsDeleted)
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (user.IsDeleted)
         {
             return null;
         }

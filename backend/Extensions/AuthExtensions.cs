@@ -59,14 +59,14 @@ public static class AuthExtensions
                     context.Response.Cookies.Append("accessToken", tokenResponse.AccessToken, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = true,
+                        Secure = false,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTime.UtcNow.AddMinutes(15)
                     });
                     context.Response.Cookies.Append("refreshToken", tokenResponse.RefreshToken, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = true,
+                        Secure = false,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTime.UtcNow.AddDays(7)
                     });

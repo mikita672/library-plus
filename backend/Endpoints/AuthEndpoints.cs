@@ -5,7 +5,7 @@ using LibraryPlus.Requests.Auth;
 
 namespace LibraryPlus.Endpoints;
 
-public static class UserEndpoints
+public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
@@ -35,7 +35,7 @@ public static class UserEndpoints
                 new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15)
                 }
@@ -47,7 +47,7 @@ public static class UserEndpoints
                 new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = false,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7)
                 }

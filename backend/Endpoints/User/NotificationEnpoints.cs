@@ -29,7 +29,7 @@ public static class NotificationEndpoints
                 return Results.NotFound("User not found.");
             }
             await notificationService.SendOneUserNotification(user.Id, sendOneNotificationRequest.NotificationBody);
-            _ = mailService.SendMail(user.Email, sendOneNotificationRequest.NotificationBody.Subject, sendOneNotificationRequest.NotificationBody.Text);
+            _ = mailService.SendMail(user.Email, "New Notification from LibraryPlus", sendOneNotificationRequest.NotificationBody.Text);
             return Results.Ok();
         }).AddEndpointFilter<AdminUserFilter>();
 
@@ -43,8 +43,9 @@ public static class NotificationEndpoints
             var users = await userService.GetAllUserEmails();
             foreach (var email in users)
             {
-                _ = mailService.SendMail(email, sendNotificationRequest.Subject, sendNotificationRequest.Text);
+                _ = mailService.SendMail(email, "New LibraryPlus Notification", sendNotificationRequest.Text);
             }
+            return Results.Ok();
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPatch("/read/{id}", [Authorize] async (

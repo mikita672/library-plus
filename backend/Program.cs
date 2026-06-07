@@ -15,6 +15,8 @@ using LibraryPlus.Services.Storage;
 using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
 using LibraryPlus.Endpoints.Misc;
+using LibraryPlus.Data;
+using Microsoft.EntityFrameworkCore;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -24,18 +26,18 @@ var config = builder.Configuration;
 
 var pack = new ConventionPack { new CamelCaseElementNameConvention() };
 ConventionRegistry.Register("camel case", pack, t => true);
-var connectionString =
-    config.GetConnectionString("MongoDb")
-    ?? config["MongoDbSettings:ConnectionString"];
 
-if (string.IsNullOrWhiteSpace(connectionString))
+var mongoConnectionString = config.GetConnectionString("MongoDb") ?? config["MongoDbSettings:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(mongoConnectionString))
 {
-    throw new InvalidOperationException(
-        "MongoDB connection string is missing. Configure MongoDbSettings:ConnectionString or ConnectionStrings:MongoDb.");
+    var mongoClient = new MongoClient(mongoConnectionString);
+    var mongoDb = mongoClient.GetDatabase(config["MongoDbSettings:DatabaseName"]);
+    builder.Services.AddSingleton(mongoDb);
 }
 
-var mongoClient = new MongoClient(connectionString);
-var db = mongoClient.GetDatabase(config["MongoDbSettings:DatabaseName"]);
+var postgresConnectionString = config.GetConnectionString("Postgres") ?? config["ConnectionStrings:Postgres"];
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(postgresConnectionString));
 
 IMailService mailService;
 try
@@ -56,18 +58,18 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton(db);
-builder.Services.AddSingleton<UserService>();
+
+builder.Services.AddScoped<UserService>();
 builder.Services.AddSingleton<JwtService>();
-builder.Services.AddSingleton<RefreshTokenService>();
-builder.Services.AddSingleton<AuthService>();
-builder.Services.AddSingleton<NotificationService>();
-builder.Services.AddSingleton<AuthorService>();
-builder.Services.AddSingleton<PublisherService>();
-builder.Services.AddSingleton<CategoryService>();
-builder.Services.AddSingleton<BookService>();
-builder.Services.AddSingleton<ReservationService>();
-builder.Services.AddSingleton<StatisticsService>();
+builder.Services.AddScoped<RefreshTokenService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AuthorService>();
+builder.Services.AddScoped<PublisherService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddSingleton<IMailService>(mailService);
 
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Storage));
@@ -76,6 +78,22 @@ builder.Services.AddSingleton<IObjectStorageService, MinioObjectStorageService>(
 builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
+
+for (int i = 0; i < 10; i++)
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.EnsureCreatedAsync();
+        break;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database connection failed. Attempt {i + 1}/10. Error: {ex.Message}");
+        await Task.Delay(2000);
+    }
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

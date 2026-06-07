@@ -1,19 +1,14 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace LibraryPlus.Models.User;
 
-[BsonIgnoreExtraElements]
 public class UserModel
 {
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = null!;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Email { get; set; } = null!;
     public string PasswordHash { get; set; } = null!;
     public string? PhoneNumber { get; set; }
     public string? Name { get; set; }
     public string? AvatarUrl { get; set; }
-    public DateTime JoinedAt { get; set; }
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     public bool IsDeleted { get; set; }
     public bool IsAdmin { get; set; } = false;
 }

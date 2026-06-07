@@ -9,12 +9,12 @@ public record BookPreviewResponse(
     AuthorModel? Author,
     PublisherModel? Publisher,
     string Language,
-    uint PublicationYear,
-    uint PagesCount,
+    int PublicationYear,
+    int PagesCount,
     IList<CategoryModel> Categories,
     string? OriginalTitle,
     string? OriginalLanguage,
-    uint? OriginalPublicationYear,
+    int? OriginalPublicationYear,
     PublisherModel? OriginalPublisherId,
     string? CoverURI,
     bool IsAvailable
@@ -27,8 +27,8 @@ public record BookCardResponse(
     string? AuthorName,
     string? CategoryName,
     string? PublisherName,
-    uint PublicationYear,
-    uint? OriginalPublicationYear,
+    int PublicationYear,
+    int? OriginalPublicationYear,
     string? CoverURI,
     bool IsAvailable
 );
