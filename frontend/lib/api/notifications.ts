@@ -29,7 +29,6 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 
 export async function sendNotificationToUser(
   email: string,
-  subject: string,
   text: string,
 ): Promise<boolean> {
   const res = await fetch("/api/notifications/sendOne", {
@@ -37,20 +36,19 @@ export async function sendNotificationToUser(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email,
-      notificationBody: { subject, text },
+      notificationBody: { text },
     }),
   });
   return res.ok;
 }
 
 export async function sendNotificationToAll(
-  subject: string,
   text: string,
 ): Promise<boolean> {
   const res = await fetch("/api/notifications/sendAll", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ subject, text }),
+    body: JSON.stringify({ text }),
   });
   return res.ok;
 }

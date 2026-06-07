@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const authGroup = ["/login", "/sign-up", "/password-reset"];
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const refreshToken = request.cookies.get("refreshToken");
     if (refreshToken !== undefined && authGroup.includes(pathname)) {

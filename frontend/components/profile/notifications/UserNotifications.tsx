@@ -59,7 +59,7 @@ export default function UserNotifications() {
                 <div className="flex items-center gap-2">
                   {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                   <span className={`text-sm font-bold ${n.isRead ? "text-foreground font-medium" : "text-primary"}`}>
-                    {n.subject}
+                    Notification
                   </span>
                 </div>
                 <p className="text-xs text-foreground mt-1 truncate">
@@ -88,7 +88,7 @@ export default function UserNotifications() {
       >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">{activeNotification?.subject}</DialogTitle>
+            <DialogTitle className="text-xl">Notification</DialogTitle>
             <DialogDescription className="text-base">
               {activeNotification?.text}
             </DialogDescription>

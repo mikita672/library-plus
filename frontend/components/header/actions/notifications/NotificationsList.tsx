@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react'
 import { Notification } from '@/types/user/Notification';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
 interface Params {
-    notifications: Notification[]
+    notifications: Notification[];
 }
 
 function NotificationsList({ notifications }: Params) {
@@ -24,15 +24,13 @@ function NotificationsList({ notifications }: Params) {
     return (
         <>
             {notifications.map((n, i) => {
-                const subject = n.subject.length > 30 ? n.subject.substring(0, 27) + '...' : n.subject;
-
                 return (
                     <div
                         key={i}
                         onClick={() => readNotification(n)}
                         className="w-full flex items-center cursor-pointer relative p-2 hover:bg-background"
                     >
-                        <div>{subject}</div>
+                        <div>Notification</div>
                         {!n.isRead && <div className="absolute right-2 rounded-full w-1.5 h-1.5 bg-primary" />}
                     </div>
                 );
@@ -46,7 +44,7 @@ function NotificationsList({ notifications }: Params) {
             >
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle className="text-xl">{activeNotification?.subject}</DialogTitle>
+                        <DialogTitle className="text-xl">Notification</DialogTitle>
                         <DialogDescription className="text-base">
                             {activeNotification?.text}
                         </DialogDescription>
@@ -66,7 +64,7 @@ function NotificationsList({ notifications }: Params) {
                 </DialogContent>
             </Dialog>
         </>
-    );
+    )
 }
 
-export default NotificationsList;
+export default NotificationsList

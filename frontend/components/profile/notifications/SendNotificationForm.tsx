@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,11 +13,11 @@ import {
   UserSuggestion,
 } from "@/lib/api/notifications";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 export default function SendNotificationForm() {
   const [sendToAll, setSendToAll] = useState(false);
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
@@ -49,8 +48,8 @@ export default function SendNotificationForm() {
   }, []);
 
   const handleSend = useCallback(async () => {
-    if (!subject.trim() || !body.trim()) {
-      toast.error("Subject and message body are required");
+    if (!body.trim()) {
+      toast.error("Message body is required");
       return;
     }
     if (!sendToAll && !email.trim()) {
@@ -61,21 +60,20 @@ export default function SendNotificationForm() {
     setSending(true);
     let ok: boolean;
     if (sendToAll) {
-      ok = await sendNotificationToAll(subject, body);
+      ok = await sendNotificationToAll(body);
     } else {
-      ok = await sendNotificationToUser(email, subject, body);
+      ok = await sendNotificationToUser(email, body);
     }
 
     if (ok) {
       toast.success(sendToAll ? "Notification sent to all users" : "Notification sent");
-      setSubject("");
       setBody("");
       if (!sendToAll) setEmail("");
     } else {
       toast.error("Failed to send notification");
     }
     setSending(false);
-  }, [sendToAll, email, subject, body]);
+  }, [sendToAll, email, body]);
 
   const selectSuggestion = (s: UserSuggestion) => {
     setEmail(s.email);
@@ -137,17 +135,6 @@ export default function SendNotificationForm() {
           )}
         </div>
       )}
-
-      <div className="space-y-2">
-        <Label htmlFor="notif-subject">Subject</Label>
-        <Input
-          id="notif-subject"
-          placeholder="Notification title..."
-          className="rounded-none"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        />
-      </div>
 
       <div className="space-y-2">
         <Label htmlFor="notif-body">Message</Label>
