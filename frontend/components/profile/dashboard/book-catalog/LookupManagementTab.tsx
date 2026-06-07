@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { PencilSimpleIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import {
   flexRender,
@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,25 +38,36 @@ interface BaseLookupModel {
 interface LookupManagementTabProps<T extends BaseLookupModel> {
   entityName: string;
   entityNamePlural: string;
+  paramKey: string;
   fetchItems: () => Promise<T[]>;
-  addItem: (name: string) => Promise<T>;
-  updateItem: (id: string, name: string) => Promise<boolean>;
-  deleteItem: (id: string) => Promise<boolean>;
+  createItem: (name: string) => Promise<T | null>;
+  updateItem: (id: string, name: string) => Promise<any>;
+  deleteItem: (id: string) => Promise<any>;
 }
 
 function buildColumns<T extends BaseLookupModel>(
   onEdit: (item: T) => void,
   onDelete: (item: T) => void,
+  paramKey: string,
 ): ColumnDef<T>[] {
   return [
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => (
-        <div className="max-w-75 truncate" title={row.getValue("name")}>
-          {row.getValue("name")}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const val = row.getValue("name") as string;
+        const id = row.original.id;
+        const searchParam = new URLSearchParams({ [paramKey]: id, tab: "books" }).toString();
+        return (
+          <Link
+            href={`/profile/dashboard/book-catalog?${searchParam}`}
+            className="block max-w-75 truncate text-primary underline underline-offset-2 hover:text-primary/80"
+            title={val}
+          >
+            {val}
+          </Link>
+        );
+      },
     },
     {
       id: "actions",
@@ -77,8 +89,9 @@ function buildColumns<T extends BaseLookupModel>(
 export default function LookupManagementTab<T extends BaseLookupModel>({
   entityName,
   entityNamePlural,
+  paramKey,
   fetchItems,
-  addItem,
+  createItem,
   updateItem,
   deleteItem,
 }: LookupManagementTabProps<T>) {
@@ -89,6 +102,8 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   const [editingItem, setEditingItem] = useState<T | null>(null);
   const [nameInput, setNameInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   const loadItems = useCallback(async () => {
     setLoading(true);
@@ -138,7 +153,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
           setDialogOpen(false);
         }
       } else {
-        await addItem(nameInput.trim());
+        await createItem(nameInput.trim());
         toast.success(`${entityName} created`);
         await loadItems();
         setDialogOpen(false);
@@ -151,12 +166,15 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   };
 
   const filteredItems = useMemo(() => items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())), [items, searchQuery]);
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
+  const paginatedItems = useMemo(() => filteredItems.slice((pageNumber - 1) * ITEMS_PER_PAGE, pageNumber * ITEMS_PER_PAGE), [filteredItems, pageNumber]);
   
-  const columns = useMemo(() => buildColumns<T>(openEditDialog, handleDelete), [openEditDialog, handleDelete]);
+  useEffect(() => { setPageNumber(1); }, [searchQuery]);
 
+  const columns = useMemo(() => buildColumns<T>(openEditDialog, handleDelete, paramKey), [openEditDialog, handleDelete, paramKey]);
 
   const table = useReactTable({
-    data: filteredItems,
+    data: paginatedItems,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -182,26 +200,31 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
           {searchQuery ? `No matches for "${searchQuery}"` : `No ${entityNamePlural.toLowerCase()} found.`}
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map(hg => (
-              <TableRow key={hg.id}>
-                {hg.headers.map(h => (
-                  <TableHead key={h.id}>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map(row => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map(cell => (
-                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="flex flex-col justify-between space-y-4">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map(hg => (
+                <TableRow key={hg.id}>
+                  {hg.headers.map(h => (
+                    <TableHead key={h.id}>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map(row => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="flex justify-center mt-4">
+            <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
+          </div>
+        </div>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

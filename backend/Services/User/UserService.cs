@@ -11,7 +11,7 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
     private readonly NotificationService _notificationService = notificationService;
     private readonly IObjectStorageService _storageService = storageService;
-    private const int PAGE_SIZE = 20;
+    private const int PAGE_SIZE = 6;
 
     public string? GetAvatarUrl(string? key) => _storageService.GetPublicUrl(key);
     public async Task<UserModel?> GetUserById(string id) => await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
@@ -48,9 +48,11 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
     {
         var update = Builders<UserModel>.Update;
         var updates = new List<UpdateDefinition<UserModel>>();
-        if (name != null) updates.Add(update.Set(u => u.Name, name));
-        if (phone != null) updates.Add(update.Set(u => u.PhoneNumber, phone));
-        if (updates.Count > 0) await _users.UpdateOneAsync(u => u.Id == id, update.Combine(updates));
+        
+        updates.Add(update.Set(u => u.Name, string.IsNullOrWhiteSpace(name) ? null : name));
+        updates.Add(update.Set(u => u.PhoneNumber, string.IsNullOrWhiteSpace(phone) ? null : phone));
+        
+        await _users.UpdateOneAsync(u => u.Id == id, update.Combine(updates));
     }
 
     public async Task<bool> SetAvatarUrl(string id, string? url)

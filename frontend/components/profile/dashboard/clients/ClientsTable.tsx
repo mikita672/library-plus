@@ -17,6 +17,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -50,16 +55,24 @@ function buildColumns(
     {
       accessorKey: "email",
       header: "Client",
-      cell: ({ row }) => (
-        <div className="max-w-[200px]">
-          <div className="truncate font-medium text-sm" title={row.original.name || "Unknown"}>
-            {row.original.name || "Unknown"}
+      cell: ({ row }) => {
+        const name = row.original.name;
+        const email = row.original.email;
+        const hasValidName = name && name !== "Unknown";
+        
+        return (
+          <div className="max-w-[200px]">
+            {hasValidName ? (
+              <>
+                <div className="truncate font-medium text-sm" title={name}>{name}</div>
+                <div className="truncate text-xs text-muted-foreground" title={email}>{email}</div>
+              </>
+            ) : (
+              <div className="truncate font-medium text-sm" title={email}>{email}</div>
+            )}
           </div>
-          <div className="truncate text-xs text-muted-foreground" title={row.original.email}>
-            {row.original.email}
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       accessorKey: "phoneNumber",
@@ -85,29 +98,59 @@ function buildColumns(
         }
 
         const isProcessing = processingId === row.original.id;
-
-        if (row.original.isDeleted) {
-          return (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isProcessing}
-              onClick={() => onRestoreClick(row.original.id)}
-            >
-              {isProcessing ? "Restoring..." : "Restore User"}
-            </Button>
-          );
-        }
+        const isDeleted = row.original.isDeleted;
 
         return (
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={isProcessing}
-            onClick={() => onRemoveClick(row.original.id)}
-          >
-            {isProcessing ? "Removing..." : "Remove User"}
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={isDeleted ? "outline" : "destructive"}
+                size="sm"
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Processing..." : isDeleted ? "Restore User" : "Remove User"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 rounded-none border border-border bg-background p-4">
+              <div className="space-y-3">
+                <div className="text-sm font-semibold">
+                  {isDeleted ? "Restore user" : "Remove user"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {isDeleted 
+                    ? "Are you sure you want to restore this user account?" 
+                    : "Are you sure you want to remove this user? They will not be able to log in."}
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isDeleted ? "default" : "destructive"}
+                    disabled={isProcessing}
+                    onClick={() => {
+                      document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+                      if (isDeleted) {
+                        onRestoreClick(row.original.id);
+                      } else {
+                        onRemoveClick(row.original.id);
+                      }
+                    }}
+                  >
+                    {isDeleted ? "Restore" : "Remove"}
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         );
       },
     },
@@ -124,8 +167,6 @@ export default function ClientsTable({
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const handleRemove = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this user?")) return;
-
     setProcessingId(id);
     try {
       await softDeleteUser(id);
@@ -139,8 +180,6 @@ export default function ClientsTable({
   };
 
   const handleRestore = async (id: string) => {
-    if (!confirm("Are you sure you want to restore this user?")) return;
-
     setProcessingId(id);
     try {
       await restoreUser(id);

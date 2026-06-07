@@ -167,3 +167,12 @@ export async function addBookUnits(
   const requests = Array.from({ length: count }, () => addBookUnit(bookId));
   await Promise.all(requests);
 }
+
+export async function getBookUnitsForBook(bookId: string): Promise<BookUnit[]> {
+  const res = await fetch(`/api/books/book/${bookId}/units`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<BookUnit[]>;
+}

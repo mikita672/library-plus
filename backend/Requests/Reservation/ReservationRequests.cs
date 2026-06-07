@@ -8,9 +8,7 @@ public record CreateReservationRequest(
 
 public record HandleReturnRequest(
     string BookConditionUponReturn,
-    string? AdditionalNote,
-    DateTime StartDate,
-    DateTime EndDate
+    string? AdditionalNote
 );
 
 public record UpdateStatusRequest(

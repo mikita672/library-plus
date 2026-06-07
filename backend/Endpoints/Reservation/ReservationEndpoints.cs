@@ -22,12 +22,12 @@ public static class ReservationEndpoints
         ) =>
         {
             var userId = claims.FindFirstValue("sub")!;
-            var res = await reservationService.CreateReservation(userId, createReservationRequest);
-            if (res == null)
+            var (reservation, error) = await reservationService.CreateReservation(userId, createReservationRequest);
+            if (reservation == null)
             {
-                return Results.BadRequest();
+                return Results.BadRequest(error);
             }
-            return Results.Ok(res);
+            return Results.Ok(reservation);
         });
 
         group.MapGet("/", [Authorize] async (
@@ -53,11 +53,23 @@ public static class ReservationEndpoints
             return await reservationService.GetUserReservationsPageCount(userId, status, searchToken);
         });
 
-        group.MapPatch("/reservation/{id}/take", [Authorize] async (
+        group.MapPatch("/reservation/{id}/cancel", [Authorize] async (
             ReservationService reservationService,
+            ClaimsPrincipal claims,
             string id
         ) =>
         {
+            var userId = claims.FindFirstValue("sub")!;
+            var result = await reservationService.CancelReservationByUser(id, userId);
+            if (!result) return Results.BadRequest("Cannot cancel this reservation.");
+            return Results.Ok();
+        });
+
+    group.MapPatch("/reservation/{id}/take", [Authorize] async (
+        ReservationService reservationService,
+        string id
+    ) =>
+    {
             await reservationService.HandleTaken(id);
         }).AddEndpointFilter<AdminUserFilter>();
 
@@ -87,6 +99,14 @@ public static class ReservationEndpoints
         ) =>
         {
             return await reservationService.GetAllReservations(pageNumber, status, searchToken);
+        }).AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/byUnit/{unitId}", [Authorize] async (
+            ReservationService reservationService,
+            string unitId
+        ) =>
+        {
+            return await reservationService.GetReservationsByBookUnit(unitId);
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapGet("/all/pages", [Authorize] async (

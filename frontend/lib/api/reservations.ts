@@ -71,8 +71,6 @@ export async function getReservationPages(
 export interface ReturnReservationPayload {
   bookConditionUponReturn: string;
   additionalNote: string;
-  startDate: string;
-  endDate: string;
 }
 
 export async function returnReservation(
@@ -97,4 +95,22 @@ export async function updateReservationStatus(
     body: JSON.stringify({ status }),
   });
   return res.ok;
+}
+
+export async function cancelReservation(
+  id: string,
+): Promise<boolean> {
+  const res = await fetch(`/api/reservations/reservation/${id}/cancel`, {
+    method: "PATCH",
+  });
+  return res.ok;
+}
+
+export async function getReservationsByUnit(unitId: string): Promise<ReservationItem[]> {
+  const res = await fetch(`/api/reservations/byUnit/${unitId}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<ReservationItem[]>;
 }

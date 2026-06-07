@@ -17,11 +17,7 @@ function CheckoutPage() {
     const [books, setBooks] = useState<BookCard[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [dateRanges, setDateRanges] = useState<Record<string, DateRange | undefined>>({});
-    const booksThatCanBeReserved = books.filter(book =>
-        book.isAvailable &&
-        dateRanges[book.id]?.from !== undefined &&
-        dateRanges[book.id]?.to !== undefined
-    );
+    const booksThatCanBeReserved = books.filter(book => book.isAvailable);
 
     useEffect(() => {
         if (bookIds === null) {
@@ -99,6 +95,7 @@ function CheckoutPage() {
         for (const book of booksThatCanBeReserved) {
             const dateRange = dateRanges[book.id];
             if (dateRange?.from === undefined || dateRange?.to === undefined) {
+                toast.error(`Please select dates for ${book.title}`);
                 return;
             }
             requests.push(fetch('/api/reservations', {
@@ -120,7 +117,14 @@ function CheckoutPage() {
         for (const response of responses) {
             const bookId = booksThatCanBeReserved[i].id;
             i++;
-            if (response.status === 'rejected' || !response.value.ok) {
+            if (response.status === 'rejected') {
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: Network error`);
+                continue;
+            }
+            if (!response.value.ok) {
+                const text = await response.value.text().catch(() => "");
+                const errorMsg = text.replace(/^"|"$/g, '') || "Unknown error";
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: ${errorMsg}`);
                 continue;
             }
             reservedBooksIds.push(bookId);

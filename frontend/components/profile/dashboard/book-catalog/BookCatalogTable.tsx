@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import {
   PencilSimpleIcon,
   SortAscendingIcon,
@@ -30,6 +30,7 @@ import {
 import { deleteBook } from "@/lib/api/books";
 import { BookCard } from "@/types/book/Book";
 import EditBookModal from "./EditBookModal";
+import BookCopiesModal from "./BookCopiesModal";
 
 function SortableHeader({
   label,
@@ -69,15 +70,20 @@ function AvailabilityBadge({ isAvailable }: { isAvailable: boolean }) {
 function buildColumns(
   onEditClick: (book: BookCard) => void,
   onDeleteClick: (book: BookCard) => void,
+  onTitleClick: (book: BookCard) => void,
 ): ColumnDef<BookCard>[] {
   return [
     {
       accessorKey: "title",
       header: ({ column }) => <SortableHeader label="Title" column={column} />,
       cell: ({ row }) => (
-        <div className="max-w-50 truncate" title={row.getValue("title")}>
+        <button
+          onClick={() => onTitleClick(row.original)}
+          className="max-w-50 truncate text-left text-primary underline underline-offset-2 hover:text-primary/80 block"
+          title={row.getValue("title")}
+        >
           {row.getValue("title")}
-        </div>
+        </button>
       ),
     },
     {
@@ -87,6 +93,18 @@ function buildColumns(
         const val = row.getValue("authorName") as string | null;
         return (
           <div className="max-w-37.5 truncate" title={val ?? ""}>
+            {val ?? "-"}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "publisherName",
+      header: ({ column }) => <SortableHeader label="Publisher" column={column} />,
+      cell: ({ row }) => {
+        const val = row.getValue("publisherName") as string | null;
+        return (
+          <div className="max-w-30 truncate" title={val ?? ""}>
             {val ?? "-"}
           </div>
         );
@@ -116,6 +134,11 @@ function buildColumns(
     {
       accessorKey: "publicationYear",
       header: ({ column }) => <SortableHeader label="Year" column={column} />,
+      sortingFn: (rowA, rowB) => {
+        const a = rowA.original.originalPublicationYear ?? rowA.original.publicationYear;
+        const b = rowB.original.originalPublicationYear ?? rowB.original.publicationYear;
+        return a - b;
+      },
       cell: ({ row }) => (
         <div>
           {row.original.originalPublicationYear ??
@@ -173,10 +196,17 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [editingBook, setEditingBook] = useState<BookCard | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [copiesBook, setCopiesBook] = useState<BookCard | null>(null);
+  const [copiesModalOpen, setCopiesModalOpen] = useState(false);
 
   const handleEditClick = useCallback((book: BookCard) => {
     setEditingBook(book);
     setEditModalOpen(true);
+  }, []);
+
+  const handleTitleClick = useCallback((book: BookCard) => {
+    setCopiesBook(book);
+    setCopiesModalOpen(true);
   }, []);
 
   const handleDeleteClick = useCallback(
@@ -206,8 +236,8 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
   }, [onSuccess]);
 
   const columns = useMemo(
-    () => buildColumns(handleEditClick, handleDeleteClick),
-    [handleEditClick, handleDeleteClick],
+    () => buildColumns(handleEditClick, handleDeleteClick, handleTitleClick),
+    [handleEditClick, handleDeleteClick, handleTitleClick],
   );
 
   const data = useMemo(() => books, [books]);
@@ -265,6 +295,12 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
         onSave={handleSaveBook}
+      />
+
+      <BookCopiesModal
+        book={copiesBook}
+        open={copiesModalOpen}
+        onOpenChange={setCopiesModalOpen}
       />
     </div>
   );

@@ -32,11 +32,7 @@ import AddBookDialog from "./AddBookDialog";
 import BookCatalogTable from "./BookCatalogTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
-const SORT_OPTIONS = [
-  { value: "title", label: "Title" },
-  { value: "publicationyear", label: "Year" },
-  { value: "relevancy", label: "Popularity" },
-];
+
 
 export default function BooksTab() {
   const searchParams = useSearchParams();
@@ -46,14 +42,20 @@ export default function BooksTab() {
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [inputValue, setInputValue] = useState(searchParams.get("search") || "");
+  const [inputValue, setInputValue] = useState(searchParams.get("searchToken") || "");
   const debouncedSearch = useDebounce(inputValue, 500);
+
+  useEffect(() => {
+    const token = searchParams.get("searchToken");
+    if (token !== null && token !== inputValue) {
+      setInputValue(token);
+    }
+  }, [searchParams]);
 
   const [authorId, setAuthorId] = useState(searchParams.get("authorId") || "all");
   const [publisherId, setPublisherId] = useState(searchParams.get("publisherId") || "all");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryIds") || "all");
-  const [sortBy, setSortBy] = useState("title");
-  const [sortDescending, setSortDescending] = useState(false);
+
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [publishers, setPublishers] = useState<Publisher[]>([]);
@@ -69,8 +71,6 @@ export default function BooksTab() {
         publisherId: publisherId === "all" ? undefined : publisherId,
         categoryIds: categoryId === "all" ? [] : [categoryId],
         pageNumber,
-        sortBy,
-        sortDescending,
       };
 
       const [data, pages] = await Promise.all([getBooks(params), getBooksPages(params)]);
@@ -81,7 +81,7 @@ export default function BooksTab() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, authorId, publisherId, categoryId, pageNumber, sortBy, sortDescending]);
+  }, [debouncedSearch, authorId, publisherId, categoryId, pageNumber]);
 
   useEffect(() => { void fetchBooksAndPages(); }, [fetchBooksAndPages]);
 
@@ -97,15 +97,14 @@ export default function BooksTab() {
     void loadLookups();
   }, []);
 
-  useEffect(() => { setPageNumber(1); }, [debouncedSearch, authorId, publisherId, categoryId, sortBy, sortDescending]);
+  useEffect(() => { setPageNumber(1); }, [debouncedSearch, authorId, publisherId, categoryId]);
 
   const handleClearFilters = () => {
     setInputValue("");
     setAuthorId("all");
     setPublisherId("all");
     setCategoryId("all");
-    setSortBy("title");
-    setSortDescending(false);
+
   };
 
   return (
@@ -168,28 +167,6 @@ export default function BooksTab() {
               </Select>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-black pt-4">
-            <div className="space-y-2">
-              <Label>Sort By</Label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Order</Label>
-              <Select value={sortDescending ? "desc" : "asc"} onValueChange={(v) => setSortDescending(v === "desc")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">Ascending</SelectItem>
-                  <SelectItem value="desc">Descending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </CollapsibleContent>
       </Collapsible>
 
@@ -198,7 +175,7 @@ export default function BooksTab() {
       ) : error ? (
         <div className="text-destructive py-8">Error loading books</div>
       ) : (
-        <div className="min-h-150 flex flex-col justify-between">
+        <div className="flex flex-col justify-between">
           <BookCatalogTable books={books} onSuccess={fetchBooksAndPages} />
           <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>

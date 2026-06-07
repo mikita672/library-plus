@@ -26,6 +26,7 @@ public record BookCardResponse(
     string Language,
     string? AuthorName,
     string? CategoryName,
+    string? PublisherName,
     uint PublicationYear,
     uint? OriginalPublicationYear,
     string? CoverURI,

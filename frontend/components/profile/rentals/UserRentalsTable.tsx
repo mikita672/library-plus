@@ -16,8 +16,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Image from "next/image";
+import { cancelReservation } from "@/lib/api/reservations";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -73,20 +76,28 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function calculateFine(reservation: EnrichedReservationItem): number {
-  if (reservation.status.toLowerCase() !== "overdue") return 0;
+  let fine = 0;
   
-  const dueDate = new Date(reservation.endDate);
-  const now = new Date();
-  
-  if (now > dueDate) {
-    const diffTime = Math.abs(now.getTime() - dueDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays * 1; 
+  if (reservation.bookConditionUponReturn?.toLowerCase().includes("minor")) {
+    fine += reservation.repurchasePrice / 3;
   }
-  return 0;
+
+  if (reservation.status.toLowerCase() === "overdue") {
+    const dueDate = new Date(reservation.endDate);
+    const now = new Date();
+    
+    if (now > dueDate) {
+      const diffTime = Math.abs(now.getTime() - dueDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      fine += diffDays * 1; 
+    }
+  }
+  
+  return fine;
 }
 
-const columns: ColumnDef<EnrichedReservationItem>[] = [
+function buildColumns(onCancel: (id: string) => void): ColumnDef<EnrichedReservationItem>[] {
+  return [
   {
     accessorKey: "bookTitle",
     header: "Book",
@@ -118,7 +129,7 @@ const columns: ColumnDef<EnrichedReservationItem>[] = [
           )}
           <div className="flex flex-col max-w-50 sm:max-w-75">
             <Link
-              href={`/catalog?search=${encodeURIComponent(title)}`}
+              href={`/catalog?${new URLSearchParams({ searchToken: title }).toString()}`}
               className="truncate font-medium text-sm text-primary underline-offset-2 hover:underline"
               title={title}
             >
@@ -146,11 +157,16 @@ const columns: ColumnDef<EnrichedReservationItem>[] = [
       </span>
     ),
   },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
-  },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const r = row.original;
+        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const displayStatus = isOverdue ? "Overdue" : r.status;
+        return <StatusBadge status={displayStatus} />;
+      },
+    },
   {
     id: "fines",
     header: "Fines",
@@ -162,13 +178,51 @@ const columns: ColumnDef<EnrichedReservationItem>[] = [
       return <span className="text-muted-foreground">-</span>;
     },
   },
-];
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const r = row.original;
+      const isPending = r.status.toLowerCase() === "reserved" || r.status.toLowerCase() === "pending";
+
+      if (!isPending) return null;
+
+      return (
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => onCancel(r.id)}
+        >
+          Cancel
+        </Button>
+      );
+    },
+  },
+  ];
+}
 
 export default function UserRentalsTable({
   reservations,
+  onRefresh,
 }: {
   reservations: EnrichedReservationItem[];
+  onRefresh: () => void;
 }) {
+  const handleCancel = useCallback(async (id: string) => {
+    try {
+      const success = await cancelReservation(id);
+      if (success) {
+        toast.success("Reservation canceled successfully");
+        onRefresh();
+      } else {
+        toast.error("Failed to cancel reservation");
+      }
+    } catch {
+      toast.error("An error occurred while canceling");
+    }
+  }, [onRefresh]);
+
+  const columns = useMemo(() => buildColumns(handleCancel), [handleCancel]);
   const data = useMemo(() => reservations, [reservations]);
 
   // eslint-disable-next-line react-hooks/incompatible-library

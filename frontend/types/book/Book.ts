@@ -64,6 +64,7 @@ export interface BookCard {
   title: string;
   authorName?: string | null;
   categoryName?: string | null;
+  publisherName?: string | null;
   language: string;
   publicationYear: number;
   originalPublicationYear?: number | null;

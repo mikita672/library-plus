@@ -1,15 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { getBookById, getBookUnitById } from "@/lib/api/books";
-import {
-  GetReservationsParams,
-  getReservationPages,
-  getReservations,
-} from "@/lib/api/reservations";
-import { getUserById } from "@/lib/api/users";
-import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useEnrichedReservations } from "@/hooks/useEnrichedReservations";
 
 import RentalsTable from "./RentalsTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -34,72 +27,16 @@ const STATUS_OPTIONS = [
 ];
 
 export default function RentalsTab() {
-  const [allReservations, setAllReservations] = useState<EnrichedReservationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("all");
   const [inputValue, setInputValue] = useState("");
   const debouncedSearch = useDebounce(inputValue, 500);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const params: GetReservationsParams = {
-        pageNumber,
-        ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(debouncedSearch && { searchToken: debouncedSearch }),
-      };
-
-      const [data, pages] = await Promise.all([
-        getReservations(params),
-        getReservationPages(params),
-      ]);
-
-      const userIds = [...new Set(data.map((r) => r.userId))];
-      const unitIds = [...new Set(data.map((r) => r.bookUnitId))];
-
-      const [users, units] = await Promise.all([
-        Promise.all(userIds.map((id) => getUserById(id).catch(() => null))),
-        Promise.all(unitIds.map((id) => getBookUnitById(id).catch(() => null))),
-      ]);
-
-      const userMap = Object.fromEntries(userIds.map((id, i) => [id, users[i]]));
-      const unitMap = Object.fromEntries(unitIds.map((id, i) => [id, units[i]]));
-
-      const bookIds = [...new Set(units.map((u) => u?.bookId).filter(Boolean) as string[])];
-      const books = await Promise.all(bookIds.map((id) => getBookById(id).catch(() => null)));
-      const bookMap = Object.fromEntries(bookIds.map((id, i) => [id, books[i]]));
-
-      const enriched = data.map((r) => {
-        const u = userMap[r.userId];
-        const bu = unitMap[r.bookUnitId];
-        const b = bu ? bookMap[bu.bookId] : null;
-        return {
-          ...r,
-          clientName: u?.name || "Unknown",
-          clientEmail: u?.email || "",
-          clientPhone: u?.phoneNumber || "none",
-          bookTitle: b?.title || "Unknown",
-          bookAuthor: b?.author?.name || "Unknown",
-          bookLanguage: b?.language || "Unknown",
-          bookYear: b?.publicationYear || 0,
-          bookCoverUri: b?.coverURI || "",
-        };
-      });
-
-      setAllReservations(enriched);
-      setTotalPages(Math.max(1, pages));
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [pageNumber, statusFilter, debouncedSearch]);
-
-  useEffect(() => { void fetchData(); }, [fetchData]);
+  const { reservations, loading, error, totalPages, refetch } = useEnrichedReservations({
+    pageNumber,
+    statusFilter,
+    debouncedSearch,
+  });
 
   useEffect(() => { setPageNumber(1); }, [debouncedSearch, statusFilter]);
 
@@ -111,7 +48,7 @@ export default function RentalsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex flex-1 max-w mr-4 gap-2">
+        <div className="flex flex-1 max-w-md mr-4 gap-2">
           <Input
             className="h-10 text-base"
             placeholder="Search reservations..."
@@ -146,8 +83,8 @@ export default function RentalsTab() {
       ) : error ? (
         <div className="text-destructive py-8">Error loading reservations</div>
       ) : (
-        <div className="min-h-[600px] flex flex-col justify-between">
-          <RentalsTable reservations={allReservations} onRefresh={fetchData} />
+        <div className="flex flex-col justify-between">
+          <RentalsTable reservations={reservations} onRefresh={refetch} />
           <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>
       )}

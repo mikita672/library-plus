@@ -53,9 +53,9 @@ function HeaderUserMenu({ userData }: Props) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer">
-            <Link href="/profile/orders" className="flex flex-1 gap-2 align-center w-full">
+            <Link href="/profile/rentals" className="flex flex-1 gap-2 align-center w-full">
               <ShoppingBagIcon className="w-6 h-6" />
-              <span>Your orders</span>
+              <span>My rentals</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

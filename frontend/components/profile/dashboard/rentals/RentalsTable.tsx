@@ -21,12 +21,6 @@ import { useCallback, useMemo, useState } from "react";
 import { ManageRentalDialog } from "./ManageRentalDialog";
 import { updateReservationStatus } from "@/lib/api/reservations";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -86,7 +80,6 @@ const STATUSES = [
   "Taken",
   "Returned",
   "Overdue",
-  "Waiting for payment",
 ];
 
 function buildColumns(
@@ -106,7 +99,7 @@ function buildColumns(
           >
             {row.original.clientName}
           </Link>
-          {row.original.clientEmail && (
+          {row.original.clientEmail && row.original.clientName !== row.original.clientEmail && (
             <div
               className="truncate text-xs text-muted-foreground"
               title={row.original.clientEmail}
@@ -132,7 +125,7 @@ function buildColumns(
 
         return (
           <Link
-            href={`/profile/dashboard/book-catalog?search=${encodeURIComponent(title)}`}
+            href={`/profile/dashboard/book-catalog?${new URLSearchParams({ searchToken: title }).toString()}`}
             className="block max-w-50 truncate text-primary text-sm underline underline-offset-2 hover:text-primary/80"
             title={title}
           >
@@ -154,42 +147,39 @@ function buildColumns(
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => {
+        const r = row.original;
+        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const displayStatus = isOverdue ? "Overdue" : r.status;
+        return <StatusBadge status={displayStatus} />;
+      },
     },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
+        const r = row.original;
+        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const displayStatus = isOverdue ? "Overdue" : r.status;
+        
         return (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageClick(row.original)}
-            >
-              Manage
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Status
+            {displayStatus === "Reserved" && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => onStatusChange(r.id, "Taken")}>
+                  Take
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {STATUSES.map((s) => (
-                  <DropdownMenuItem
-                    key={s}
-                    onClick={() => onStatusChange(row.original.id, s)}
-                    className={
-                      row.original.status === s ? "bg-accent font-bold" : ""
-                    }
-                  >
-                    {s}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <Button variant="destructive" size="sm" onClick={() => onStatusChange(r.id, "Returned")}>
+                  Cancel
+                </Button>
+              </>
+            )}
+            
+            {(displayStatus === "Taken" || displayStatus === "Overdue") && (
+              <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
+                Return
+              </Button>
+            )}
           </div>
         );
       },

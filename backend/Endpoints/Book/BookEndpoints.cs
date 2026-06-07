@@ -88,6 +88,14 @@ public static class BookEndpoints
             return await bookService.GetBookPreviewById(id);
         });
 
+        group.MapGet("/book/{id}/units", async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            return await bookService.GetBookUnitsForBook(id);
+        });
+
         group.MapPost("/", [Authorize] async (
             BookService bookService,
             [FromBody] CreateBookRequest createBookRequest
