@@ -1,6 +1,7 @@
 using LibraryPlus.Requests.User;
 using LibraryPlus.Filters;
 using LibraryPlus.Services.User;
+using LibraryPlus.Services.Mail;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,18 +18,33 @@ public static class NotificationEndpoints
 
         group.MapPost("/sendOne", [Authorize] async (
             NotificationService notificationService,
+            UserService userService,
+            IMailService mailService,
             [FromBody] SendOneNotificationRequest sendOneNotificationRequest
         ) =>
         {
-            await notificationService.SendOneUserNotification(sendOneNotificationRequest.UserId, sendOneNotificationRequest.NotificationBody);
+            var user = await userService.GetUserByEmail(sendOneNotificationRequest.Email);
+            if (user == null)
+            {
+                return Results.NotFound("User not found.");
+            }
+            await notificationService.SendOneUserNotification(user.Id, sendOneNotificationRequest.NotificationBody);
+            _ = mailService.SendMail(user.Email, sendOneNotificationRequest.NotificationBody.Subject, sendOneNotificationRequest.NotificationBody.Text);
+            return Results.Ok();
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPost("/sendAll", [Authorize] async (
             UserService userService,
+            IMailService mailService,
             [FromBody] NotificationRequest sendNotificationRequest
         ) =>
         {
             await userService.SendAllUsersNotification(sendNotificationRequest);
+            var users = await userService.GetAllUserEmails();
+            foreach (var email in users)
+            {
+                _ = mailService.SendMail(email, sendNotificationRequest.Subject, sendNotificationRequest.Text);
+            }
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPatch("/read/{id}", [Authorize] async (
@@ -44,5 +60,15 @@ public static class NotificationEndpoints
             }
             return Results.Ok();
         });
+
+        group.MapGet("/suggestUsers", [Authorize] async (
+            UserService userService,
+            [FromQuery] string query
+        ) =>
+        {
+            if (string.IsNullOrWhiteSpace(query)) return Results.Ok(Array.Empty<object>());
+            var suggestions = await userService.SuggestUsersByEmail(query);
+            return Results.Ok(suggestions);
+        }).AddEndpointFilter<AdminUserFilter>();
     }
 }

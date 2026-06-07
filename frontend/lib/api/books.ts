@@ -176,3 +176,19 @@ export async function getBookUnitsForBook(bookId: string): Promise<BookUnit[]> {
   if (!res.ok) return [];
   return res.json() as Promise<BookUnit[]>;
 }
+
+export async function archiveBookUnit(unitId: string): Promise<boolean> {
+  const res = await fetch(`/api/books/bookUnit/${unitId}/archive`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return res.ok;
+}
+
+export async function unarchiveBookUnit(unitId: string): Promise<boolean> {
+  const res = await fetch(`/api/books/bookUnit/${unitId}/unarchive`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return res.ok;
+}

@@ -2,20 +2,25 @@ using LibraryPlus.Models.Book;
 using LibraryPlus.Models.User;
 using LibraryPlus.Models.Reservation;
 using LibraryPlus.Requests.Reservation;
+using LibraryPlus.Requests.User;
 using LibraryPlus.Services.Book;
+using LibraryPlus.Services.Mail;
+using LibraryPlus.Services.User;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
 namespace LibraryPlus.Services.Reservation;
 
-public class ReservationService(IMongoDatabase db, BookService bookService)
+public class ReservationService(IMongoDatabase db, BookService bookService, NotificationService notificationService, IMailService mailService)
 {
     private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
     private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
     private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
     private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
     private readonly BookService _bookService = bookService;
+    private readonly NotificationService _notificationService = notificationService;
+    private readonly IMailService _mailService = mailService;
     public const int USER_PAGE_SIZE = 3;
     public const int ADMIN_PAGE_SIZE = 6;
 
@@ -80,7 +85,12 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
             r => r.Id == id,
             Builders<ReservationModel>.Update.Set(r => r.Status, "Taken")
         );
-        return result.ModifiedCount == 1;
+        if (result.ModifiedCount == 1)
+        {
+            await SendStatusNotification(id, "Taken");
+            return true;
+        }
+        return false;
     }
 
     public async Task<bool> HandleReturned(string id, HandleReturnRequest request)
@@ -92,7 +102,12 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
             .Set(r => r.AdditionalNote, request.AdditionalNote);
 
         var result = await _reservations.UpdateOneAsync(r => r.Id == id, update);
-        return result.ModifiedCount == 1;
+        if (result.ModifiedCount == 1)
+        {
+            await SendStatusNotification(id, "Returned");
+            return true;
+        }
+        return false;
     }
 
     public async Task<bool> UpdateStatus(string id, string status)
@@ -101,7 +116,12 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
             r => r.Id == id,
             Builders<ReservationModel>.Update.Set(r => r.Status, status)
         );
-        return result.ModifiedCount == 1;
+        if (result.ModifiedCount == 1)
+        {
+            await SendStatusNotification(id, status);
+            return true;
+        }
+        return false;
     }
 
     public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null, string? searchToken = null)
@@ -198,5 +218,24 @@ public class ReservationService(IMongoDatabase db, BookService bookService)
         );
 
         return result.ModifiedCount > 0;
+    }
+
+    private async Task SendStatusNotification(string reservationId, string newStatus)
+    {
+        var reservation = await _reservations.Find(r => r.Id == reservationId).FirstOrDefaultAsync();
+        if (reservation == null) return;
+
+        var user = await _users.Find(u => u.Id == reservation.UserId).FirstOrDefaultAsync();
+        if (user == null) return;
+
+        var bookUnit = await _bookUnits.Find(bu => bu.Id == reservation.BookUnitId).FirstOrDefaultAsync();
+        var book = bookUnit != null ? await _books.Find(b => b.Id == bookUnit.BookId).FirstOrDefaultAsync() : null;
+        var bookTitle = book?.Title ?? "Unknown";
+
+        var subject = $"Reservation status updated: {newStatus}";
+        var text = $"Your reservation for \"{bookTitle}\" has been updated to status: {newStatus}.";
+
+        await _notificationService.SendOneUserNotification(reservation.UserId, new NotificationRequest(subject, text));
+        _ = _mailService.SendMail(user.Email, subject, text);
     }
 }

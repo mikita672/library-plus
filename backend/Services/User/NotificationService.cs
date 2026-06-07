@@ -78,8 +78,8 @@ public class NotificationService(IMongoDatabase db)
         return await _userNotifications.AsQueryable()
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
-            .Skip(4 * (page - 1))
-            .Take(4)
+            .Skip(5 * (page - 1))
+            .Take(5)
             .Join(
                 _notifications.AsQueryable(),
                 un => un.NotificationId,
@@ -105,7 +105,7 @@ public class NotificationService(IMongoDatabase db)
             .Where(un => !un.IsRead)
             .CountAsync();
         return new UserNotificationCountResponse(
-            (int)Math.Ceiling(totalCount / 4.0),
+            (int)Math.Ceiling(totalCount / 5.0),
             notReadCount
         );
     }

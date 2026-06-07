@@ -10,4 +10,5 @@ public class BookUnitModel
     public string Id { get; set; } = null!;
     [BsonRepresentation(BsonType.ObjectId)]
     public string BookId { get; set; } = null!;
+    public bool IsArchived { get; set; } = false;
 }

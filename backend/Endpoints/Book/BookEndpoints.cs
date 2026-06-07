@@ -180,5 +180,33 @@ public static class BookEndpoints
             return await bookService.GetPopularBooks();
         });
 
+        group.MapPatch("/bookUnit/{id}/archive", [Authorize] async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            if (!await bookService.ArchiveBookUnit(id))
+            {
+                return Results.BadRequest("Cannot archive a rented book unit.");
+            }
+            return Results.Ok();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapPatch("/bookUnit/{id}/unarchive", [Authorize] async (
+            BookService bookService,
+            string id
+        ) =>
+        {
+            if (!await bookService.UnarchiveBookUnit(id))
+            {
+                return Results.NotFound();
+            }
+            return Results.Ok();
+        })
+            .AddEndpointFilter<ActiveUserFilter>()
+            .AddEndpointFilter<AdminUserFilter>();
+
     }
 }

@@ -92,6 +92,19 @@ public class UserService(IMongoDatabase db, NotificationService notificationServ
         return (int)Math.Ceiling(count / (double)PAGE_SIZE);
     }
 
+    public async Task<List<string>> GetAllUserEmails()
+    {
+        return await _users.Find(_ => true).Project(u => u.Email).ToListAsync();
+    }
+
+    public async Task<List<object>> SuggestUsersByEmail(string query)
+    {
+        var regex = new MongoDB.Bson.BsonRegularExpression(query, "i");
+        var filter = Builders<UserModel>.Filter.Regex(u => u.Email, regex);
+        var users = await _users.Find(filter).Limit(10).ToListAsync();
+        return users.Select(u => (object)new { email = u.Email, name = u.Name }).ToList();
+    }
+
     private FilterDefinition<UserModel> BuildUserFilter(string? token)
     {
         if (string.IsNullOrEmpty(token)) return Builders<UserModel>.Filter.Empty;
