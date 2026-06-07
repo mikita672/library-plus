@@ -22,7 +22,7 @@ public class BookService(
     private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
     private readonly IObjectStorageService _storageService = storageService;
-    private const int PAGE_SIZE = 6;
+    private const int PAGE_SIZE = 12;
 
     public async Task<BookModel> CreateBook(CreateBookRequest request)
     {
@@ -98,7 +98,7 @@ public class BookService(
     private async Task<HashSet<string>> GetAvailableBookIds()
     {
         var takenIds = await _reservations.Find(r => r.ReturnedDate == null).Project(r => r.BookUnitId).ToListAsync();
-        var allUnits = await _bookUnits.Find(bu => !takenIds.Contains(bu.Id)).ToListAsync();
+        var allUnits = await _bookUnits.Find(bu => !takenIds.Contains(bu.Id) && !bu.IsArchived).ToListAsync();
         var availableBookIds = new HashSet<string>();
 
         foreach (var unit in allUnits)
@@ -212,7 +212,7 @@ public class BookService(
     public async Task<BookUnitModel?> GetAvailableBookUnitForBook(string bookId)
     {
         var takenIds = await _reservations.Find(r => r.ReturnedDate == null).Project(r => r.BookUnitId).ToListAsync();
-        var availableUnits = await _bookUnits.Find(bu => bu.BookId == bookId && !takenIds.Contains(bu.Id)).ToListAsync();
+        var availableUnits = await _bookUnits.Find(bu => bu.BookId == bookId && !takenIds.Contains(bu.Id) && !bu.IsArchived).ToListAsync();
         
         foreach (var unit in availableUnits)
         {
@@ -228,6 +228,20 @@ public class BookService(
         }
         
         return null;
+    }
+
+    public async Task<bool> ArchiveBookUnit(string unitId)
+    {
+        var activeReservation = await _reservations.Find(r => r.BookUnitId == unitId && r.ReturnedDate == null).FirstOrDefaultAsync();
+        if (activeReservation != null) return false;
+        var result = await _bookUnits.UpdateOneAsync(bu => bu.Id == unitId, Builders<BookUnitModel>.Update.Set(bu => bu.IsArchived, true));
+        return result.ModifiedCount == 1;
+    }
+
+    public async Task<bool> UnarchiveBookUnit(string unitId)
+    {
+        var result = await _bookUnits.UpdateOneAsync(bu => bu.Id == unitId, Builders<BookUnitModel>.Update.Set(bu => bu.IsArchived, false));
+        return result.ModifiedCount == 1;
     }
 
     public async Task<IList<BookCardResponse>> GetBooksByAuthor(string id, string? excludedId)

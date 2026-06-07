@@ -68,7 +68,7 @@ builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<ReservationService>();
 builder.Services.AddSingleton<StatisticsService>();
-builder.Services.AddSingleton(mailService);
+builder.Services.AddSingleton<IMailService>(mailService);
 
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Storage));
 builder.Services.AddSingleton<IObjectStorageService, MinioObjectStorageService>();

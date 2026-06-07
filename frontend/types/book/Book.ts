@@ -57,6 +57,7 @@ export interface BookPreview {
 export interface BookUnit {
   id: string;
   bookId: string;
+  isArchived: boolean;
 }
 
 export interface BookCard {

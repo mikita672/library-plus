@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getBookUnitsForBook } from "@/lib/api/books";
+import { getBookUnitsForBook, archiveBookUnit, unarchiveBookUnit } from "@/lib/api/books";
 import { getReservationsByUnit } from "@/lib/api/reservations";
 import { BookUnit, BookCard } from "@/types/book/Book";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface BookUnitStatus {
   unit: BookUnit;
   condition: string;
   isAvailable: boolean;
+  isRentable: boolean;
 }
 
 interface Props {
@@ -23,48 +26,64 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [unitsStatus, setUnitsStatus] = useState<BookUnitStatus[]>([]);
 
+  const fetchData = async () => {
+    if (!book) return;
+    setLoading(true);
+    try {
+      const units = await getBookUnitsForBook(book.id);
+      const statuses = await Promise.all(units.map(async (unit) => {
+        const reservations = await getReservationsByUnit(unit.id);
+        const latestReturn = reservations.find(r => r.returnedDate !== null);
+        const activeReservation = reservations.find(r => r.returnedDate === null);
+
+        let condition = "Good";
+        if (latestReturn && latestReturn.bookConditionUponReturn) {
+          condition = latestReturn.bookConditionUponReturn;
+        }
+
+        const condLower = condition.toLowerCase();
+        const isRentable = condLower.includes("good") || condLower.includes("minor");
+
+        return {
+          unit,
+          condition,
+          isAvailable: !activeReservation && isRentable && !unit.isArchived,
+          isRentable,
+        };
+      }));
+
+      setUnitsStatus(statuses);
+    } catch (err) {
+      console.error("Failed to fetch copies", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!book || !open) return;
-
-    let mounted = true;
-
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const units = await getBookUnitsForBook(book!.id);
-        const statuses = await Promise.all(units.map(async (unit) => {
-          const reservations = await getReservationsByUnit(unit.id);
-          const latestReturn = reservations.find(r => r.returnedDate !== null);
-          const activeReservation = reservations.find(r => r.returnedDate === null);
-          
-          let condition = "Good";
-          if (latestReturn && latestReturn.bookConditionUponReturn) {
-            condition = latestReturn.bookConditionUponReturn;
-          }
-
-          return {
-            unit,
-            condition,
-            isAvailable: !activeReservation
-          };
-        }));
-
-        if (mounted) {
-          setUnitsStatus(statuses);
-        }
-      } catch (err) {
-        console.error("Failed to fetch copies", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
     void fetchData();
-
-    return () => {
-      mounted = false;
-    };
   }, [book, open]);
+
+  const handleArchive = async (unitId: string) => {
+    const ok = await archiveBookUnit(unitId);
+    if (ok) {
+      toast.success("Book unit archived");
+      void fetchData();
+    } else {
+      toast.error("Cannot archive a rented book unit");
+    }
+  };
+
+  const handleUnarchive = async (unitId: string) => {
+    const ok = await unarchiveBookUnit(unitId);
+    if (ok) {
+      toast.success("Book unit unarchived");
+      void fetchData();
+    } else {
+      toast.error("Failed to unarchive");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,6 +104,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                   <TableHead>Unit ID</TableHead>
                   <TableHead>Condition</TableHead>
                   <TableHead>Availability</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,10 +121,36 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {s.isAvailable ? (
+                      {s.unit.isArchived ? (
+                        <span className="text-muted-foreground font-medium">Archived</span>
+                      ) : !s.isRentable ? (
+                        <span className="text-muted-foreground font-medium">N/A</span>
+                      ) : s.isAvailable ? (
                         <span className="text-green-600 font-medium">Available</span>
                       ) : (
                         <span className="text-destructive font-medium">Rented</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {s.unit.isArchived ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleUnarchive(s.unit.id)}
+                        >
+                          Unarchive
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          style={{ cursor: "pointer" }}
+                          disabled={!s.isRentable || !s.isAvailable}
+                          onClick={() => handleArchive(s.unit.id)}
+                        >
+                          Archive
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>

@@ -6,6 +6,6 @@ public record NotificationRequest(
 );
 
 public record SendOneNotificationRequest(
-    string UserId,
+    string Email,
     NotificationRequest NotificationBody
 );
