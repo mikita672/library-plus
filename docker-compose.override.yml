@@ -14,27 +14,17 @@ services:
   mongo-express:
     image: mongo-express:1.0.2-20-alpine3.19
     restart: always
-    ports:
-      - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://root:some_secret_password@mongo:27017/
-      ME_CONFIG_BASICAUTH_ENABLED: true
-      ME_CONFIG_BASICAUTH_USERNAME: mongoexpressuser
-      ME_CONFIG_BASICAUTH_PASSWORD: mongoexpresspass
+      - ME_CONFIG_MONGODB_URL=mongodb://root:some_secret_password@mongo:27017/?authSource=admin
+      - ME_CONFIG_BASICAUTH_USERNAME=mongoexpressuser
+      - ME_CONFIG_BASICAUTH_PASSWORD=mongoexpresspass
     depends_on:
       mongo:
         condition: service_healthy
 
-  minio:
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-
   backend:
     build:
       dockerfile: Dockerfile.dev
-    ports:
-      - "8080:8080"
     volumes:
       - ./backend:/app
       - dotnet-bin:/app/bin
@@ -44,6 +34,8 @@ services:
   frontend:
     build:
       dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
