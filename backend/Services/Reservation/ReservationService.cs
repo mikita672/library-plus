@@ -1,3 +1,4 @@
+using LibraryPlus.Models;
 using LibraryPlus.Models.Book;
 using LibraryPlus.Models.User;
 using LibraryPlus.Models.Reservation;
@@ -6,18 +7,13 @@ using LibraryPlus.Requests.User;
 using LibraryPlus.Services.Book;
 using LibraryPlus.Services.Mail;
 using LibraryPlus.Services.User;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.Reservation;
 
-public class ReservationService(IMongoDatabase db, BookService bookService, NotificationService notificationService, IMailService mailService)
+public class ReservationService(LibraryPlusContext context, BookService bookService, NotificationService notificationService, IMailService mailService)
 {
-    private readonly IMongoCollection<ReservationModel> _reservations = db.GetCollection<ReservationModel>("reservations");
-    private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
-    private readonly IMongoCollection<BookModel> _books = db.GetCollection<BookModel>("books");
-    private readonly IMongoCollection<BookUnitModel> _bookUnits = db.GetCollection<BookUnitModel>("bookUnits");
+    private readonly LibraryPlusContext _context = context;
     private readonly BookService _bookService = bookService;
     private readonly NotificationService _notificationService = notificationService;
     private readonly IMailService _mailService = mailService;
@@ -29,8 +25,8 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
         var totalDays = (request.EndDate - request.StartDate).TotalDays;
         if (totalDays < 14 || totalDays > 30) return (null, "Reservation period must be between 14 and 30 days.");
 
-        var bookUnitsForBook = await _bookUnits.Find(bu => bu.BookId == request.BookId).Project(bu => bu.Id).ToListAsync();
-        var existingReservation = await _reservations.Find(r => r.UserId == userId && r.ReturnedDate == null && bookUnitsForBook.Contains(r.BookUnitId)).FirstOrDefaultAsync();
+        var bookUnitsForBookIds = await _context.BookUnits.Where(bu => bu.BookId == request.BookId).Select(bu => bu.Id).ToListAsync();
+        var existingReservation = await _context.Reservations.FirstOrDefaultAsync(r => r.UserId == userId && r.ReturnedDate == null && bookUnitsForBookIds.Contains(r.BookUnitId));
         if (existingReservation != null) return (null, "You already have an active reservation for this book.");
 
         var bookUnit = await _bookService.GetAvailableBookUnitForBook(request.BookId);
@@ -41,6 +37,7 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
 
         var reservation = new ReservationModel
         {
+            Id = Guid.NewGuid().ToString(),
             BookUnitId = bookUnit.Id,
             UserId = userId,
             StartDate = request.StartDate,
@@ -52,41 +49,36 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
             CreatedAt = DateTime.UtcNow,
         };
 
-        await _reservations.InsertOneAsync(reservation);
+        _context.Reservations.Add(reservation);
+        await _context.SaveChangesAsync();
         await _bookService.IncreasePopularity(book);
         return (reservation, null);
     }
 
     public async Task<IList<ReservationModel>> GetUserReservations(string userId, int page, string? status = null, string? searchToken = null)
     {
-        var pipeline = CreateFilteredPipeline(status, searchToken, userId);
+        var query = BuildFilteredQuery(status, searchToken, userId);
 
-        pipeline.Add(new BsonDocument("$sort", new BsonDocument("createdAt", -1)));
-        pipeline.Add(new BsonDocument("$skip", USER_PAGE_SIZE * (page - 1)));
-        pipeline.Add(new BsonDocument("$limit", USER_PAGE_SIZE));
-
-        return await _reservations.Aggregate<ReservationModel>(PipelineDefinition<ReservationModel, ReservationModel>.Create(pipeline)).ToListAsync();
+        return await query.OrderByDescending(r => r.CreatedAt)
+            .Skip(USER_PAGE_SIZE * (page - 1))
+            .Take(USER_PAGE_SIZE)
+            .ToListAsync();
     }
 
     public async Task<int> GetUserReservationsPageCount(string userId, string? status = null, string? searchToken = null)
     {
-        var pipeline = CreateFilteredPipeline(status, searchToken, userId);
-        pipeline.Add(new BsonDocument("$count", "total"));
-
-        var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
-        if (result == null) return 1;
-
-        return (int)Math.Ceiling(result["total"].AsInt32 / (double)USER_PAGE_SIZE);
+        var query = BuildFilteredQuery(status, searchToken, userId);
+        var count = await query.CountAsync();
+        return (int)Math.Ceiling(count / (double)USER_PAGE_SIZE);
     }
 
     public async Task<bool> HandleTaken(string id)
     {
-        var result = await _reservations.UpdateOneAsync(
-            r => r.Id == id,
-            Builders<ReservationModel>.Update.Set(r => r.Status, "Taken")
-        );
-        if (result.ModifiedCount == 1)
+        var reservation = await _context.Reservations.FindAsync(id);
+        if (reservation != null)
         {
+            reservation.Status = "Taken";
+            await _context.SaveChangesAsync();
             await SendStatusNotification(id, "Taken");
             return true;
         }
@@ -95,15 +87,14 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
 
     public async Task<bool> HandleReturned(string id, HandleReturnRequest request)
     {
-        var update = Builders<ReservationModel>.Update
-            .Set(r => r.Status, "Returned")
-            .Set(r => r.ReturnedDate, DateTime.UtcNow)
-            .Set(r => r.BookConditionUponReturn, request.BookConditionUponReturn)
-            .Set(r => r.AdditionalNote, request.AdditionalNote);
-
-        var result = await _reservations.UpdateOneAsync(r => r.Id == id, update);
-        if (result.ModifiedCount == 1)
+        var reservation = await _context.Reservations.FindAsync(id);
+        if (reservation != null)
         {
+            reservation.Status = "Returned";
+            reservation.ReturnedDate = DateTime.UtcNow;
+            reservation.BookConditionUponReturn = request.BookConditionUponReturn;
+            reservation.AdditionalNote = request.AdditionalNote;
+            await _context.SaveChangesAsync();
             await SendStatusNotification(id, "Returned");
             return true;
         }
@@ -112,12 +103,11 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
 
     public async Task<bool> UpdateStatus(string id, string status)
     {
-        var result = await _reservations.UpdateOneAsync(
-            r => r.Id == id,
-            Builders<ReservationModel>.Update.Set(r => r.Status, status)
-        );
-        if (result.ModifiedCount == 1)
+        var reservation = await _context.Reservations.FindAsync(id);
+        if (reservation != null)
         {
+            reservation.Status = status;
+            await _context.SaveChangesAsync();
             await SendStatusNotification(id, status);
             return true;
         }
@@ -126,110 +116,78 @@ public class ReservationService(IMongoDatabase db, BookService bookService, Noti
 
     public async Task<IList<ReservationModel>> GetAllReservations(int page, string? status = null, string? searchToken = null)
     {
-        var pipeline = CreateFilteredPipeline(status, searchToken);
+        var query = BuildFilteredQuery(status, searchToken);
 
-        pipeline.Add(new BsonDocument("$sort", new BsonDocument("createdAt", -1)));
-        pipeline.Add(new BsonDocument("$skip", ADMIN_PAGE_SIZE * (page - 1)));
-        pipeline.Add(new BsonDocument("$limit", ADMIN_PAGE_SIZE));
-
-        return await _reservations.Aggregate<ReservationModel>(PipelineDefinition<ReservationModel, ReservationModel>.Create(pipeline)).ToListAsync();
+        return await query.OrderByDescending(r => r.CreatedAt)
+            .Skip(ADMIN_PAGE_SIZE * (page - 1))
+            .Take(ADMIN_PAGE_SIZE)
+            .ToListAsync();
     }
 
     public async Task<int> GetAllReservationsPageCount(string? status = null, string? searchToken = null)
     {
-        var pipeline = CreateFilteredPipeline(status, searchToken);
-        pipeline.Add(new BsonDocument("$count", "total"));
-
-        var result = await _reservations.Aggregate<BsonDocument>(PipelineDefinition<ReservationModel, BsonDocument>.Create(pipeline)).FirstOrDefaultAsync();
-        if (result == null) return 1;
-
-        return (int)Math.Ceiling(result["total"].AsInt32 / (double)ADMIN_PAGE_SIZE);
+        var query = BuildFilteredQuery(status, searchToken);
+        var count = await query.CountAsync();
+        return (int)Math.Ceiling(count / (double)ADMIN_PAGE_SIZE);
     }
 
     public async Task<IList<ReservationModel>> GetReservationsByBookUnit(string bookUnitId)
     {
-        return await _reservations.Find(r => r.BookUnitId == bookUnitId).SortByDescending(r => r.CreatedAt).ToListAsync();
+        return await _context.Reservations.Where(r => r.BookUnitId == bookUnitId).OrderByDescending(r => r.CreatedAt).ToListAsync();
     }
 
-    private List<BsonDocument> CreateFilteredPipeline(string? status, string? searchToken, string? userId = null)
+    private IQueryable<ReservationModel> BuildFilteredQuery(string? status, string? searchToken, string? userId = null)
     {
-        var pipeline = new List<BsonDocument>();
+        var query = _context.Reservations.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            pipeline.Add(new BsonDocument("$match", new BsonDocument("userId", ObjectId.Parse(userId))));
+            query = query.Where(r => r.UserId == userId);
         }
 
         if (!string.IsNullOrWhiteSpace(status) && status.ToLower() != "all")
         {
-            pipeline.Add(new BsonDocument("$match", new BsonDocument("status", status)));
+            query = query.Where(r => r.Status == status);
         }
 
         if (!string.IsNullOrWhiteSpace(searchToken))
         {
-            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "users" },
-                { "localField", "userId" },
-                { "foreignField", "_id" },
-                { "as", "user" }
-            }));
-
-            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "bookUnits" },
-                { "localField", "bookUnitId" },
-                { "foreignField", "_id" },
-                { "as", "unit" }
-            }));
-            pipeline.Add(new BsonDocument("$unwind", "$unit"));
-
-            pipeline.Add(new BsonDocument("$lookup", new BsonDocument
-            {
-                { "from", "books" },
-                { "localField", "unit.bookId" },
-                { "foreignField", "_id" },
-                { "as", "book" }
-            }));
-
-            var regex = new BsonRegularExpression(searchToken, "i");
-            pipeline.Add(new BsonDocument("$match", new BsonDocument("$or", new BsonArray
-            {
-                new BsonDocument("user.name", regex),
-                new BsonDocument("user.email", regex),
-                new BsonDocument("book.title", regex)
-            })));
+            query = from r in query
+                    join u in _context.Users on r.UserId equals u.Id
+                    join bu in _context.BookUnits on r.BookUnitId equals bu.Id
+                    join b in _context.Books on bu.BookId equals b.Id
+                    where (u.Name != null && EF.Functions.ILike(u.Name, $"%{searchToken}%")) ||
+                          EF.Functions.ILike(u.Email, $"%{searchToken}%") ||
+                          EF.Functions.ILike(b.Title, $"%{searchToken}%")
+                    select r;
         }
 
-        return pipeline;
+        return query;
     }
 
     public async Task<bool> CancelReservationByUser(string reservationId, string userId)
     {
-        var reservation = await _reservations.Find(r => r.Id == reservationId && r.UserId == userId).FirstOrDefaultAsync();
+        var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userId);
         if (reservation == null) return false;
         if (reservation.Status != "Reserved") return false;
 
-        var result = await _reservations.UpdateOneAsync(
-            r => r.Id == reservationId,
-            Builders<ReservationModel>.Update
-                .Set(r => r.Status, "Returned")
-                .Set(r => r.ReturnedDate, DateTime.UtcNow)
-        );
+        reservation.Status = "Returned";
+        reservation.ReturnedDate = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
 
-        return result.ModifiedCount > 0;
+        return true;
     }
 
     private async Task SendStatusNotification(string reservationId, string newStatus)
     {
-        var reservation = await _reservations.Find(r => r.Id == reservationId).FirstOrDefaultAsync();
+        var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId);
         if (reservation == null) return;
 
-        var user = await _users.Find(u => u.Id == reservation.UserId).FirstOrDefaultAsync();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == reservation.UserId);
         if (user == null) return;
 
-        var bookUnit = await _bookUnits.Find(bu => bu.Id == reservation.BookUnitId).FirstOrDefaultAsync();
-        var book = bookUnit != null ? await _books.Find(b => b.Id == bookUnit.BookId).FirstOrDefaultAsync() : null;
+        var bookUnit = await _context.BookUnits.FirstOrDefaultAsync(bu => bu.Id == reservation.BookUnitId);
+        var book = bookUnit != null ? await _context.Books.FirstOrDefaultAsync(b => b.Id == bookUnit.BookId) : null;
         var bookTitle = book?.Title ?? "Unknown";
 
         var subject = $"Reservation status updated: {newStatus}";

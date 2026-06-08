@@ -1,64 +1,60 @@
+using LibraryPlus.Models;
 using LibraryPlus.Models.User;
 using LibraryPlus.Requests.User;
 using LibraryPlus.Responses.User;
-using MailKit;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.User;
 
-public class NotificationService(IMongoDatabase db)
+public class NotificationService(LibraryPlusContext context)
 {
-    private readonly IMongoCollection<NotificationModel> _notifications = db.GetCollection<NotificationModel>("notifications");
-    private readonly IMongoCollection<UserModel> _users = db.GetCollection<UserModel>("users");
-    private readonly IMongoCollection<UserNotificationModel> _userNotifications = db.GetCollection<UserNotificationModel>("userNotifications");
+    private readonly LibraryPlusContext _context = context;
 
     public async Task<NotificationModel> CreateNotification(string subject, string text)
     {
         var notification = new NotificationModel
         {
+            Id = Guid.NewGuid().ToString(),
             Subject = subject,
             Text = text,
         };
-        await _notifications.InsertOneAsync(notification);
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
         return notification;
     }
 
     public async Task SendAdminNotification(string userId, string message)
     {
-        var admin = await _users.AsQueryable()
+        var admin = await _context.Users
             .Where(u => u.IsAdmin)
-            .Take(1)
             .FirstOrDefaultAsync();
-        if (admin == null)
-        {
-            return;
-        }
-        var user = await _users.AsQueryable()
-            .Where(u => u.Id == userId)
-            .FirstOrDefaultAsync();
-        if (user == null)
-        {
-            return;
-        }
+        if (admin == null) return;
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+
         var notification = await CreateNotification($"Contact request (from: {user.Email})", message);
-        await _userNotifications.InsertOneAsync(new UserNotificationModel
+        _context.UserNotifications.Add(new UserNotificationModel
         {
+            Id = Guid.NewGuid().ToString(),
             UserId = admin.Id,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
         });
+        await _context.SaveChangesAsync();
     }
 
     public async Task SendOneUserNotification(string userId, NotificationRequest notificationBody)
     {
         var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
-        await _userNotifications.InsertOneAsync(new UserNotificationModel
+        _context.UserNotifications.Add(new UserNotificationModel
         {
+            Id = Guid.NewGuid().ToString(),
             UserId = userId,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
         });
+        await _context.SaveChangesAsync();
     }
 
     public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationRequest notificationBody)
@@ -66,43 +62,40 @@ public class NotificationService(IMongoDatabase db)
         var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
         var userNotifications = userIds.Select(id => new UserNotificationModel
         {
+            Id = Guid.NewGuid().ToString(),
             UserId = id,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
         });
-        await _userNotifications.InsertManyAsync(userNotifications);
+        _context.UserNotifications.AddRange(userNotifications);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<IList<UserNotificationResponse>> GetUserNotifications(string userId, int page)
     {
-        return await _userNotifications.AsQueryable()
-            .Where(n => n.UserId == userId)
-            .OrderByDescending(n => n.CreatedAt)
+        return await (from un in _context.UserNotifications
+                      where un.UserId == userId
+                      join n in _context.Notifications on un.NotificationId equals n.Id
+                      orderby un.CreatedAt descending
+                      select new UserNotificationResponse(
+                          un.Id,
+                          n.Subject,
+                          n.Text,
+                          un.IsRead,
+                          un.CreatedAt
+                      ))
             .Skip(5 * (page - 1))
             .Take(5)
-            .Join(
-                _notifications.AsQueryable(),
-                un => un.NotificationId,
-                n => n.Id,
-                (un, n) => new UserNotificationResponse(
-                    un.Id,
-                    n.Subject,
-                    n.Text,
-                    un.IsRead,
-                    un.CreatedAt
-                )
-            )
             .ToListAsync();
     }
 
     public async Task<UserNotificationCountResponse> GetUserNotificationsCount(string userId)
     {
-        var totalCount = await _userNotifications.AsQueryable()
+        var totalCount = await _context.UserNotifications
             .Where(un => un.UserId == userId)
             .CountAsync();
-        var notReadCount = await _userNotifications.AsQueryable()
-            .Where(un => un.UserId == userId)
-            .Where(un => !un.IsRead)
+        var notReadCount = await _context.UserNotifications
+            .Where(un => un.UserId == userId && !un.IsRead)
             .CountAsync();
         return new UserNotificationCountResponse(
             (int)Math.Ceiling(totalCount / 5.0),
@@ -112,14 +105,13 @@ public class NotificationService(IMongoDatabase db)
 
     public async Task<bool> MarkNotificationAsRead(string userId, string id)
     {
-        var res = await _userNotifications.UpdateOneAsync(
-            Builders<UserNotificationModel>.Filter.And(
-                Builders<UserNotificationModel>.Filter.Eq(un => un.Id, id),
-                Builders<UserNotificationModel>.Filter.Eq(un => un.UserId, userId)
-            ),
-            Builders<UserNotificationModel>.Update.Set(un => un.IsRead, true)
-        );
-        return res.MatchedCount == 1;
+        var un = await _context.UserNotifications.FirstOrDefaultAsync(u => u.Id == id && u.UserId == userId);
+        if (un != null)
+        {
+            un.IsRead = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        return false;
     }
-
 }

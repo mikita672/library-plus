@@ -1,36 +1,39 @@
+using LibraryPlus.Models;
 using LibraryPlus.Models.Book;
 using LibraryPlus.Requests.Book;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.Book;
 
-public class PublisherService(IMongoDatabase db)
+public class PublisherService(LibraryPlusContext context)
 {
-    private readonly IMongoCollection<PublisherModel> _publishers = db.GetCollection<PublisherModel>("publishers");
+    private readonly LibraryPlusContext _context = context;
 
     public async Task<PublisherModel> CreatePublisher(CreatePublisherRequest createPublisherRequest)
     {
         var publisher = new PublisherModel
         {
+            Id = Guid.NewGuid().ToString(),
             Name = createPublisherRequest.Name,
         };
-        await _publishers.InsertOneAsync(publisher);
+        _context.Publishers.Add(publisher);
+        await _context.SaveChangesAsync();
         return publisher;
     }
 
     public async Task<bool> EditPublisher(string id, UpdatePublisherRequest updatePublisherRequest)
     {
-        var res = await _publishers.UpdateOneAsync(
-            Builders<PublisherModel>.Filter.Eq(p => p.Id, id),
-            Builders<PublisherModel>.Update.Set(p => p.Name, updatePublisherRequest.Name)
-        );
-        return res.MatchedCount == 1;
+        var publisher = await _context.Publishers.FindAsync(id);
+        if (publisher == null) return false;
+
+        publisher.Name = updatePublisherRequest.Name;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<IList<PublisherModel>> GetPublishers(int page)
     {
-        return await _publishers.AsQueryable()
+        return await _context.Publishers
             .Skip(8 * (page - 1))
             .Take(8)
             .ToListAsync();
@@ -38,25 +41,28 @@ public class PublisherService(IMongoDatabase db)
 
     public async Task<IList<PublisherModel>> GetAllPublishers()
     {
-        return await _publishers.AsQueryable().ToListAsync();
+        return await _context.Publishers.ToListAsync();
     }
 
     public async Task<IList<PublisherModel>> GetPublishersByIds(IList<string?> ids)
     {
-        return await _publishers.AsQueryable()
+        return await _context.Publishers
             .Where(p => ids.Contains(p.Id))
             .ToListAsync();
     }
 
     public async Task DeletePublisher(string id)
     {
-        await _publishers.FindOneAndDeleteAsync(
-            Builders<PublisherModel>.Filter.Eq(p => p.Id, id)
-        );
+        var publisher = await _context.Publishers.FindAsync(id);
+        if (publisher != null)
+        {
+            _context.Publishers.Remove(publisher);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<PublisherModel?> GetPublisher(string id)
     {
-        return await _publishers.AsQueryable().Where(p => p.Id == id).FirstOrDefaultAsync();
+        return await _context.Publishers.FirstOrDefaultAsync(p => p.Id == id);
     }
 }

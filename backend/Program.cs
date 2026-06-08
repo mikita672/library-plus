@@ -15,6 +15,7 @@ using LibraryPlus.Services.Storage;
 using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
 using LibraryPlus.Endpoints.Misc;
+using Microsoft.EntityFrameworkCore;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -22,20 +23,24 @@ JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-var pack = new ConventionPack { new CamelCaseElementNameConvention() };
-ConventionRegistry.Register("camel case", pack, t => true);
-var connectionString =
+var mongoConnectionString =
     config.GetConnectionString("MongoDb")
     ?? config["MongoDbSettings:ConnectionString"];
 
-if (string.IsNullOrWhiteSpace(connectionString))
+if (string.IsNullOrWhiteSpace(mongoConnectionString))
 {
     throw new InvalidOperationException(
         "MongoDB connection string is missing. Configure MongoDbSettings:ConnectionString or ConnectionStrings:MongoDb.");
 }
 
-var mongoClient = new MongoClient(connectionString);
+var mongoClient = new MongoClient(mongoConnectionString);
 var db = mongoClient.GetDatabase(config["MongoDbSettings:DatabaseName"]);
+
+var pack = new ConventionPack { new CamelCaseElementNameConvention() };
+ConventionRegistry.Register("camel case", pack, t => true);
+
+var pgConnectionString = config.GetConnectionString("PostgreSql");
+builder.Services.AddNpgsql<LibraryPlusContext>(pgConnectionString);
 
 IMailService mailService;
 try
@@ -57,17 +62,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(db);
-builder.Services.AddSingleton<UserService>();
-builder.Services.AddSingleton<JwtService>();
-builder.Services.AddSingleton<RefreshTokenService>();
-builder.Services.AddSingleton<AuthService>();
-builder.Services.AddSingleton<NotificationService>();
-builder.Services.AddSingleton<AuthorService>();
-builder.Services.AddSingleton<PublisherService>();
-builder.Services.AddSingleton<CategoryService>();
-builder.Services.AddSingleton<BookService>();
-builder.Services.AddSingleton<ReservationService>();
-builder.Services.AddSingleton<StatisticsService>();
+
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<RefreshTokenService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AuthorService>();
+builder.Services.AddScoped<PublisherService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddSingleton<IMailService>(mailService);
 
 builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Storage));
@@ -76,6 +82,12 @@ builder.Services.AddSingleton<IObjectStorageService, MinioObjectStorageService>(
 builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<LibraryPlusContext>();
+    context.Database.EnsureCreated();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

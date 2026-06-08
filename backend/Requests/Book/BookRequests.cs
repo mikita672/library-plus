@@ -4,15 +4,15 @@ public record CreateBookRequest(
     string Title,
     string Description,
     string Language,
-    uint PublicationYear,
-    uint PagesCount,
+    int PublicationYear,
+    int PagesCount,
     decimal RepurchasePrice,
     IList<string> CategoryIds,
     string? AuthorId,
     string? PublisherId,
     string? OriginalTitle,
     string? OriginalLanguage,
-    uint? OriginalPublicationYear,
+    int? OriginalPublicationYear,
     string? OriginalPublisherId
 );
 
@@ -20,15 +20,15 @@ public record UpdateBookRequest(
     string Title,
     string Description,
     string Language,
-    uint PublicationYear,
-    uint PagesCount,
+    int PublicationYear,
+    int PagesCount,
     decimal RepurchasePrice,
     IList<string> CategoryIds,
     string? AuthorId,
     string? PublisherId,
     string? OriginalTitle,
     string? OriginalLanguage,
-    uint? OriginalPublicationYear,
+    int? OriginalPublicationYear,
     string? OriginalPublisherId
 );
 
