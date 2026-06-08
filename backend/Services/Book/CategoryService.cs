@@ -1,48 +1,54 @@
+using LibraryPlus.Models;
 using LibraryPlus.Models.Book;
 using LibraryPlus.Requests.Book;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.Book;
 
-public class CategoryService(IMongoDatabase db)
+public class CategoryService(LibraryPlusContext context)
 {
-    private readonly IMongoCollection<CategoryModel> _categories = db.GetCollection<CategoryModel>("categories");
+    private readonly LibraryPlusContext _context = context;
 
     public async Task<CategoryModel> CreateCategory(CreateCategoryRequest createCategoryRequest)
     {
         var category = new CategoryModel
         {
+            Id = Guid.NewGuid().ToString(),
             Name = createCategoryRequest.Name,
         };
-        await _categories.InsertOneAsync(category);
+        _context.Categories.Add(category);
+        await _context.SaveChangesAsync();
         return category;
     }
 
     public async Task<bool> EditCategory(string id, UpdateCategoryRequest updateCategoryRequest)
     {
-        var res = await _categories.UpdateOneAsync(
-            Builders<CategoryModel>.Filter.Eq(c => c.Id, id),
-            Builders<CategoryModel>.Update.Set(c => c.Name, updateCategoryRequest.Name)
-        );
-        return res.MatchedCount == 1;
+        var category = await _context.Categories.FindAsync(id);
+        if (category == null) return false;
+
+        category.Name = updateCategoryRequest.Name;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task DeleteCategory(string id)
     {
-        await _categories.FindOneAndDeleteAsync(
-            Builders<CategoryModel>.Filter.Eq(c => c.Id, id)
-        );
+        var category = await _context.Categories.FindAsync(id);
+        if (category != null)
+        {
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<IList<CategoryModel>> GetAllCategories()
     {
-        return await _categories.AsQueryable().ToListAsync();
+        return await _context.Categories.ToListAsync();
     }
 
     public async Task<IList<CategoryModel>> GetCategoriesByIds(IList<string> ids)
     {
-        return await _categories.AsQueryable()
+        return await _context.Categories
             .Where(c => ids.Contains(c.Id))
             .ToListAsync();
     }

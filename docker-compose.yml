@@ -1,4 +1,33 @@
 services:
+  postgres:
+    image: postgres:17.2-bookworm
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: some_secret_password
+      POSTGRES_DB: libraryplus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d libraryplus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   mongo:
     image: mongo:8.3.1-noble
     restart: always
@@ -60,7 +89,12 @@ services:
       - Storage__SecretKey=miniopass
       - Storage__ForcePathStyle=true
       - Storage__PublicBaseUrl=http://localhost:9000/library-plus
+      - ConnectionStrings__PostgreSql=Host=postgres;Database=libraryplus;Username=root;Password=some_secret_password
+      - MongoDbSettings__ConnectionString=mongodb://root:some_secret_password@mongo:27017/?authSource=admin
+      - MongoDbSettings__DatabaseName=libraryplus
     depends_on:
+      postgres:
+        condition: service_healthy
       mongo:
         condition: service_healthy
       minio:
@@ -88,6 +122,7 @@ services:
 
 volumes:
   db:
+  pg_data:
   minio_data:
   ollama_data:
     driver: local

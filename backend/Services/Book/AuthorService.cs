@@ -1,36 +1,39 @@
+using LibraryPlus.Models;
 using LibraryPlus.Models.Book;
 using LibraryPlus.Requests.Book;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryPlus.Services.Book;
 
-public class AuthorService(IMongoDatabase db)
+public class AuthorService(LibraryPlusContext context)
 {
-    private readonly IMongoCollection<AuthorModel> _authors = db.GetCollection<AuthorModel>("authors");
+    private readonly LibraryPlusContext _context = context;
 
     public async Task<AuthorModel> CreateAuthor(CreateAuthorRequest createAuthorRequest)
     {
         var author = new AuthorModel
         {
+            Id = Guid.NewGuid().ToString(),
             Name = createAuthorRequest.Name,
         };
-        await _authors.InsertOneAsync(author);
+        _context.Authors.Add(author);
+        await _context.SaveChangesAsync();
         return author;
     }
 
     public async Task<bool> EditAuthor(string id, UpdateAuthorRequest updateAuthorRequest)
     {
-        var res = await _authors.UpdateOneAsync(
-            Builders<AuthorModel>.Filter.Eq(a => a.Id, id),
-            Builders<AuthorModel>.Update.Set(a => a.Name, updateAuthorRequest.Name)
-        );
-        return res.MatchedCount == 1;
+        var author = await _context.Authors.FindAsync(id);
+        if (author == null) return false;
+
+        author.Name = updateAuthorRequest.Name;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<IList<AuthorModel>> GetAuthors(int page)
     {
-        return await _authors.AsQueryable()
+        return await _context.Authors
             .Skip(8 * (page - 1))
             .Take(8)
             .ToListAsync();
@@ -38,25 +41,28 @@ public class AuthorService(IMongoDatabase db)
 
     public async Task<IList<AuthorModel>> GetAuthorsByIds(IList<string?> ids)
     {
-        return await _authors.AsQueryable()
+        return await _context.Authors
             .Where(a => ids.Contains(a.Id))
             .ToListAsync();
     }
 
     public async Task<IList<AuthorModel>> GetAllAuthors()
     {
-        return await _authors.AsQueryable().ToListAsync();
+        return await _context.Authors.ToListAsync();
     }
 
     public async Task<AuthorModel?> GetAuthor(string id)
     {
-        return await _authors.AsQueryable().Where(a => a.Id == id).FirstOrDefaultAsync();
+        return await _context.Authors.FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task DeleteAuthor(string id)
     {
-        await _authors.FindOneAndDeleteAsync(
-            Builders<AuthorModel>.Filter.Eq(a => a.Id, id)
-        );
+        var author = await _context.Authors.FindAsync(id);
+        if (author != null)
+        {
+            _context.Authors.Remove(author);
+            await _context.SaveChangesAsync();
+        }
     }
 }
