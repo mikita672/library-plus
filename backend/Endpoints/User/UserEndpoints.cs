@@ -21,7 +21,7 @@ public static class UserEndpoints
         {
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
-            return new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrl(user.AvatarUrl), user.PhoneNumber);
+            return new MeShortResponse(user.Email, user.Name, await userService.GetAvatarUrlById(user.AvatarImageId), user.PhoneNumber);
         });
 
         group.MapGet("/user/{id}", [Authorize] async (string id, UserService userService) =>
@@ -31,7 +31,7 @@ public static class UserEndpoints
             {
                 return Results.NotFound();
             }
-            return Results.Ok(new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrl(user.AvatarUrl), user.PhoneNumber));
+            return Results.Ok(new MeShortResponse(user.Email, user.Name, await userService.GetAvatarUrlById(user.AvatarImageId), user.PhoneNumber));
         });
 
         group.MapGet("/me", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
@@ -39,7 +39,7 @@ public static class UserEndpoints
             var userId = claims.FindFirstValue("sub")!;
             var user = (await userService.GetUserById(userId))!;
             var response = MeResponse.FromModel(user);
-            return response with { AvatarUrl = userService.GetAvatarUrl(user.AvatarUrl) };
+            return response with { AvatarUrl = await userService.GetAvatarUrlById(user.AvatarImageId) };
         });
 
         group.MapPatch("/updatePhoneNumber", [Authorize] async (

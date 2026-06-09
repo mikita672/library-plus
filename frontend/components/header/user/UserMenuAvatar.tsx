@@ -12,7 +12,7 @@ function HeaderUserMenuAvatar({ avatarUrl } : Props) {
   return avatarUrl === null ?
     <UserCircleIcon className="h-8 w-8" /> :
     <div className="relative h-8 w-8 overflow-hidden rounded-full">
-      <Image src={avatarUrl} alt="User avatar" fill className="object-cover" unoptimized />
+      <Image src={avatarUrl} alt="User avatar" fill sizes="32px" className="object-cover" unoptimized />
     </div>
 }
 

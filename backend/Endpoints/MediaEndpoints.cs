@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using LibraryPlus.Filters;
+using LibraryPlus.Models;
 using LibraryPlus.Services.Book;
 using LibraryPlus.Services.Storage;
 using LibraryPlus.Services.User;
@@ -32,6 +33,7 @@ public static class MediaEndpoints
         IFormFile file,
         BookService bookService,
         IObjectStorageService storageService,
+        LibraryPlusContext context,
         CancellationToken ct)
     {
         if (file.Length == 0) return Results.BadRequest("File is empty.");
@@ -42,14 +44,24 @@ public static class MediaEndpoints
         if (book == null) return Results.NotFound("Book not found.");
 
         var extension = Path.GetExtension(file.FileName);
-        var key = $"covers/{bookId}{extension}";
+        var imageId = Guid.NewGuid().ToString();
+        var key = $"covers/{imageId}{extension}";
 
         using var stream = file.OpenReadStream();
-        var uploadedKey = await storageService.UploadAsync(key, stream, file.ContentType, ct);
+        await storageService.UploadAsync(key, stream, file.ContentType, ct);
 
-        await bookService.SetCoverURI(bookId, uploadedKey);
+        var image = new ImageModel
+        {
+            Id = imageId,
+            StorageKey = key,
+            ContentType = file.ContentType
+        };
+        context.Images.Add(image);
+        await context.SaveChangesAsync(ct);
 
-        return Results.Ok(new { coverURI = storageService.GetPublicUrl(uploadedKey) });
+        await bookService.SetCoverImageId(bookId, imageId);
+
+        return Results.Ok(new { coverURI = storageService.GetPublicUrl(key) });
     }
 
     private static async Task<IResult> UploadUserAvatar(
@@ -57,6 +69,7 @@ public static class MediaEndpoints
         IFormFile file,
         UserService userService,
         IObjectStorageService storageService,
+        LibraryPlusContext context,
         CancellationToken ct)
     {
         var userId = user.FindFirstValue("sub")!;
@@ -65,13 +78,23 @@ public static class MediaEndpoints
         if (!AllowedContentTypes.Contains(file.ContentType)) return Results.BadRequest("Invalid file type.");
 
         var extension = Path.GetExtension(file.FileName);
-        var key = $"avatars/{userId}{extension}";
+        var imageId = Guid.NewGuid().ToString();
+        var key = $"avatars/{imageId}{extension}";
 
         using var stream = file.OpenReadStream();
-        var uploadedKey = await storageService.UploadAsync(key, stream, file.ContentType, ct);
+        await storageService.UploadAsync(key, stream, file.ContentType, ct);
 
-        await userService.SetAvatarUrl(userId, uploadedKey);
+        var image = new ImageModel
+        {
+            Id = imageId,
+            StorageKey = key,
+            ContentType = file.ContentType
+        };
+        context.Images.Add(image);
+        await context.SaveChangesAsync(ct);
 
-        return Results.Ok(new { avatarUrl = storageService.GetPublicUrl(uploadedKey) });
+        await userService.SetAvatarImageId(userId, imageId);
+
+        return Results.Ok(new { avatarUrl = storageService.GetPublicUrl(key) });
     }
 }

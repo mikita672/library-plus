@@ -41,6 +41,7 @@ public class BookService(
             OriginalPublicationYear = request.OriginalPublicationYear,
             OriginalPublisherId = request.OriginalPublisherId,
             Popularity = 0,
+            CoverImageId = null,
             CreatedAt = DateTime.UtcNow
         };
         _context.Books.Add(book);
@@ -69,6 +70,13 @@ public class BookService(
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private async Task<string?> GetImageUrl(string? imageId)
+    {
+        if (string.IsNullOrEmpty(imageId)) return null;
+        var image = await _context.Images.FindAsync(imageId);
+        return _storageService.GetPublicUrl(image?.StorageKey);
     }
 
     private async Task<IQueryable<BookModel>> BuildFilterQuery(
@@ -180,7 +188,7 @@ public class BookService(
                 b.CategoryIds?.Count > 0 && catMap.TryGetValue(b.CategoryIds[0], out var c) ? c : null,
                 b.PublisherId != null && pubMap.TryGetValue(b.PublisherId, out var p) ? p : null,
                 b.PublicationYear, b.OriginalPublicationYear,
-                _storageService.GetPublicUrl(b.CoverURI),
+                await GetImageUrl(b.CoverImageId),
                 isAvailable
             ));
         }
@@ -230,16 +238,16 @@ public class BookService(
         return new BookPreviewResponse(
             book.Id, book.Title, book.Description, author, pub, book.Language,
             book.PublicationYear, book.PagesCount, cats, book.OriginalTitle, book.OriginalLanguage,
-            book.OriginalPublicationYear, origPub, _storageService.GetPublicUrl(book.CoverURI), unit != null
+            book.OriginalPublicationYear, origPub, await GetImageUrl(book.CoverImageId), unit != null
         );
     }
 
-    public async Task<bool> SetCoverURI(string bookId, string? uri)
+    public async Task<bool> SetCoverImageId(string bookId, string? imageId)
     {
         var book = await _context.Books.FindAsync(bookId);
         if (book != null)
         {
-            book.CoverURI = uri;
+            book.CoverImageId = imageId;
             await _context.SaveChangesAsync();
             return true;
         }

@@ -8,21 +8,24 @@ import { useContext } from "react";
 import Image from "next/image";
 
 interface Props {
-    book: BookCard
+    book: BookCard;
+    priority?: boolean;
 }
 
-function BookResult({ book }: Props) {
+function BookResult({ book, priority }: Props) {
     const { bookIds, addBook, removeBook } = useContext(cartContext);
 
     return (
         <div className="col-span-1 bg-background flex flex-col items-center p-2 gap-2">
-            <div className="relative w-full max-w-[235px] h-[235px]">
+            <div className="relative w-full max-w-58.75 h-58.75">
                 <Image
-                    src={book.coverURI ?? "/images/book-placeholder.png"}
+                    src={book.coverURI || "/images/book-placeholder.png"}
                     fill
+                    sizes="(max-width: 768px) 100vw, 235px"
                     unoptimized={!!book.coverURI}
                     className="object-contain"
                     alt="Book cover"
+                    priority={priority}
                 />
             </div>
 

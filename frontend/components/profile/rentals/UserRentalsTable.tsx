@@ -118,8 +118,10 @@ function buildColumns(onCancel: (id: string) => void): ColumnDef<EnrichedReserva
                 src={coverUri}
                 alt={title}
                 fill
+                sizes="48px"
                 className="object-cover"
                 unoptimized
+                priority={row.index < 5}
               />
             </div>
           ) : (

@@ -112,7 +112,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
             </div>
             {reservation.bookCoverUri && (
               <div className="mt-4 relative w-50 h-75 overflow-hidden">
-                <Image src={reservation.bookCoverUri} alt={reservation.bookTitle} fill className="object-cover" unoptimized />
+                <Image src={reservation.bookCoverUri} alt={reservation.bookTitle} fill sizes="200px" className="object-cover" unoptimized />
               </div>
             )}
           </div>

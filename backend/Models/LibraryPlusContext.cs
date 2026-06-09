@@ -18,6 +18,7 @@ public class LibraryPlusContext : DbContext
     public DbSet<ReservationModel> Reservations { get; set; } = null!;
     public DbSet<NotificationModel> Notifications { get; set; } = null!;
     public DbSet<UserNotificationModel> UserNotifications { get; set; } = null!;
+    public DbSet<ImageModel> Images { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,6 +27,10 @@ public class LibraryPlusContext : DbContext
         modelBuilder.Entity<UserModel>(entity => {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<ImageModel>(entity => {
+            entity.HasKey(e => e.Id);
         });
 
         modelBuilder.Entity<AuthorModel>(entity => {

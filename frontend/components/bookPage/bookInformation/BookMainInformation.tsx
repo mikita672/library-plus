@@ -17,11 +17,13 @@ function BookMainInformation({ book }: Props) {
       <div className="col-span-1 flex justify-center">
         <div className="relative h-125 w-full max-w-100">
           <Image
-            src={book.coverURI ?? "/images/book-placeholder.png"}
+            src={book.coverURI || "/images/book-placeholder.png"}
             fill
+            sizes="(max-width: 768px) 100vw, 400px"
             unoptimized={!!book.coverURI}
             className="shadow-md object-contain"
             alt="Book cover"
+            priority
           />
         </div>
       </div>

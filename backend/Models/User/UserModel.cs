@@ -7,7 +7,7 @@ public class UserModel
     public string PasswordHash { get; set; } = null!;
     public string? PhoneNumber { get; set; }
     public string? Name { get; set; }
-    public string? AvatarUrl { get; set; }
+    public string? AvatarImageId { get; set; }
     public DateTime JoinedAt { get; set; }
     public bool IsDeleted { get; set; }
     public bool IsAdmin { get; set; } = false;
