@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0
 WORKDIR /app
 EXPOSE 8080
 ENV DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1
+ENV DOTNET_SYSTEM_NET_DISABLEIPV6=true
 
 RUN apt-get update \
     && apt-get install -y curl \
