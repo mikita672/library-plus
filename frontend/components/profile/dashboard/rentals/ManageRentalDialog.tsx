@@ -78,12 +78,13 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     ? Math.max(0, Math.ceil((new Date().getTime() - dates.e.getTime()) / 86400000)) : 0;
 
   const overdueFine = overdueDays * 1;
-  const conditionFine = (condition === "Lost" || condition === "Destroyed") 
+  const conditionFine = Math.round(((condition === "Lost" || condition === "Destroyed") 
     ? reservation.repurchasePrice 
     : condition.toLowerCase().includes("minor") 
       ? reservation.repurchasePrice / 3 
-      : 0;
-  const totalFine = overdueFine + conditionFine;
+      : 0) * 100) / 100;
+
+  const totalFine = Math.round((overdueFine + conditionFine) * 100) / 100;
 
   const onSubmit = async (values: FormValues) => {
     setLoading(true);
@@ -170,9 +171,9 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <div className="text-right">
                 <h3 className="font-bold text-lg mb-2">Fines</h3>
                 <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Overdue: ${overdueFine}</p>
-                  <p>Condition: ${conditionFine}</p>
-                  <p className="font-semibold text-foreground">Total: ${totalFine}</p>
+                  <p>Overdue: ${overdueFine.toFixed(2)}</p>
+                  <p>Condition: ${conditionFine.toFixed(2)}</p>
+                  <p className="font-semibold text-foreground">Total: ${totalFine.toFixed(2)}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2">

@@ -93,7 +93,7 @@ function calculateFine(reservation: EnrichedReservationItem): number {
     }
   }
   
-  return fine;
+  return Math.round(fine * 100) / 100;
 }
 
 function buildColumns(onCancel: (id: string) => void): ColumnDef<EnrichedReservationItem>[] {
