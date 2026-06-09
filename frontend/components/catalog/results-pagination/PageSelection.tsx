@@ -53,9 +53,9 @@ function PageSelection({ pageNumber, pagesCount }: Props) {
                         }}>{pagesCount}</PaginationLink>
                     </PaginationItem>
                 </>}
-                <PaginationItem className={pageNumber === pagesCount ? 'opacity-30' : 'cursor-pointer'}>
+                <PaginationItem className={pageNumber >= pagesCount ? 'opacity-30' : 'cursor-pointer'}>
                     <PaginationNext onClick={() => {
-                        if (pageNumber === pagesCount) {
+                        if (pageNumber >= pagesCount) {
                             return;
                         }
                         changePage(pageNumber + 1);
