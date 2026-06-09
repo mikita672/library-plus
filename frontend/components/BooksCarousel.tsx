@@ -74,11 +74,13 @@ function BooksCarousel({ books, includeAuthor }: Props) {
               <div className="w-full bg-background p-6 flex flex-col items-center gap-4">
                 <div className="relative w-full max-w-58.75 h-58.75">
                   <Image
-                    src={book.coverURI ?? "/images/book-placeholder.png"}
+                    src={book.coverURI || "/images/book-placeholder.png"}
                     fill
+                    sizes="(max-width: 768px) 100vw, 235px"
                     unoptimized={!!book.coverURI}
                     className="object-contain"
                     alt="Book cover"
+                    priority={index < 6}
                   />
                 </div>
 

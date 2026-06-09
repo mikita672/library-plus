@@ -16,7 +16,7 @@ public record BookPreviewResponse(
     string? OriginalLanguage,
     int? OriginalPublicationYear,
     PublisherModel? OriginalPublisher,
-    string? CoverUrl,
+    string? CoverURI,
     bool IsAvailable
 );
 
@@ -29,6 +29,6 @@ public record BookCardResponse(
     string? PublisherName,
     int PublicationYear,
     int? OriginalPublicationYear,
-    string? CoverUrl,
+    string? CoverURI,
     bool IsAvailable
 );

@@ -16,6 +16,7 @@ using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
 using LibraryPlus.Endpoints.Misc;
 using Microsoft.EntityFrameworkCore;
+using LibraryPlus.Services;
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -83,11 +84,7 @@ builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<LibraryPlusContext>();
-    context.Database.EnsureCreated();
-}
+await DbInitializer.Initialize(app.Services);
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -14,7 +14,15 @@ public class UserService(LibraryPlusContext context, NotificationService notific
     private readonly IObjectStorageService _storageService = storageService;
     private const int PAGE_SIZE = 6;
 
-    public string? GetAvatarUrl(string? key) => _storageService.GetPublicUrl(key);
+    private async Task<string?> GetImageUrl(string? imageId)
+    {
+        if (string.IsNullOrEmpty(imageId)) return null;
+        var image = await _context.Images.FindAsync(imageId);
+        return _storageService.GetPublicUrl(image?.StorageKey);
+    }
+
+    public async Task<string?> GetAvatarUrlById(string? imageId) => await GetImageUrl(imageId);
+
     public async Task<UserModel?> GetUserById(string id) => await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
     public async Task<UserModel?> GetUserByEmail(string email) => await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     public async Task<bool> IsEmailTaken(string email) => await _context.Users.AnyAsync(u => u.Email == email);
@@ -27,7 +35,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
             Email = request.Email,
             Name = request.Name,
             PhoneNumber = request.PhoneNumber,
-            AvatarUrl = request.AvatarUrl,
+            AvatarImageId = null,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             JoinedAt = DateTime.UtcNow,
             IsDeleted = false,
@@ -74,12 +82,12 @@ public class UserService(LibraryPlusContext context, NotificationService notific
         }
     }
 
-    public async Task<bool> SetAvatarUrl(string id, string? url)
+    public async Task<bool> SetAvatarImageId(string id, string? imageId)
     {
         var user = await _context.Users.FindAsync(id);
         if (user != null)
         {
-            user.AvatarUrl = url;
+            user.AvatarImageId = imageId;
             await _context.SaveChangesAsync();
             return true;
         }

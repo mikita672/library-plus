@@ -17,7 +17,7 @@ public record MeResponse(
             user.Email,
             user.Name,
             user.PhoneNumber,
-            user.AvatarUrl,
+            null,
             user.JoinedAt,
             user.IsAdmin
         );

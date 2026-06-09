@@ -51,13 +51,15 @@ function CartList({ ids }: Props) {
             className="w-full bg-background grid grid-cols-6 gap-2 p-2"
         >
             <div className="h-full col-span-5 flex items-center gap-2">
-                <div className="relative w-full max-w-[64px] h-[64px]">
+                <div className="relative w-full max-w-16 h-16">
                     <Image
-                        src={book.coverURI ?? "/images/book-placeholder.png"}
+                        src={book.coverURI || "/images/book-placeholder.png"}
                         fill
+                        sizes="64px"
                         unoptimized={!!book.coverURI}
                         className="object-contain"
                         alt="Book cover"
+                        priority={index < 5}
                     />
                 </div>
 

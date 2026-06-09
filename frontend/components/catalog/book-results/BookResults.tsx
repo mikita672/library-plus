@@ -22,8 +22,8 @@ async function BookResults({ params }: Props) {
 
     return (
         <div className="w-full grid grid-cols-4 gap-x-12 gap-y-4">
-            {books.map((b) => (
-                <BookResult key={b.id} book={b} />
+            {books.map((b, index) => (
+                <BookResult key={b.id} book={b} priority={index < 8} />
             ))}
         </div>
     )
