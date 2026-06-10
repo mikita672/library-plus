@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
+import { StarRating } from "@/components/ui/star-rating";
 import { cartContext } from "@/context/cartContext";
 import { BookCard } from "@/types/book/Book"
 import Link from "next/link";
@@ -36,6 +37,14 @@ function BookResult({ book, priority }: Props) {
                 <p className="opacity-50">Publication year: {book.originalPublicationYear ?? book.publicationYear}</p>
                 {book.isAvailable ?
                     <p>Available now</p> : <p className="text-destructive">Not Available</p>}
+                <div className="flex items-center gap-1.5 mt-1">
+                    <StarRating rating={book.averageRating} size={14} />
+                    <span className="text-xs text-muted-foreground">
+                        {book.reviewCount === 0
+                            ? "0 stars 0 reviews"
+                            : `${book.averageRating.toFixed(1)} stars ${book.reviewCount} ${book.reviewCount === 1 ? "review" : "reviews"}`}
+                    </span>
+                </div>
             </div>
 
             <div className="w-full grid grid-cols-2 gap-2">

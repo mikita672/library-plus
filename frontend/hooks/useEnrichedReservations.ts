@@ -55,10 +55,14 @@ export function useEnrichedReservations({
       const bookMap = Object.fromEntries(bookIds.map((id, i) => [id, books[i]]));
 
       let userMap: Record<number, UserMeShort | null> = {};
+      let reviewedBooks: number[] = [];
+
       if (!isUserView) {
         const userIds = [...new Set(data.map((r) => r.userId))];
         const users = await Promise.all(userIds.map((id) => getUserById(id).catch(() => null)));
         userMap = Object.fromEntries(userIds.map((id, i) => [id, users[i]]));
+      } else {
+        reviewedBooks = await import("@/lib/api/books").then(m => m.getReviewedBooks()).catch(() => []);
       }
 
       const enriched: EnrichedReservationItem[] = data.map((r) => {
@@ -71,11 +75,13 @@ export function useEnrichedReservations({
           clientEmail: u?.email || "",
           clientPhone: u?.phoneNumber || (isUserView ? "" : "none"),
           clientAvatarUrl: u?.avatarUrl || "",
+          bookId: bu?.bookId || 0,
           bookTitle: b?.title || "Unknown",
           bookAuthor: b?.author?.name || "Unknown",
           bookLanguage: b?.language || "Unknown",
           bookYear: b?.publicationYear || 0,
           bookCoverUri: b?.coverURI || "",
+          hasReviewed: bu?.bookId ? reviewedBooks.includes(bu.bookId) : false,
         };
       });
 

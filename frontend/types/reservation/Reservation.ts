@@ -19,9 +19,11 @@ export interface EnrichedReservationItem extends ReservationItem {
   clientEmail: string;
   clientPhone: string;
   clientAvatarUrl?: string;
+  bookId: number;
   bookTitle: string;
   bookAuthor: string;
   bookLanguage: string;
   bookYear: number;
   bookCoverUri: string;
+  hasReviewed?: boolean;
 }

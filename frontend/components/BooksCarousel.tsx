@@ -9,6 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { StarRating } from "@/components/ui/star-rating";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { BookCard } from "@/types/book/Book";
 import Link from "next/link";
@@ -102,6 +103,14 @@ function BooksCarousel({ books, includeAuthor }: Props) {
                   ) : (
                     <p className="text-destructive">Not Available</p>
                   )}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <StarRating rating={book.averageRating} size={14} />
+                    <span className="text-xs text-muted-foreground">
+                      {book.reviewCount === 0
+                        ? "0 stars 0 reviews"
+                        : `${book.averageRating.toFixed(1)} stars ${book.reviewCount} ${book.reviewCount === 1 ? "review" : "reviews"}`}
+                    </span>
+                  </div>
                 </div>
 
                 <Link className="w-full" href={`/book/${book.id}`}>
