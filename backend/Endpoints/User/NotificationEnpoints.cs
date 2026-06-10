@@ -50,10 +50,10 @@ public static class NotificationEndpoints
         group.MapPatch("/read/{id}", [Authorize] async (
             ClaimsPrincipal claims,
             NotificationService notificationService,
-            string id
+            int id
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             if (!await notificationService.MarkNotificationAsRead(userId, id))
             {
                 return Results.NotFound();

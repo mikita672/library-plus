@@ -71,7 +71,7 @@ export async function getBooksPages(
   return res.json() as Promise<number>;
 }
 
-export async function getBookById(id: string): Promise<BookPreview> {
+export async function getBookById(id: number): Promise<BookPreview> {
   const res = await fetch(`/api/books/book/${id}`, { method: "GET", cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Failed to fetch book (${res.status})`);
@@ -80,7 +80,7 @@ export async function getBookById(id: string): Promise<BookPreview> {
 }
 
 export async function updateBook(
-  id: string,
+  id: number,
   body: UpdateBookRequest,
 ): Promise<void> {
   const res = await fetch(`/api/books/book/${id}`, {
@@ -96,7 +96,7 @@ export async function updateBook(
   }
 }
 
-export async function deleteBook(id: string): Promise<void> {
+export async function deleteBook(id: number): Promise<void> {
   const res = await fetch(`/api/books/book/${id}`, {
     method: "DELETE",
     credentials: "include",
@@ -108,7 +108,7 @@ export async function deleteBook(id: string): Promise<void> {
   }
 }
 
-export async function getBookUnitById(id: string): Promise<BookUnit | null> {
+export async function getBookUnitById(id: number): Promise<BookUnit | null> {
   const res = await fetch(`/api/books/bookUnit/${id}`, {
     method: "GET",
     cache: "force-cache",
@@ -117,7 +117,7 @@ export async function getBookUnitById(id: string): Promise<BookUnit | null> {
   return res.json() as Promise<BookUnit>;
 }
 
-export async function addBookUnit(bookId: string): Promise<void> {
+export async function addBookUnit(bookId: number): Promise<void> {
   const body: AddBookUnitRequest = { bookId };
   const res = await fetch(`/api/books/bookUnit`, {
     method: "POST",
@@ -132,7 +132,7 @@ export async function addBookUnit(bookId: string): Promise<void> {
   }
 }
 
-export async function deleteBookUnit(unitId: string): Promise<void> {
+export async function deleteBookUnit(unitId: number): Promise<void> {
   const res = await fetch(`/api/books/bookUnit/${unitId}`, {
     method: "DELETE",
     credentials: "include",
@@ -161,14 +161,14 @@ export async function createBook(body: CreateBookRequest): Promise<Book> {
 }
 
 export async function addBookUnits(
-  bookId: string,
+  bookId: number,
   count: number,
 ): Promise<void> {
   const requests = Array.from({ length: count }, () => addBookUnit(bookId));
   await Promise.all(requests);
 }
 
-export async function getBookUnitsForBook(bookId: string): Promise<BookUnit[]> {
+export async function getBookUnitsForBook(bookId: number): Promise<BookUnit[]> {
   const res = await fetch(`/api/books/book/${bookId}/units`, {
     method: "GET",
     cache: "no-store",
@@ -177,7 +177,7 @@ export async function getBookUnitsForBook(bookId: string): Promise<BookUnit[]> {
   return res.json() as Promise<BookUnit[]>;
 }
 
-export async function archiveBookUnit(unitId: string): Promise<boolean> {
+export async function archiveBookUnit(unitId: number): Promise<boolean> {
   const res = await fetch(`/api/books/bookUnit/${unitId}/archive`, {
     method: "PATCH",
     credentials: "include",
@@ -185,7 +185,7 @@ export async function archiveBookUnit(unitId: string): Promise<boolean> {
   return res.ok;
 }
 
-export async function unarchiveBookUnit(unitId: string): Promise<boolean> {
+export async function unarchiveBookUnit(unitId: number): Promise<boolean> {
   const res = await fetch(`/api/books/bookUnit/${unitId}/unarchive`, {
     method: "PATCH",
     credentials: "include",

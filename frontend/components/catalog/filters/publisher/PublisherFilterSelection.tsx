@@ -21,20 +21,20 @@ function PublisherFilterSelection({ publishers }: Props) {
     const displayedPublishers = isExtended ? publishers : publishers.slice(0, 4);
 
     const handleChange = (id: string) => {
-        setPublisherId(id);
+        setPublisherId(id.toString());
 
         const params = new URLSearchParams(searchParams);
-        if (id.length === 0) {
+        if (id.toString().length === 0) {
             params.delete("publisherId");
         } else {
-            params.set("publisherId", id);
+            params.set("publisherId", id.toString());
         }
         router.replace(`${pathname}?${params.toString()}`);
     }
 
     return (
         <div className="flex flex-col gap-2">
-            <RadioGroup value={publisherId} onValueChange={handleChange}>
+            <RadioGroup value={publisherId?.toString()} onValueChange={handleChange}>
                 <Field orientation="horizontal">
                     <RadioGroupItem value="" id="publisher-none" />
                     <FieldContent>
@@ -44,7 +44,7 @@ function PublisherFilterSelection({ publishers }: Props) {
 
                 {displayedPublishers.map((a) => (
                     <Field key={a.id} orientation="horizontal">
-                        <RadioGroupItem value={a.id} id={`publisher-${a.id}`} />
+                        <RadioGroupItem value={a.id.toString()} id={`publisher-${a.id}`} />
                         <FieldContent>
                             <FieldLabel htmlFor={`publisher-${a.id}`}>{a.name}</FieldLabel>
                         </FieldContent>

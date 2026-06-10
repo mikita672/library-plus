@@ -11,7 +11,7 @@ using LibraryPlus.Endpoints.Book;
 using LibraryPlus.Endpoints.Reservation;
 using LibraryPlus.Services.Reservation;
 using LibraryPlus.Services.Mail;
-using LibraryPlus.Services.Storage;
+
 using LibraryPlus.Services.Statistics;
 using LibraryPlus.Models;
 using LibraryPlus.Endpoints.Misc;
@@ -77,8 +77,6 @@ builder.Services.AddScoped<ReservationService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddSingleton<IMailService>(mailService);
 
-builder.Services.Configure<StorageOptions>(config.GetSection(StorageOptions.Storage));
-builder.Services.AddSingleton<IObjectStorageService, MinioObjectStorageService>();
 
 builder.Services.AddJwtAuthentication(config);
 

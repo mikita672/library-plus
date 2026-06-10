@@ -5,7 +5,7 @@ import BookEntry from "@/components/checkout/BookEntry";
 import { Button } from "@/components/ui/button";
 import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
-import { addDays, endOfDay, format, setDate } from "date-fns";
+import { addDays, format } from "date-fns";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
@@ -39,20 +39,21 @@ function CheckoutPage() {
             }
             const booksData: BookCard[] = await response.json();
 
-            const newDateRanges: Record<string, DateRange | undefined> = {};
-            for (const book of booksData) {
-                if (book.id in dateRanges) {
-                    newDateRanges[book.id] = dateRanges[book.id];
-                } else {
-                    newDateRanges[book.id] = {
-                        from: new Date(),
-                        to: addDays(new Date(), 21),
-                    };
-                }
-            }
-
             setBooks(booksData);
-            setDateRanges(newDateRanges);
+            setDateRanges(prevRanges => {
+                const newDateRanges: Record<string, DateRange | undefined> = {};
+                for (const book of booksData) {
+                    if (book.id in prevRanges) {
+                        newDateRanges[book.id] = prevRanges[book.id];
+                    } else {
+                        newDateRanges[book.id] = {
+                            from: new Date(),
+                            to: addDays(new Date(), 21),
+                        };
+                    }
+                }
+                return newDateRanges;
+            });
         })().then(() => {
             setIsLoading(false);
         });
@@ -68,25 +69,62 @@ function CheckoutPage() {
         );
     }
 
-    const changeDateRange = (id: string, newRange: DateRange | undefined) => {
+    const changeDateRange = (id: number, newRange: DateRange | undefined) => {
+        if (!newRange) {
+            const newDateRanges = { ...dateRanges };
+            newDateRanges[id] = undefined;
+            setDateRanges(newDateRanges);
+            return;
+        }
+
+        const oldRange = dateRanges[id];
+        const range = { ...newRange };
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        if (newRange?.from !== undefined && newRange.from < today) {
-            newRange.from = today;
+
+        if (range.from && range.from < today) {
+            range.from = today;
         }
-        if (newRange?.from !== undefined && newRange?.to !== undefined) {
-            const THRITY_DAYS = 30 * 24 * 60 * 60 * 1000;
-            const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-            if (newRange.to.getTime() - newRange.from.getTime() > THRITY_DAYS) {
-                newRange.to = new Date(newRange.from.getTime() + THRITY_DAYS);
-            } else if (newRange.to.getTime() - newRange.from.getTime() < SEVEN_DAYS) {
-                newRange.to = new Date(newRange.from.getTime() + SEVEN_DAYS);
-            } else if (newRange.to < newRange.from) {
-                newRange.to = new Date(newRange.from);
+        if (range.to && range.to < today) {
+            range.to = today;
+        }
+
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        const FOURTEEN_DAYS = 14 * 24 * 60 * 60 * 1000;
+
+        if (range.from && range.to) {
+            const fromChanged = oldRange?.from?.getTime() !== range.from.getTime();
+            const toChanged = oldRange?.to?.getTime() !== range.to.getTime();
+            const diff = range.to.getTime() - range.from.getTime();
+
+            if (fromChanged) {
+                if (diff < FOURTEEN_DAYS) {
+                    range.to = new Date(range.from.getTime() + FOURTEEN_DAYS);
+                } else if (diff > THIRTY_DAYS) {
+                    range.to = new Date(range.from.getTime() + THIRTY_DAYS);
+                }
+            } else if (toChanged) {
+                if (diff < FOURTEEN_DAYS) {
+                    range.from = new Date(range.to.getTime() - FOURTEEN_DAYS);
+                    if (range.from < today) {
+                        range.from = today;
+                        range.to = new Date(range.from.getTime() + FOURTEEN_DAYS);
+                    }
+                } else if (diff > THIRTY_DAYS) {
+                    range.from = new Date(range.to.getTime() - THIRTY_DAYS);
+                    if (range.from < today) {
+                        range.from = today;
+                        range.to = new Date(range.from.getTime() + THIRTY_DAYS);
+                    }
+                }
+            } else {
+                if (diff < FOURTEEN_DAYS) range.to = new Date(range.from.getTime() + FOURTEEN_DAYS);
+                else if (diff > THIRTY_DAYS) range.to = new Date(range.from.getTime() + THIRTY_DAYS);
             }
         }
+
         const newDateRanges = { ...dateRanges };
-        newDateRanges[id] = newRange;
+        newDateRanges[id] = range;
         setDateRanges(newDateRanges);
     }
 
@@ -118,13 +156,13 @@ function CheckoutPage() {
             const bookId = booksThatCanBeReserved[i].id;
             i++;
             if (response.status === 'rejected') {
-                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: Network error`);
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i - 1].title}: Network error`);
                 continue;
             }
             if (!response.value.ok) {
                 const text = await response.value.text().catch(() => "");
                 const errorMsg = text.replace(/^"|"$/g, '') || "Unknown error";
-                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: ${errorMsg}`);
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i - 1].title}: ${errorMsg}`);
                 continue;
             }
             reservedBooksIds.push(bookId);

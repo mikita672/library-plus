@@ -21,7 +21,7 @@ public static class ReservationEndpoints
             [FromBody] CreateReservationRequest createReservationRequest
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var (reservation, error) = await reservationService.CreateReservation(userId, createReservationRequest);
             if (reservation == null)
             {
@@ -38,7 +38,7 @@ public static class ReservationEndpoints
             [FromQuery] string? searchToken
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             return await reservationService.GetUserReservations(userId, pageNumber, status, searchToken);
         });
 
@@ -49,17 +49,17 @@ public static class ReservationEndpoints
             [FromQuery] string? searchToken
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             return await reservationService.GetUserReservationsPageCount(userId, status, searchToken);
         });
 
         group.MapPatch("/reservation/{id}/cancel", [Authorize] async (
             ReservationService reservationService,
             ClaimsPrincipal claims,
-            string id
+            int id
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var result = await reservationService.CancelReservationByUser(id, userId);
             if (!result) return Results.BadRequest("Cannot cancel this reservation.");
             return Results.Ok();
@@ -67,7 +67,7 @@ public static class ReservationEndpoints
 
     group.MapPatch("/reservation/{id}/take", [Authorize] async (
         ReservationService reservationService,
-        string id
+        int id
     ) =>
     {
             await reservationService.HandleTaken(id);
@@ -76,7 +76,7 @@ public static class ReservationEndpoints
         group.MapPatch("/reservation/{id}/return", [Authorize] async (
             ReservationService reservationService,
             HandleReturnRequest handleReturnRequest,
-            string id
+            int id
         ) =>
         {
             await reservationService.HandleReturned(id, handleReturnRequest);
@@ -85,7 +85,7 @@ public static class ReservationEndpoints
         group.MapPatch("/reservation/{id}/status", [Authorize] async (
             ReservationService reservationService,
             UpdateStatusRequest updateStatusRequest,
-            string id
+            int id
         ) =>
         {
             await reservationService.UpdateStatus(id, updateStatusRequest.Status);
@@ -101,9 +101,9 @@ public static class ReservationEndpoints
             return await reservationService.GetAllReservations(pageNumber, status, searchToken);
         }).AddEndpointFilter<AdminUserFilter>();
 
-        group.MapGet("/byUnit/{unitId}", [Authorize] async (
+        group.MapGet("/byUnit/{unitId:int}", [Authorize] async (
             ReservationService reservationService,
-            string unitId
+            int unitId
         ) =>
         {
             return await reservationService.GetReservationsByBookUnit(unitId);

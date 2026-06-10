@@ -75,16 +75,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-const STATUSES = [
-  "Reserved",
-  "Taken",
-  "Returned",
-  "Overdue",
-];
+
 
 function buildColumns(
   onManageClick: (r: EnrichedReservationItem) => void,
-  onStatusChange: (id: string, newStatus: string) => void,
+  onStatusChange: (id: number, newStatus: string) => void,
 ): ColumnDef<EnrichedReservationItem>[] {
   return [
     {
@@ -199,7 +194,7 @@ export default function RentalsTable({
     useState<EnrichedReservationItem | null>(null);
 
   const handleStatusChange = useCallback(
-    async (id: string, newStatus: string) => {
+    async (id: number, newStatus: string) => {
       try {
         const success = await updateReservationStatus(id, newStatus);
         if (success) {

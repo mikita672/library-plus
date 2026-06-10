@@ -26,7 +26,8 @@ export default function UserNotifications() {
   }, [page]);
 
   useEffect(() => {
-    void fetchData();
+    const t = setTimeout(() => void fetchData(), 0);
+    return () => clearTimeout(t);
   }, [fetchData]);
 
   const handleClick = async (n: Notification) => {

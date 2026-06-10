@@ -23,7 +23,7 @@ export async function createCategory(name: string): Promise<Category | null> {
 }
 
 export async function updateCategory(
-  id: string,
+  id: number,
   name: string,
 ): Promise<void> {
   const res = await fetch(`/api/categories/category/${id}`, {
@@ -39,7 +39,7 @@ export async function updateCategory(
   }
 }
 
-export async function deleteCategory(id: string): Promise<void> {
+export async function deleteCategory(id: number): Promise<void> {
   const res = await fetch(`/api/categories/category/${id}`, {
     method: "DELETE",
     credentials: "include",

@@ -1,4 +1,4 @@
 export interface Publisher {
-    id: string;
+    id: number;
     name: string;
 }

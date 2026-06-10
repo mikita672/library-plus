@@ -8,7 +8,7 @@ public record UserNotificationCountResponse(
 );
 
 public record UserNotificationResponse(
-    string Id,
+    int Id,
     string Subject,
     string Text,
     bool IsRead,

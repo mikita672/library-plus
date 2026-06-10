@@ -14,7 +14,6 @@ public class NotificationService(LibraryPlusContext context)
     {
         var notification = new NotificationModel
         {
-            Id = Guid.NewGuid().ToString(),
             Subject = subject,
             Text = text,
         };
@@ -23,7 +22,7 @@ public class NotificationService(LibraryPlusContext context)
         return notification;
     }
 
-    public async Task SendAdminNotification(string userId, string message)
+    public async Task SendAdminNotification(int userId, string message)
     {
         var admin = await _context.Users
             .Where(u => u.IsAdmin)
@@ -36,7 +35,6 @@ public class NotificationService(LibraryPlusContext context)
         var notification = await CreateNotification($"Contact request (from: {user.Email})", message);
         _context.UserNotifications.Add(new UserNotificationModel
         {
-            Id = Guid.NewGuid().ToString(),
             UserId = admin.Id,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
@@ -44,12 +42,11 @@ public class NotificationService(LibraryPlusContext context)
         await _context.SaveChangesAsync();
     }
 
-    public async Task SendOneUserNotification(string userId, NotificationRequest notificationBody)
+    public async Task SendOneUserNotification(int userId, NotificationRequest notificationBody)
     {
         var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
         _context.UserNotifications.Add(new UserNotificationModel
         {
-            Id = Guid.NewGuid().ToString(),
             UserId = userId,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
@@ -57,12 +54,11 @@ public class NotificationService(LibraryPlusContext context)
         await _context.SaveChangesAsync();
     }
 
-    public async Task SendAllUsersNotification(IEnumerable<string> userIds, NotificationRequest notificationBody)
+    public async Task SendAllUsersNotification(IEnumerable<int> userIds, NotificationRequest notificationBody)
     {
         var notification = await CreateNotification(notificationBody.Subject, notificationBody.Text);
         var userNotifications = userIds.Select(id => new UserNotificationModel
         {
-            Id = Guid.NewGuid().ToString(),
             UserId = id,
             NotificationId = notification.Id,
             CreatedAt = DateTime.UtcNow,
@@ -71,7 +67,7 @@ public class NotificationService(LibraryPlusContext context)
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IList<UserNotificationResponse>> GetUserNotifications(string userId, int page)
+    public async Task<IList<UserNotificationResponse>> GetUserNotifications(int userId, int page)
     {
         return await (from un in _context.UserNotifications
                       where un.UserId == userId
@@ -89,7 +85,7 @@ public class NotificationService(LibraryPlusContext context)
             .ToListAsync();
     }
 
-    public async Task<UserNotificationCountResponse> GetUserNotificationsCount(string userId)
+    public async Task<UserNotificationCountResponse> GetUserNotificationsCount(int userId)
     {
         var totalCount = await _context.UserNotifications
             .Where(un => un.UserId == userId)
@@ -103,7 +99,7 @@ public class NotificationService(LibraryPlusContext context)
         );
     }
 
-    public async Task<bool> MarkNotificationAsRead(string userId, string id)
+    public async Task<bool> MarkNotificationAsRead(int userId, int id)
     {
         var un = await _context.UserNotifications.FirstOrDefaultAsync(u => u.Id == id && u.UserId == userId);
         if (un != null)

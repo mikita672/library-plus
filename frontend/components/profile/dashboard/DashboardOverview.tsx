@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import ReservationsChart from "./rentals/ReservationsChart";
 
 interface StatCardProps {
   title: string;
@@ -125,6 +126,8 @@ export default function DashboardOverview() {
           ))}
         </div>
       )}
+
+      <ReservationsChart />
     </div>
   );
 }

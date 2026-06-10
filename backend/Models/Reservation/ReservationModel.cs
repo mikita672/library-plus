@@ -2,9 +2,9 @@ namespace LibraryPlus.Models.Reservation;
 
 public class ReservationModel
 {
-    public string Id { get; set; } = null!;
-    public string BookUnitId { get; set; } = null!;
-    public string UserId { get; set; } = null!;
+    public int Id { get; set; }
+    public int BookUnitId { get; set; }
+    public int UserId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public DateTime? ReturnedDate { get; set; }

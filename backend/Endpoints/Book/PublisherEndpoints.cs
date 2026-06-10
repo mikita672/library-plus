@@ -31,7 +31,7 @@ public static class PublisherEndpoints
         group.MapPut("/publisher/{id}", [Authorize] async (
             PublisherService publisherService,
             [FromBody] UpdatePublisherRequest updatePublisherRequest,
-            string id
+            int id
         ) =>
         {
             if (!await publisherService.EditPublisher(id, updatePublisherRequest))
@@ -45,7 +45,7 @@ public static class PublisherEndpoints
 
         group.MapDelete("/publisher/{id}", [Authorize] async (
             PublisherService publisherService,
-            string id
+            int id
         ) =>
         {
             await publisherService.DeletePublisher(id);

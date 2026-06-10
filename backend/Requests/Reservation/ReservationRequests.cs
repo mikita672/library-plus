@@ -1,7 +1,7 @@
 namespace LibraryPlus.Requests.Reservation;
 
 public record CreateReservationRequest(
-    string BookId,
+    int BookId,
     DateTime StartDate,
     DateTime EndDate
 );

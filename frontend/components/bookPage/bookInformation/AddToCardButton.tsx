@@ -8,7 +8,7 @@ import { useContext } from 'react';
 import { cartContext } from '@/context/cartContext';
 
 interface Props {
-    id: string,
+    id: number,
     isAvailable: boolean;
 }
 

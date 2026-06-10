@@ -2,9 +2,9 @@ namespace LibraryPlus.Models.User;
 
 public class UserNotificationModel
 {
-    public string Id { get; set; } = null!;
-    public string UserId { get; set; } = null!;
-    public string NotificationId { get; set; } = null!;
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int NotificationId { get; set; }
     public bool IsRead { get; set; } = false;
     public DateTime CreatedAt { get; set; }
 }

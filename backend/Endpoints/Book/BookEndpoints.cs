@@ -15,9 +15,9 @@ public static class BookEndpoints
 
         group.MapGet("/", async (
             [FromQuery] string? searchToken,
-            [FromQuery] string? authorId,
-            [FromQuery] string? publisherId,
-            [FromQuery] string[]? categoryIds,
+            [FromQuery] int? authorId,
+            [FromQuery] int? publisherId,
+            [FromQuery] int[]? categoryIds,
             [FromQuery] int? minPublicationYear,
             [FromQuery] int? maxPublicationYear,
             [FromQuery] bool? isAvailable,
@@ -43,7 +43,7 @@ public static class BookEndpoints
 
 
         group.MapPost("/multiple", async (
-            [FromBody] string[] ids,
+            [FromBody] int[] ids,
             BookService bookService
         ) =>
         {
@@ -52,9 +52,9 @@ public static class BookEndpoints
 
         group.MapGet("/pages", async (
             [FromQuery] string? searchToken,
-            [FromQuery] string? authorId,
-            [FromQuery] string? publisherId,
-            [FromQuery] string[]? categoryIds,
+            [FromQuery] int? authorId,
+            [FromQuery] int? publisherId,
+            [FromQuery] int[]? categoryIds,
             [FromQuery] int? minPublicationYear,
             [FromQuery] int? maxPublicationYear,
             [FromQuery] bool? isAvailable,
@@ -74,7 +74,7 @@ public static class BookEndpoints
 
         group.MapGet("/book/{id}/checkAvailable", async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             return await bookService.GetAvailableBookUnitForBook(id) != null;
@@ -82,7 +82,7 @@ public static class BookEndpoints
 
         group.MapGet("/book/{id}", async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             return await bookService.GetBookPreviewById(id);
@@ -90,7 +90,7 @@ public static class BookEndpoints
 
         group.MapGet("/book/{id}/units", async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             return await bookService.GetBookUnitsForBook(id);
@@ -109,7 +109,7 @@ public static class BookEndpoints
         group.MapPut("/book/{id}", [Authorize] async (
             BookService bookService,
             [FromBody] UpdateBookRequest updateBookRequest,
-            string id
+            int id
         ) =>
         {
             if (!await bookService.EditBook(id, updateBookRequest))
@@ -123,7 +123,7 @@ public static class BookEndpoints
 
         group.MapDelete("/book/{id}", [Authorize] async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             await bookService.DeleteBook(id);
@@ -143,7 +143,7 @@ public static class BookEndpoints
 
         group.MapGet("/bookUnit/{id}", [Authorize] async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             var bookUnit = await bookService.GetBookUnitById(id);
@@ -156,7 +156,7 @@ public static class BookEndpoints
 
         group.MapDelete("/bookUnit/{id}", [Authorize] async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             await bookService.DeleteBookUnit(id);
@@ -166,8 +166,8 @@ public static class BookEndpoints
 
         group.MapGet("/booksByAuthor/{authorId}", async (
             BookService bookService,
-            [FromQuery] string? excludedBookId,
-            string authorId
+            [FromQuery] int? excludedBookId,
+            int authorId
         ) =>
         {
             return await bookService.GetBooksByAuthor(authorId, excludedBookId);
@@ -182,7 +182,7 @@ public static class BookEndpoints
 
         group.MapPatch("/bookUnit/{id}/archive", [Authorize] async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             if (!await bookService.ArchiveBookUnit(id))
@@ -196,7 +196,7 @@ public static class BookEndpoints
 
         group.MapPatch("/bookUnit/{id}/unarchive", [Authorize] async (
             BookService bookService,
-            string id
+            int id
         ) =>
         {
             if (!await bookService.UnarchiveBookUnit(id))

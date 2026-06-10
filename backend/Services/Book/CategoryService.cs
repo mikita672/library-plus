@@ -13,7 +13,6 @@ public class CategoryService(LibraryPlusContext context)
     {
         var category = new CategoryModel
         {
-            Id = Guid.NewGuid().ToString(),
             Name = createCategoryRequest.Name,
         };
         _context.Categories.Add(category);
@@ -21,7 +20,7 @@ public class CategoryService(LibraryPlusContext context)
         return category;
     }
 
-    public async Task<bool> EditCategory(string id, UpdateCategoryRequest updateCategoryRequest)
+    public async Task<bool> EditCategory(int id, UpdateCategoryRequest updateCategoryRequest)
     {
         var category = await _context.Categories.FindAsync(id);
         if (category == null) return false;
@@ -31,7 +30,7 @@ public class CategoryService(LibraryPlusContext context)
         return true;
     }
 
-    public async Task DeleteCategory(string id)
+    public async Task DeleteCategory(int id)
     {
         var category = await _context.Categories.FindAsync(id);
         if (category != null)
@@ -46,7 +45,7 @@ public class CategoryService(LibraryPlusContext context)
         return await _context.Categories.ToListAsync();
     }
 
-    public async Task<IList<CategoryModel>> GetCategoriesByIds(IList<string> ids)
+    public async Task<IList<CategoryModel>> GetCategoriesByIds(IList<int> ids)
     {
         return await _context.Categories
             .Where(c => ids.Contains(c.Id))

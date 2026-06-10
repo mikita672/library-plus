@@ -38,7 +38,10 @@ export default function RentalsTab() {
     debouncedSearch,
   });
 
-  useEffect(() => { setPageNumber(1); }, [debouncedSearch, statusFilter]);
+  useEffect(() => {
+    const t = setTimeout(() => setPageNumber(1), 0);
+    return () => clearTimeout(t);
+  }, [debouncedSearch, statusFilter]);
 
   const handleClearFilters = () => {
     setStatusFilter("all");

@@ -60,9 +60,9 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
       try {
         const [details, a, p, c] = await Promise.all([getBookById(book.id), getAuthors(), getPublishers(), getCategories()]);
         setTitle(details.title);
-        setAuthorId(details.author?.id || "none");
-        setPublisherId(details.publisher?.id || "none");
-        setCategoryId(details.categories?.[0]?.id || "none");
+        setAuthorId(details.author?.id?.toString() || "");
+        setPublisherId(details.publisher?.id?.toString() || "");
+        setCategoryId(details.categories?.[0]?.id?.toString() || "");
         setYear(String(details.publicationYear));
         setLookups({ authors: a, publishers: p, categories: c });
       } finally { setLoading(false); }
@@ -75,9 +75,9 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
     try {
       const body: UpdateBookRequest = {
         title, publicationYear: Number(year),
-        authorId: authorId === "none" ? null : authorId,
-        publisherId: publisherId === "none" ? null : publisherId,
-        categoryIds: categoryId === "none" ? [] : [categoryId],
+        authorId: !authorId ? null : Number(authorId),
+        publisherId: !publisherId ? null : Number(publisherId),
+        categoryIds: !categoryId ? [] : [Number(categoryId)],
         description: book.title, language: "English", pagesCount: 100, repurchasePrice: 10,
       };
       await updateBook(book.id, body);
@@ -105,9 +105,9 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
         {loading ? <div className="py-10 text-center">Loading...</div> : (
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Title</Label><Input className="col-span-3" value={title} onChange={e => setTitle(e.target.value)} /></div>
-            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Author</Label><Select value={authorId} onValueChange={setAuthorId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div>
-            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Publisher</Label><Select value={publisherId} onValueChange={setPublisherId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
-            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Category</Label><Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Author</Label><Select value={authorId} onValueChange={setAuthorId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Publisher</Label><Select value={publisherId} onValueChange={setPublisherId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Category</Label><Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent></Select></div>
             <ImageUpload id="edit-cover" label="Cover" onFileSelect={setFile} initialPreviewUrl={book.coverURI} aspectRatio="cover" className="grid grid-cols-4 items-start gap-4" labelClassName="text-right pt-2" contentClassName="col-span-3" />
             <Separator className="my-2" />
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Stock</Label><div className="col-span-3 flex items-center gap-2"><Input type="number" value={copies} onChange={e => setCopies(Number(e.target.value))} className="w-20" /><Button variant="outline" size="sm" onClick={handleAddUnits} className="gap-2"><PlusIcon /> Add Copies</Button></div></div>

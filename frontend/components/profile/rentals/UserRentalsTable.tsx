@@ -96,7 +96,7 @@ function calculateFine(reservation: EnrichedReservationItem): number {
   return Math.round(fine * 100) / 100;
 }
 
-function buildColumns(onCancel: (id: string) => void): ColumnDef<EnrichedReservationItem>[] {
+function buildColumns(onCancel: (id: number) => void): ColumnDef<EnrichedReservationItem>[] {
   return [
   {
     accessorKey: "bookTitle",
@@ -210,7 +210,7 @@ export default function UserRentalsTable({
   reservations: EnrichedReservationItem[];
   onRefresh: () => void;
 }) {
-  const handleCancel = useCallback(async (id: string) => {
+  const handleCancel = useCallback(async (id: number) => {
     try {
       const success = await cancelReservation(id);
       if (success) {

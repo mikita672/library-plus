@@ -90,9 +90,9 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
     setSubmitting(true);
     const payload = {
       ...values,
-      categoryIds: values.categoryId && values.categoryId !== "none" ? [values.categoryId] : [],
-      authorId: values.authorId?.trim() || null,
-      publisherId: values.publisherId?.trim() || null,
+      categoryIds: values.categoryId && values.categoryId !== "none" ? [Number(values.categoryId)] : [],
+      authorId: values.authorId?.trim() && values.authorId !== "none" ? Number(values.authorId) : null,
+      publisherId: values.publisherId?.trim() && values.publisherId !== "none" ? Number(values.publisherId) : null,
       originalTitle: values.originalTitle?.trim() || null,
       originalLanguage: values.originalLanguage?.trim() || null,
       originalPublicationYear: values.originalPublicationYear || null,
@@ -125,13 +125,13 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
           <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Field data-invalid={!!form.formState.errors.title}><FieldLabel>Title</FieldLabel><Input {...form.register("title")} /><FieldError>{form.formState.errors.title?.message}</FieldError></Field>
             <Field><FieldLabel>Author</FieldLabel><Controller name="authorId" control={form.control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Author" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select>
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Author" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}</SelectContent></Select>
             )} /></Field>
             <Field><FieldLabel>Publisher</FieldLabel><Controller name="publisherId" control={form.control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Publisher" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select>
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Publisher" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}</SelectContent></Select>
             )} /></Field>
             <Field><FieldLabel>Category</FieldLabel><Controller name="categoryId" control={form.control} render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+              <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent></Select>
             )} /></Field>
             <Field><FieldLabel>Language</FieldLabel><Input {...form.register("language")} /></Field>
             <Field><FieldLabel>Publication Year</FieldLabel><Input type="number" {...form.register("publicationYear", { valueAsNumber: true })} /></Field>

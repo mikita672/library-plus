@@ -65,7 +65,7 @@ public class AuthService(
         return newPassword;
     }
 
-    public async Task<bool> ChangePassword(string userId, string oldPassword, string newPassword)
+    public async Task<bool> ChangePassword(int userId, string oldPassword, string newPassword)
     {
         var user = await _userService.GetUserById(userId);
         if (user == null)

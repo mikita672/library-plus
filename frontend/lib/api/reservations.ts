@@ -1,4 +1,4 @@
-import { EnrichedReservationItem, ReservationItem } from "@/types/reservation/Reservation";
+import { ReservationItem } from "@/types/reservation/Reservation";
 
 export interface GetReservationsParams {
   pageNumber: number;
@@ -74,7 +74,7 @@ export interface ReturnReservationPayload {
 }
 
 export async function returnReservation(
-  id: string,
+  id: number,
   payload: ReturnReservationPayload,
 ): Promise<boolean> {
   const res = await fetch(`/api/reservations/reservation/${id}/return`, {
@@ -86,7 +86,7 @@ export async function returnReservation(
 }
 
 export async function updateReservationStatus(
-  id: string,
+  id: number,
   status: string,
 ): Promise<boolean> {
   const res = await fetch(`/api/reservations/reservation/${id}/status`, {
@@ -98,7 +98,7 @@ export async function updateReservationStatus(
 }
 
 export async function cancelReservation(
-  id: string,
+  id: number,
 ): Promise<boolean> {
   const res = await fetch(`/api/reservations/reservation/${id}/cancel`, {
     method: "PATCH",
@@ -106,7 +106,7 @@ export async function cancelReservation(
   return res.ok;
 }
 
-export async function getReservationsByUnit(unitId: string): Promise<ReservationItem[]> {
+export async function getReservationsByUnit(unitId: number): Promise<ReservationItem[]> {
   const res = await fetch(`/api/reservations/byUnit/${unitId}`, {
     method: "GET",
     cache: "no-store",

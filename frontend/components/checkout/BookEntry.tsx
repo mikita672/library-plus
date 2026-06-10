@@ -23,6 +23,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
     return (
         <div className="w-full grid grid-cols-5 items-center gap-12 bg-background p-4">
             <div className="col-span-3 flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={book.coverURI ?? "/images/book-placeholder.png"}
                     className="w-full max-w-[100px] h-[100px] object-contain"
@@ -61,6 +62,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
                                     defaultMonth={dateRange?.from}
                                     selected={dateRange?.from}
                                     onSelect={(date) => changeDateRange({ from: date, to: dateRange?.to })}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                 />
                             </PopoverContent>
                         </Popover>
@@ -84,6 +86,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
                                     defaultMonth={dateRange?.to ?? dateRange?.from}
                                     selected={dateRange?.to}
                                     onSelect={(date) => changeDateRange({ from: dateRange?.from, to: date })}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                 />
                             </PopoverContent>
                         </Popover>

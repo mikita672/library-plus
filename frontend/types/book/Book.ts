@@ -3,20 +3,20 @@ import { Category } from "./Category";
 import { Publisher } from "./Publisher";
 
 export interface Book {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  authorId?: string | null;
-  publisherId?: string | null;
+  authorId?: number | null;
+  publisherId?: number | null;
   language: string;
   publicationYear: number;
   pagesCount: number;
-  categoryIds: string[];
+  categoryIds: number[];
   repurchasePrice: number;
   originalTitle?: string | null;
   originalLanguage?: string | null;
   originalPublicationYear?: number | null;
-  originalPublisherId?: string | null;
+  originalPublisherId?: number | null;
   coverURI?: string | null;
 }
 
@@ -27,17 +27,17 @@ export interface UpdateBookRequest {
   publicationYear?: number;
   pagesCount?: number;
   repurchasePrice?: number;
-  categoryIds?: string[] | null;
-  authorId?: string | null;
-  publisherId?: string | null;
+  categoryIds?: number[] | null;
+  authorId?: number | null;
+  publisherId?: number | null;
   originalTitle?: string | null;
   originalLanguage?: string | null;
   originalPublicationYear?: number | null;
-  originalPublisherId?: string | null;
+  originalPublisherId?: number | null;
 }
 
 export interface BookPreview {
-  id: string;
+  id: number;
   title: string;
   description: string;
   author?: Author;
@@ -55,13 +55,13 @@ export interface BookPreview {
 }
 
 export interface BookUnit {
-  id: string;
-  bookId: string;
+  id: number;
+  bookId: number;
   isArchived: boolean;
 }
 
 export interface BookCard {
-  id: string;
+  id: number;
   title: string;
   authorName?: string | null;
   categoryName?: string | null;
@@ -74,7 +74,7 @@ export interface BookCard {
 }
 
 export interface AddBookUnitRequest {
-  bookId: string;
+  bookId: number;
 }
 
 export interface CreateBookRequest {
@@ -84,11 +84,11 @@ export interface CreateBookRequest {
   publicationYear: number;
   pagesCount: number;
   repurchasePrice: number;
-  categoryIds: string[];
-  authorId?: string | null;
-  publisherId?: string | null;
+  categoryIds: number[];
+  authorId?: number | null;
+  publisherId?: number | null;
   originalTitle?: string | null;
   originalLanguage?: string | null;
   originalPublicationYear?: number | null;
-  originalPublisherId?: string | null;
+  originalPublisherId?: number | null;
 }

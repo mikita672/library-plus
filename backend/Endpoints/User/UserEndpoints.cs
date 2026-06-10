@@ -19,27 +19,27 @@ public static class UserEndpoints
 
         group.MapGet("/meShort", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var user = (await userService.GetUserById(userId))!;
-            return new MeShortResponse(user.Email, user.Name, await userService.GetAvatarUrlById(user.AvatarImageId), user.PhoneNumber);
+            return new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrlById(user), user.PhoneNumber);
         });
 
-        group.MapGet("/user/{id}", [Authorize] async (string id, UserService userService) =>
+        group.MapGet("/user/{id}", [Authorize] async (int id, UserService userService) =>
         {
             var user = await userService.GetUserById(id);
             if (user == null)
             {
                 return Results.NotFound();
             }
-            return Results.Ok(new MeShortResponse(user.Email, user.Name, await userService.GetAvatarUrlById(user.AvatarImageId), user.PhoneNumber));
+            return Results.Ok(new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrlById(user), user.PhoneNumber));
         });
 
         group.MapGet("/me", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var user = (await userService.GetUserById(userId))!;
             var response = MeResponse.FromModel(user);
-            return response with { AvatarUrl = await userService.GetAvatarUrlById(user.AvatarImageId) };
+            return response with { AvatarUrl = userService.GetAvatarUrlById(user) };
         });
 
         group.MapPatch("/updatePhoneNumber", [Authorize] async (
@@ -47,7 +47,7 @@ public static class UserEndpoints
             UserService userService,
             [FromBody] UpdatePhoneNumberRequest updatePhoneNumberDto) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             await userService.UpdatePhoneNumber(userId, updatePhoneNumberDto.NewPhoneNumber);
         });
 
@@ -56,7 +56,7 @@ public static class UserEndpoints
             UserService userService,
             [FromBody] UpdateNameRequest updateNameDto) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             await userService.UpdateName(userId, updateNameDto.NewName);
         });
 
@@ -65,7 +65,7 @@ public static class UserEndpoints
             UserService userService,
             [FromBody] UpdateProfileRequest updateProfileDto) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             await userService.UpdateProfile(userId, updateProfileDto.Name, updateProfileDto.PhoneNumber);
         });
 
@@ -75,7 +75,7 @@ public static class UserEndpoints
             [FromBody] UpdatePasswordRequest updatePasswordDto
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var res = await authService.ChangePassword(userId, updatePasswordDto.OldPassword, updatePasswordDto.NewPassword);
             if (!res)
             {
@@ -90,7 +90,7 @@ public static class UserEndpoints
             [FromQuery] int pageNumber
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             return await notificationService.GetUserNotifications(userId, pageNumber);
         });
 
@@ -99,7 +99,7 @@ public static class UserEndpoints
             NotificationService notificationService
         ) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             return await notificationService.GetUserNotificationsCount(userId);
         });
 
@@ -108,7 +108,7 @@ public static class UserEndpoints
             UserService userService,
             RefreshTokenService refreshTokenService) =>
         {
-            var userId = claims.FindFirstValue("sub")!;
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
             var deleted = await userService.SoftDeleteUser(userId);
             if (deleted)
             {
@@ -138,7 +138,7 @@ public static class UserEndpoints
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPatch("/user/{id}/delete", [Authorize] async (
-            string id,
+            int id,
             UserService userService,
             RefreshTokenService refreshTokenService) =>
         {
@@ -151,7 +151,7 @@ public static class UserEndpoints
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapPatch("/user/{id}/restore", [Authorize] async (
-            string id,
+            int id,
             UserService userService) =>
         {
             var restored = await userService.RestoreUser(id);

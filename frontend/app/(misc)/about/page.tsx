@@ -5,7 +5,7 @@ function AboutPage() {
     return (
         <>
             <p className="font-bold text-xl">About Library+</p>
-            <p>This project was made by <a className="underline text-primary" href="https://github.com/justkinou">Andrii Bialkovskyi</a> and <a className="underline text-primary" href="https://github.com/mikita672">Mikita Dzeviatau</a> for the 'Designing dynamic websites', 'Basics of containerization' and '.NET platform' courses @ Łódź University of Technology</p>
+            <p>This project was made by <a className="underline text-primary" href="https://github.com/justkinou">Andrii Bialkovskyi</a> and <a className="underline text-primary" href="https://github.com/mikita672">Mikita Dzeviatau</a> for the &apos;Designing dynamic websites&apos;, &apos;Basics of containerization&apos; and &apos;.NET platform&apos; courses @ Łódź University of Technology</p>
             <Separator className="my-8" />
             <div className="grid grid-cols-2 gap-7">
                 <div>
@@ -30,7 +30,10 @@ function AboutPage() {
                         <tr><th>Read books!</th></tr>
                     </thead>
                     <tbody>
-                        <tr className="grid justify-center mt-2"><td><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.getmidnight.com%2F45d07b00b0188a892509950ff919e14e%2F2022%2F10%2FBook-Report--1-.jpg&f=1&nofb=1&ipt=2c1c9a70811f6b8f65a1ff4a10f16826c8bffdbae49a9fb736fc4fff035b8300" className="w-[480px]" /></td></tr>
+                        <tr className="grid justify-center mt-2"><td>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img alt="" src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.getmidnight.com%2F45d07b00b0188a892509950ff919e14e%2F2022%2F10%2FBook-Report--1-.jpg&f=1&nofb=1&ipt=2c1c9a70811f6b8f65a1ff4a10f16826c8bffdbae49a9fb736fc4fff035b8300" className="w-[480px]" />
+                        </td></tr>
                     </tbody>
                 </table>
             </div>

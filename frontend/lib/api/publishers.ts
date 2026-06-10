@@ -23,7 +23,7 @@ export async function createPublisher(name: string): Promise<Publisher | null> {
 }
 
 export async function updatePublisher(
-  id: string,
+  id: number,
   name: string,
 ): Promise<void> {
   const res = await fetch(`/api/publishers/publisher/${id}`, {
@@ -39,7 +39,7 @@ export async function updatePublisher(
   }
 }
 
-export async function deletePublisher(id: string): Promise<void> {
+export async function deletePublisher(id: number): Promise<void> {
   const res = await fetch(`/api/publishers/publisher/${id}`, {
     method: "DELETE",
     credentials: "include",

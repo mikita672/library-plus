@@ -13,7 +13,6 @@ public class AuthorService(LibraryPlusContext context)
     {
         var author = new AuthorModel
         {
-            Id = Guid.NewGuid().ToString(),
             Name = createAuthorRequest.Name,
         };
         _context.Authors.Add(author);
@@ -21,7 +20,7 @@ public class AuthorService(LibraryPlusContext context)
         return author;
     }
 
-    public async Task<bool> EditAuthor(string id, UpdateAuthorRequest updateAuthorRequest)
+    public async Task<bool> EditAuthor(int id, UpdateAuthorRequest updateAuthorRequest)
     {
         var author = await _context.Authors.FindAsync(id);
         if (author == null) return false;
@@ -39,7 +38,7 @@ public class AuthorService(LibraryPlusContext context)
             .ToListAsync();
     }
 
-    public async Task<IList<AuthorModel>> GetAuthorsByIds(IList<string?> ids)
+    public async Task<IList<AuthorModel>> GetAuthorsByIds(IList<int> ids)
     {
         return await _context.Authors
             .Where(a => ids.Contains(a.Id))
@@ -51,12 +50,12 @@ public class AuthorService(LibraryPlusContext context)
         return await _context.Authors.ToListAsync();
     }
 
-    public async Task<AuthorModel?> GetAuthor(string id)
+    public async Task<AuthorModel?> GetAuthor(int id)
     {
         return await _context.Authors.FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public async Task DeleteAuthor(string id)
+    public async Task DeleteAuthor(int id)
     {
         var author = await _context.Authors.FindAsync(id);
         if (author != null)
