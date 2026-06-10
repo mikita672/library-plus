@@ -52,6 +52,8 @@ export interface BookPreview {
   originalPublisher?: Publisher;
   coverURI?: string;
   isAvailable: boolean;
+  averageRating: number;
+  reviewCount: number;
 }
 
 export interface BookUnit {
@@ -71,6 +73,8 @@ export interface BookCard {
   originalPublicationYear?: number | null;
   coverURI?: string | null;
   isAvailable: boolean;
+  averageRating: number;
+  reviewCount: number;
 }
 
 export interface AddBookUnitRequest {

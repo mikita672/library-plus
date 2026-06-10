@@ -5,7 +5,6 @@ using LibraryPlus.Models.Reservation;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 
 namespace LibraryPlus.Services;
 
@@ -17,7 +16,6 @@ public class DbInitializer
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<LibraryPlusContext>();
-        var httpClient = scope.ServiceProvider.GetRequiredService<HttpClient>();
 
         context.Database.EnsureCreated();
 
@@ -35,7 +33,7 @@ public class DbInitializer
                 Email = adminEmail,
                 Name = "Administrator",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
-                JoinedAt = DateTime.UtcNow,
+                JoinedAt = DateTime.UtcNow.AddMonths(-13),
                 IsAdmin = true,
                 IsDeleted = false
             };
@@ -44,7 +42,7 @@ public class DbInitializer
         }
 
         var exampleUsers = new List<UserModel>();
-        for (int i = 1; i <= 3; i++)
+        for (int i = 1; i <= 6; i++)
         {
             var userEmail = $"user{i}@example.com";
             var user = await context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
@@ -55,7 +53,7 @@ public class DbInitializer
                     Email = userEmail,
                     Name = $"Example User {i}",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-                    JoinedAt = DateTime.UtcNow.AddDays(-60),
+                    JoinedAt = DateTime.UtcNow.AddMonths(-13),
                     IsAdmin = false,
                     IsDeleted = false
                 };
@@ -65,36 +63,56 @@ public class DbInitializer
         }
         await context.SaveChangesAsync();
 
-
         var seedBooks = new List<SeedBook>
         {
+            // Author 1: F. Scott Fitzgerald
             new("The Great Gatsby", "F. Scott Fitzgerald", "Scribner", "English", 1925, 180, 15.99m, new[] { "Fiction", "Classics" }, "A story of wealth, love, and the American Dream in the 1920s."),
+            new("Tender Is the Night", "F. Scott Fitzgerald", "Scribner", "English", 1934, 315, 14.50m, new[] { "Fiction", "Classics" }, "The tragic story of Dick Diver and his wife, Nicole."),
+            new("This Side of Paradise", "F. Scott Fitzgerald", "Scribner", "English", 1920, 276, 12.99m, new[] { "Fiction", "Classics" }, "A novel about post-World War I youth and their morality."),
+            new("The Beautiful and Damned", "F. Scott Fitzgerald", "Scribner", "English", 1922, 345, 13.50m, new[] { "Fiction", "Classics" }, "A portrait of the Eastern elite during the Jazz Age."),
+            new("Flappers and Philosophers", "F. Scott Fitzgerald", "Scribner", "English", 1920, 163, 10.99m, new[] { "Fiction", "Short Stories" }, "A collection of eight short stories."),
+
+            // Author 2: George Orwell
             new("1984", "George Orwell", "Secker & Warburg", "English", 1949, 328, 12.50m, new[] { "Fiction", "Science Fiction", "Dystopian" }, "A chilling prophecy about the future of a totalitarian society."),
-            new("To Kill a Mockingbird", "Harper Lee", "J.B. Lippincott & Co.", "English", 1960, 281, 14.00m, new[] { "Fiction", "Classics" }, "A powerful story of racial injustice and the loss of innocence."),
+            new("Animal Farm", "George Orwell", "Secker & Warburg", "English", 1945, 112, 9.99m, new[] { "Fiction", "Dystopian" }, "A satirical allegorical novella about the Russian Revolution."),
+            new("Homage to Catalonia", "George Orwell", "Secker & Warburg", "English", 1938, 232, 14.00m, new[] { "Non-Fiction", "History" }, "Orwell's personal account of his experiences in the Spanish Civil War."),
+            new("Down and Out in Paris and London", "George Orwell", "Victor Gollancz Ltd", "English", 1933, 213, 11.50m, new[] { "Non-Fiction", "Memoir" }, "A memoir of poverty in two major European cities."),
+            new("Burmese Days", "George Orwell", "Harper & Brothers", "English", 1934, 300, 13.99m, new[] { "Fiction", "Classics" }, "A tale of the waning days of British imperialism."),
+
+            // Author 3: J.R.R. Tolkien
             new("The Hobbit", "J.R.R. Tolkien", "George Allen & Unwin", "English", 1937, 310, 20.00m, new[] { "Fantasy", "Adventure" }, "Bilbo Baggins' epic journey to reclaim a lost treasure."),
+            new("The Fellowship of the Ring", "J.R.R. Tolkien", "George Allen & Unwin", "English", 1954, 423, 22.00m, new[] { "Fantasy", "Adventure" }, "The first volume of The Lord of the Rings."),
+            new("The Two Towers", "J.R.R. Tolkien", "George Allen & Unwin", "English", 1954, 352, 22.00m, new[] { "Fantasy", "Adventure" }, "The second volume of The Lord of the Rings."),
+            new("The Return of the King", "J.R.R. Tolkien", "George Allen & Unwin", "English", 1955, 416, 22.00m, new[] { "Fantasy", "Adventure" }, "The third volume of The Lord of the Rings."),
+            new("The Silmarillion", "J.R.R. Tolkien", "George Allen & Unwin", "English", 1977, 365, 25.00m, new[] { "Fantasy", "Mythology" }, "A collection of mythopoeic works."),
+
+            // Author 4: Jane Austen
             new("Pride and Prejudice", "Jane Austen", "T. Egerton", "English", 1813, 279, 10.99m, new[] { "Fiction", "Classics", "Romance" }, "A classic tale of manners, upbringing, and marriage in the 19th century."),
-            new("The Catcher in the Rye", "J.D. Salinger", "Little, Brown and Company", "English", 1951, 234, 13.50m, new[] { "Fiction", "Classics" }, "Holden Caulfield's journey through New York City."),
-            new("Brave New World", "Aldous Huxley", "Chatto & Windus", "English", 1932, 268, 14.95m, new[] { "Science Fiction", "Dystopian" }, "A vision of a futuristic society controlled by technology."),
-            new("The Alchemist", "Paulo Coelho", "HarperTorch", "English", 1988, 208, 16.00m, new[] { "Fiction", "Philosophy" }, "A fable about following your dreams."),
+            new("Sense and Sensibility", "Jane Austen", "T. Egerton", "English", 1811, 352, 11.50m, new[] { "Fiction", "Classics", "Romance" }, "The story of the Dashwood sisters."),
+            new("Emma", "Jane Austen", "John Murray", "English", 1815, 474, 12.99m, new[] { "Fiction", "Classics", "Romance" }, "A novel about youthful hubris and romantic misunderstandings."),
+            new("Persuasion", "Jane Austen", "John Murray", "English", 1817, 249, 10.50m, new[] { "Fiction", "Classics", "Romance" }, "Austen's last completed novel."),
+            new("Northanger Abbey", "Jane Austen", "John Murray", "English", 1817, 244, 9.99m, new[] { "Fiction", "Classics", "Gothic" }, "A satire of Gothic novels."),
+
+            // Author 5: Fyodor Dostoevsky
             new("Crime and Punishment", "Fyodor Dostoevsky", "The Russian Messenger", "English", 1866, 671, 18.50m, new[] { "Fiction", "Classics", "Philosophy" }, "A psychological thriller about guilt and redemption."),
-            new("The Witcher: The Last Wish", "Andrzej Sapkowski", "SuperNowa", "Polish", 1993, 288, 22.00m, new[] { "Fantasy" }, "Introduces Geralt of Rivia, a monster hunter known as a Witcher."),
-            new("Dune", "Frank Herbert", "Chilton Books", "English", 1965, 412, 25.00m, new[] { "Science Fiction" }, "Epic sci-fi set on the desert planet Arrakis."),
-            new("The Da Vinci Code", "Dan Brown", "Doubleday", "English", 2003, 454, 19.99m, new[] { "Mystery", "Thriller" }, "A murder in the Louvre leads to a religious mystery."),
-            new("Harry Potter and the Philosopher's Stone", "J.K. Rowling", "Bloomsbury", "English", 1997, 223, 21.00m, new[] { "Fantasy", "Adventure" }, "A young boy discovers he is a wizard."),
-            new("Fahrenheit 451", "Ray Bradbury", "Ballantine Books", "English", 1953, 158, 11.00m, new[] { "Science Fiction", "Dystopian" }, "A world where books are banned and burned."),
-            new("The Little Prince", "Antoine de Saint-Exupéry", "Reynal & Hitchcock", "French", 1943, 96, 9.99m, new[] { "Fiction", "Philosophy", "Children" }, "A young prince visits various planets in space."),
-            new("Moby-Dick", "Herman Melville", "Richard Bentley", "English", 1851, 635, 17.00m, new[] { "Fiction", "Adventure", "Classics" }, "The voyage of the whaling ship Pequod."),
-            new("War and Peace", "Leo Tolstoy", "The Russian Messenger", "English", 1869, 1225, 30.00m, new[] { "Fiction", "History", "Classics" }, "The French invasion of Russia and its impact on Tsarist society."),
-            new("The Shadow of the Wind", "Carlos Ruiz Zafón", "Planeta", "Spanish", 2001, 487, 18.00m, new[] { "Fiction", "Mystery" }, "A young boy is taken to the Cemetery of Forgotten Books."),
-            new("Solaris", "Stanisław Lem", "MON", "Polish", 1961, 204, 15.00m, new[] { "Science Fiction", "Philosophy" }, "Scientists study a mysterious living ocean on a distant planet."),
-            new("The Name of the Rose", "Umberto Eco", "Bompiani", "Italian", 1980, 502, 20.00m, new[] { "Mystery", "History" }, "A murder mystery set in a 14th-century Italian monastery.")
+            new("The Brothers Karamazov", "Fyodor Dostoevsky", "The Russian Messenger", "English", 1880, 796, 22.00m, new[] { "Fiction", "Classics", "Philosophy" }, "A passionate philosophical novel set in 19th-century Russia."),
+            new("The Idiot", "Fyodor Dostoevsky", "The Russian Messenger", "English", 1869, 615, 19.50m, new[] { "Fiction", "Classics", "Philosophy" }, "The story of Prince Myshkin, a truly good man."),
+            new("Notes from Underground", "Fyodor Dostoevsky", "Epoch", "English", 1864, 136, 9.99m, new[] { "Fiction", "Classics", "Philosophy" }, "One of the first existentialist novels."),
+            new("Demons", "Fyodor Dostoevsky", "The Russian Messenger", "English", 1872, 714, 21.00m, new[] { "Fiction", "Classics", "Philosophy" }, "A tragic satire of political radicalism."),
+
+            // Author 6: J.K. Rowling
+            new("Harry Potter and the Sorcerer's Stone", "J.K. Rowling", "Bloomsbury", "English", 1997, 309, 15.00m, new[] { "Fantasy", "Adventure", "Children" }, "A young boy discovers he is a wizard."),
+            new("Harry Potter and the Chamber of Secrets", "J.K. Rowling", "Bloomsbury", "English", 1998, 341, 16.00m, new[] { "Fantasy", "Adventure", "Children" }, "Harry's second year at Hogwarts."),
+            new("Harry Potter and the Prisoner of Azkaban", "J.K. Rowling", "Bloomsbury", "English", 1999, 435, 17.00m, new[] { "Fantasy", "Adventure", "Children" }, "Harry's third year at Hogwarts."),
+            new("Harry Potter and the Goblet of Fire", "J.K. Rowling", "Bloomsbury", "English", 2000, 734, 20.00m, new[] { "Fantasy", "Adventure", "Children" }, "Harry's fourth year at Hogwarts and the Triwizard Tournament."),
+            new("Harry Potter and the Order of the Phoenix", "J.K. Rowling", "Bloomsbury", "English", 2003, 870, 25.00m, new[] { "Fantasy", "Adventure", "Children" }, "Harry's fifth year at Hogwarts and the return of Voldemort.")
         };
 
         var categoryMap = new Dictionary<string, CategoryModel>();
         var authorMap = new Dictionary<string, AuthorModel>();
         var publisherMap = new Dictionary<string, PublisherModel>();
 
-        Console.WriteLine($"Starting seeding of {seedBooks.Count} realistic books...");
+        Console.WriteLine($"Starting seeding of {seedBooks.Count} books...");
 
         foreach (var sb in seedBooks)
         {
@@ -158,7 +176,7 @@ public class DbInitializer
             context.Books.Add(book);
             await context.SaveChangesAsync();
 
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 5; j++)
             {
                 context.BookUnits.Add(new BookUnitModel
                 {
@@ -166,37 +184,107 @@ public class DbInitializer
                     IsArchived = false
                 });
             }
-
-            await context.SaveChangesAsync();
-            Console.WriteLine($"Seeded: {sb.Title}");
         }
+        await context.SaveChangesAsync();
 
         var bookUnits = await context.BookUnits.ToListAsync();
+        var allBooks = await context.Books.ToListAsync();
         var random = new Random();
-        foreach (var user in exampleUsers)
+        var now = DateTime.UtcNow;
+
+        // Generate rentals for the last 12 months (1-2 per month by users)
+        for (int monthOffset = 12; monthOffset >= 0; monthOffset--)
         {
-            var userReservations = await context.Reservations.CountAsync(r => r.UserId == user.Id);
-            if (userReservations < 6)
+            int rentalsThisMonth = random.Next(1, 3);
+            for (int r = 0; r < rentalsThisMonth; r++)
             {
-                for (int r = 0; r < 6 - userReservations; r++)
+                var randomUser = exampleUsers[random.Next(exampleUsers.Count)];
+                var randomUnit = bookUnits[random.Next(bookUnits.Count)];
+                
+                int daysInMonth = DateTime.DaysInMonth(now.AddMonths(-monthOffset).Year, now.AddMonths(-monthOffset).Month);
+                var startDate = new DateTime(now.AddMonths(-monthOffset).Year, now.AddMonths(-monthOffset).Month, random.Next(1, daysInMonth + 1));
+                
+                if (startDate > now) startDate = now.AddDays(-1);
+
+                var endDate = startDate.AddDays(random.Next(14, 30));
+                
+                var returnedDate = startDate.AddDays(random.Next(1, 28));
+                if (returnedDate > now) returnedDate = now.AddDays(-1);
+
+                var condition = random.NextDouble() > 0.8 ? "Minor Damages" : "Good";
+
+                var reservation = new ReservationModel
                 {
-                    var randomUnit = bookUnits[random.Next(bookUnits.Count)];
-                    var startDate = DateTime.UtcNow.AddDays(-random.Next(1, 30));
-                    var endDate = startDate.AddDays(14);
+                    UserId = randomUser.Id,
+                    BookUnitId = randomUnit.Id,
+                    Status = "Returned",
+                    StartDate = startDate.ToUniversalTime(),
+                    EndDate = endDate.ToUniversalTime(),
+                    CreatedAt = startDate.ToUniversalTime(),
+                    ReturnedDate = returnedDate.ToUniversalTime(),
+                    BookConditionUponReturn = condition,
+                    RepurchasePrice = allBooks.First(b => b.Id == randomUnit.BookId).RepurchasePrice
+                };
+                context.Reservations.Add(reservation);
+            }
+        }
+        await context.SaveChangesAsync();
+
+        var reviewsTexts = new[] {
+            "Great book, really enjoyed it!",
+            "It was okay, a bit slow in the middle.",
+            "Absolutely phenomenal, couldn't put it down.",
+            "Not really my cup of tea.",
+            "A classic for a reason. Highly recommend.",
+            "Interesting perspective, well written.",
+            "A bit confusing at times but overall good.",
+            "Masterpiece!"
+        };
+
+        // Generate reviews (1-6 per book)
+        foreach (var b in allBooks)
+        {
+            int reviewCount = random.Next(1, 7);
+            var usersToReview = exampleUsers.OrderBy(x => random.Next()).Take(reviewCount).ToList();
+
+            foreach (var user in usersToReview)
+            {
+                // Ensure the user has a returned reservation for this book to be able to review
+                var userReservationsForBook = await context.Reservations
+                    .Where(r => r.UserId == user.Id && r.ReturnedDate != null)
+                    .Select(r => r.BookUnitId)
+                    .ToListAsync();
                     
-                    var reservation = new ReservationModel
-                    {
+                var bookUnitIds = bookUnits.Where(u => u.BookId == b.Id).Select(u => u.Id).ToList();
+                
+                if (!userReservationsForBook.Intersect(bookUnitIds).Any())
+                {
+                    // Create a dummy returned reservation so the review is valid under normal rules
+                    var dummyUnit = bookUnits.First(u => u.BookId == b.Id);
+                    var dummyStartDate = now.AddDays(-60);
+                    context.Reservations.Add(new ReservationModel {
                         UserId = user.Id,
-                        BookUnitId = randomUnit.Id,
+                        BookUnitId = dummyUnit.Id,
                         Status = "Returned",
-                        StartDate = startDate,
-                        EndDate = endDate,
-                        CreatedAt = startDate,
-                        ReturnedDate = startDate.AddDays(random.Next(1, 14)),
-                        BookConditionUponReturn = "Good"
-                    };
-                    context.Reservations.Add(reservation);
+                        StartDate = dummyStartDate,
+                        EndDate = dummyStartDate.AddDays(14),
+                        CreatedAt = dummyStartDate,
+                        ReturnedDate = dummyStartDate.AddDays(10),
+                        BookConditionUponReturn = "Good",
+                        RepurchasePrice = b.RepurchasePrice
+                    });
+                    await context.SaveChangesAsync();
                 }
+
+                var review = new ReviewModel
+                {
+                    BookId = b.Id,
+                    UserId = user.Id,
+                    Rating = random.Next(3, 6), // 3 to 5 stars
+                    ReviewText = reviewsTexts[random.Next(reviewsTexts.Length)],
+                    CreatedAt = now.AddDays(-random.Next(1, 100))
+                };
+                context.Reviews.Add(review);
             }
         }
         await context.SaveChangesAsync();

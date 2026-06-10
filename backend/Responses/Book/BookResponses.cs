@@ -17,7 +17,9 @@ public record BookPreviewResponse(
     int? OriginalPublicationYear,
     PublisherModel? OriginalPublisher,
     string? CoverURI,
-    bool IsAvailable
+    bool IsAvailable,
+    double AverageRating,
+    int ReviewCount
 );
 
 public record BookCardResponse(
@@ -30,5 +32,7 @@ public record BookCardResponse(
     int PublicationYear,
     int? OriginalPublicationYear,
     string? CoverURI,
-    bool IsAvailable
+    bool IsAvailable,
+    double AverageRating,
+    int ReviewCount
 );

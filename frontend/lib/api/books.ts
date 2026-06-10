@@ -192,3 +192,13 @@ export async function unarchiveBookUnit(unitId: number): Promise<boolean> {
   });
   return res.ok;
 }
+
+export async function getReviewedBooks(): Promise<number[]> {
+  const res = await fetch(`/api/books/me/reviewed-books`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<number[]>;
+}

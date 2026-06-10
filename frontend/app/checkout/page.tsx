@@ -173,7 +173,7 @@ function CheckoutPage() {
             toast.error("Failed to reserve books");
         } else {
             toast.success(`Reserved ${reservedBooksIds.length} books`);
-            router.push("/profile/dashboard/rentals");
+            router.push("/profile/rentals");
         }
         for (const bookId of reservedBooksIds) {
             removeBook(bookId);
