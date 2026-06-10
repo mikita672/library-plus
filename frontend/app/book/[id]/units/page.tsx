@@ -73,8 +73,8 @@ export default function BookUnitsPage({ params }: { params: Promise<{ id: string
       setLoading(true);
       try {
         const [book, bookUnits] = await Promise.all([
-          getBookById(bookId),
-          getBookUnitsForBook(bookId),
+          getBookById(Number(bookId)),
+          getBookUnitsForBook(Number(bookId)),
         ]);
         setBookTitle(book.title);
 
@@ -129,7 +129,7 @@ export default function BookUnitsPage({ params }: { params: Promise<{ id: string
           <TableBody>
             {units.map(({ unit, condition, reservationCount }) => (
               <TableRow key={unit.id}>
-                <TableCell className="font-mono text-xs">{unit.id.substring(0, 8)}</TableCell>
+                <TableCell className="font-mono text-xs">{unit.id.toString().substring(0, 8)}</TableCell>
                 <TableCell><ConditionBadge condition={condition} /></TableCell>
                 <TableCell>{reservationCount}</TableCell>
               </TableRow>

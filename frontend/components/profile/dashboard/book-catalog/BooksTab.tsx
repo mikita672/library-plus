@@ -50,7 +50,7 @@ export default function BooksTab() {
     if (token !== null && token !== inputValue) {
       setInputValue(token);
     }
-  }, [searchParams]);
+  }, [searchParams, inputValue]);
 
   const [authorId, setAuthorId] = useState(searchParams.get("authorId") || "all");
   const [publisherId, setPublisherId] = useState(searchParams.get("publisherId") || "all");
@@ -138,31 +138,31 @@ export default function BooksTab() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Author</Label>
-              <Select value={authorId} onValueChange={setAuthorId}>
+              <Select value={authorId?.toString()} onValueChange={setAuthorId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Authors</SelectItem>
-                  {authors.map((a) => (<SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>))}
+                  {authors.map((a) => (<SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Publisher</Label>
-              <Select value={publisherId} onValueChange={setPublisherId}>
+              <Select value={publisherId?.toString()} onValueChange={setPublisherId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Publishers</SelectItem>
-                  {publishers.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
+                  {publishers.map((p) => (<SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
+              <Select value={categoryId?.toString()} onValueChange={setCategoryId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                  {categories.map((c) => (<SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>

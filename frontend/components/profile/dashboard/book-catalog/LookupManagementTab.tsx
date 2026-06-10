@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/table";
 
 interface BaseLookupModel {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -41,8 +41,8 @@ interface LookupManagementTabProps<T extends BaseLookupModel> {
   paramKey: string;
   fetchItems: () => Promise<T[]>;
   createItem: (name: string) => Promise<T | null>;
-  updateItem: (id: string, name: string) => Promise<any>;
-  deleteItem: (id: string) => Promise<any>;
+  updateItem: (id: number, name: string) => Promise<unknown>;
+  deleteItem: (id: number) => Promise<unknown>;
 }
 
 function buildColumns<T extends BaseLookupModel>(
@@ -57,7 +57,7 @@ function buildColumns<T extends BaseLookupModel>(
       cell: ({ row }) => {
         const val = row.getValue("name") as string;
         const id = row.original.id;
-        const searchParam = new URLSearchParams({ [paramKey]: id, tab: "books" }).toString();
+        const searchParam = new URLSearchParams({ [paramKey]: id.toString(), tab: "books" }).toString();
         return (
           <Link
             href={`/profile/dashboard/book-catalog?${searchParam}`}

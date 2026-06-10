@@ -18,8 +18,28 @@ export async function getStatistics(from: Date, to: Date): Promise<StatisticsRes
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ from: from.toISOString(), to: to.toISOString() }),
+    credentials: "include",
   });
 
   if (!response.ok) return null;
+  return response.json();
+}
+
+export interface ReservationChartData {
+  year: number;
+  month: number;
+  count: number;
+}
+
+export async function getReservationsChartData(): Promise<ReservationChartData[]> {
+  const response = await fetch("/api/misc/stats/reservations", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) return [];
   return response.json();
 }

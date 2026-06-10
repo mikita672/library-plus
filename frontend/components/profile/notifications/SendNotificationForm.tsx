@@ -33,8 +33,11 @@ export default function SendNotificationForm() {
         setShowSuggestions(true);
       });
     } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+      const t = setTimeout(() => {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [debouncedEmail, sendToAll]);
 

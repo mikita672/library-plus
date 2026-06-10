@@ -5,7 +5,7 @@ import BookEntry from "@/components/checkout/BookEntry";
 import { Button } from "@/components/ui/button";
 import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
-import { addDays, endOfDay, format, setDate } from "date-fns";
+import { addDays, format } from "date-fns";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
@@ -39,20 +39,21 @@ function CheckoutPage() {
             }
             const booksData: BookCard[] = await response.json();
 
-            const newDateRanges: Record<string, DateRange | undefined> = {};
-            for (const book of booksData) {
-                if (book.id in dateRanges) {
-                    newDateRanges[book.id] = dateRanges[book.id];
-                } else {
-                    newDateRanges[book.id] = {
-                        from: new Date(),
-                        to: addDays(new Date(), 21),
-                    };
-                }
-            }
-
             setBooks(booksData);
-            setDateRanges(newDateRanges);
+            setDateRanges(prevRanges => {
+                const newDateRanges: Record<string, DateRange | undefined> = {};
+                for (const book of booksData) {
+                    if (book.id in prevRanges) {
+                        newDateRanges[book.id] = prevRanges[book.id];
+                    } else {
+                        newDateRanges[book.id] = {
+                            from: new Date(),
+                            to: addDays(new Date(), 21),
+                        };
+                    }
+                }
+                return newDateRanges;
+            });
         })().then(() => {
             setIsLoading(false);
         });
@@ -68,7 +69,7 @@ function CheckoutPage() {
         );
     }
 
-    const changeDateRange = (id: string, newRange: DateRange | undefined) => {
+    const changeDateRange = (id: number, newRange: DateRange | undefined) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (newRange?.from !== undefined && newRange.from < today) {
@@ -118,13 +119,13 @@ function CheckoutPage() {
             const bookId = booksThatCanBeReserved[i].id;
             i++;
             if (response.status === 'rejected') {
-                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: Network error`);
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i - 1].title}: Network error`);
                 continue;
             }
             if (!response.value.ok) {
                 const text = await response.value.text().catch(() => "");
                 const errorMsg = text.replace(/^"|"$/g, '') || "Unknown error";
-                toast.error(`Failed to reserve ${booksThatCanBeReserved[i-1].title}: ${errorMsg}`);
+                toast.error(`Failed to reserve ${booksThatCanBeReserved[i - 1].title}: ${errorMsg}`);
                 continue;
             }
             reservedBooksIds.push(bookId);

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using LibraryPlus.Filters;
 using LibraryPlus.Models;
 using LibraryPlus.Services.Book;
-using LibraryPlus.Services.Storage;
 using LibraryPlus.Services.User;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +17,7 @@ public static class MediaEndpoints
     {
         var group = app.MapGroup("/api/v1/media");
 
-        group.MapPost("/books/{bookId}/cover", UploadBookCover)
+        group.MapPost("/books/{bookId:int}/cover", UploadBookCover)
             .RequireAuthorization()
             .AddEndpointFilter<AdminUserFilter>()
             .DisableAntiforgery();
@@ -26,13 +25,15 @@ public static class MediaEndpoints
         group.MapPost("/users/me/avatar", UploadUserAvatar)
             .RequireAuthorization()
             .DisableAntiforgery();
+
+        group.MapGet("/books/{bookId:int}/cover", GetBookCover);
+        group.MapGet("/users/{userId:int}/avatar", GetUserAvatar);
     }
 
     private static async Task<IResult> UploadBookCover(
-        string bookId,
+        int bookId,
         IFormFile file,
         BookService bookService,
-        IObjectStorageService storageService,
         LibraryPlusContext context,
         CancellationToken ct)
     {
@@ -43,58 +44,51 @@ public static class MediaEndpoints
         var book = await bookService.GetBookById(bookId);
         if (book == null) return Results.NotFound("Book not found.");
 
-        var extension = Path.GetExtension(file.FileName);
-        var imageId = Guid.NewGuid().ToString();
-        var key = $"covers/{imageId}{extension}";
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream, ct);
 
-        using var stream = file.OpenReadStream();
-        await storageService.UploadAsync(key, stream, file.ContentType, ct);
+        var coverBytes = memoryStream.ToArray();
+        await bookService.SetCoverImageId(bookId, coverBytes, file.ContentType);
 
-        var image = new ImageModel
-        {
-            Id = imageId,
-            StorageKey = key,
-            ContentType = file.ContentType
-        };
-        context.Images.Add(image);
-        await context.SaveChangesAsync(ct);
-
-        await bookService.SetCoverImageId(bookId, imageId);
-
-        return Results.Ok(new { coverURI = storageService.GetPublicUrl(key) });
+        return Results.Ok(new { coverURI = $"/api/v1/media/books/{bookId}/cover" });
     }
 
     private static async Task<IResult> UploadUserAvatar(
         ClaimsPrincipal user,
         IFormFile file,
         UserService userService,
-        IObjectStorageService storageService,
         LibraryPlusContext context,
         CancellationToken ct)
     {
-        var userId = user.FindFirstValue("sub")!;
+        var userIdStr = user.FindFirstValue("sub")!;
+        if (!int.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
+
         if (file.Length == 0) return Results.BadRequest("File is empty.");
         if (file.Length > MaxAvatarSize) return Results.BadRequest("File is too large.");
         if (!AllowedContentTypes.Contains(file.ContentType)) return Results.BadRequest("Invalid file type.");
 
-        var extension = Path.GetExtension(file.FileName);
-        var imageId = Guid.NewGuid().ToString();
-        var key = $"avatars/{imageId}{extension}";
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream, ct);
 
-        using var stream = file.OpenReadStream();
-        await storageService.UploadAsync(key, stream, file.ContentType, ct);
+        var avatarBytes = memoryStream.ToArray();
+        await userService.SetAvatarImageId(userId, avatarBytes, file.ContentType);
 
-        var image = new ImageModel
-        {
-            Id = imageId,
-            StorageKey = key,
-            ContentType = file.ContentType
-        };
-        context.Images.Add(image);
-        await context.SaveChangesAsync(ct);
+        return Results.Ok(new { avatarUrl = $"/api/v1/media/users/{userId}/avatar" });
+    }
 
-        await userService.SetAvatarImageId(userId, imageId);
+    private static async Task<IResult> GetBookCover(int bookId, LibraryPlusContext context)
+    {
+        var book = await context.Books.FindAsync(bookId);
+        if (book?.CoverImage == null || book.CoverImageContentType == null) return Results.NotFound();
 
-        return Results.Ok(new { avatarUrl = storageService.GetPublicUrl(key) });
+        return Results.File(book.CoverImage, book.CoverImageContentType);
+    }
+
+    private static async Task<IResult> GetUserAvatar(int userId, LibraryPlusContext context)
+    {
+        var user = await context.Users.FindAsync(userId);
+        if (user?.AvatarImage == null || user.AvatarImageContentType == null) return Results.NotFound();
+
+        return Results.File(user.AvatarImage, user.AvatarImageContentType);
     }
 }

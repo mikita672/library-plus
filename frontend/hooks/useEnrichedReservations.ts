@@ -7,7 +7,7 @@ import {
   getUserReservationPages,
   getUserReservations,
 } from "@/lib/api/reservations";
-import { getUserById } from "@/lib/api/users";
+import { getUserById, UserMeShort } from "@/lib/api/users";
 import { EnrichedReservationItem } from "@/types/reservation/Reservation";
 
 interface UseEnrichedReservationsProps {
@@ -47,14 +47,14 @@ export function useEnrichedReservations({
       ]);
 
       const unitIds = [...new Set(data.map((r) => r.bookUnitId))];
-      const units = await Promise.all(unitIds.map((id) => getBookUnitById(id).catch(() => null)));
+      const units = await Promise.all(unitIds.map((id) => getBookUnitById(Number(id)).catch(() => null)));
       const unitMap = Object.fromEntries(unitIds.map((id, i) => [id, units[i]]));
 
-      const bookIds = [...new Set(units.map((u) => u?.bookId).filter(Boolean) as string[])];
-      const books = await Promise.all(bookIds.map((id) => getBookById(id).catch(() => null)));
+      const bookIds = [...new Set(units.map((u) => u?.bookId).filter(Boolean) as number[])];
+      const books = await Promise.all(bookIds.map((id) => getBookById(Number(id)).catch(() => null)));
       const bookMap = Object.fromEntries(bookIds.map((id, i) => [id, books[i]]));
 
-      let userMap: Record<string, any> = {};
+      let userMap: Record<number, UserMeShort | null> = {};
       if (!isUserView) {
         const userIds = [...new Set(data.map((r) => r.userId))];
         const users = await Promise.all(userIds.map((id) => getUserById(id).catch(() => null)));

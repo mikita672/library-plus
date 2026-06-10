@@ -47,9 +47,9 @@ function StatusBadge({ isDeleted }: { isDeleted: boolean }) {
 }
 
 function buildColumns(
-  onRemoveClick: (id: string) => void,
-  onRestoreClick: (id: string) => void,
-  processingId: string | null,
+  onRemoveClick: (id: number) => void,
+  onRestoreClick: (id: number) => void,
+  processingId: number | null,
 ): ColumnDef<AdminUser>[] {
   return [
     {
@@ -164,9 +164,9 @@ export default function ClientsTable({
   users: AdminUser[];
   onRefresh: () => void;
 }) {
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (id: number) => {
     setProcessingId(id);
     try {
       await softDeleteUser(id);
@@ -179,7 +179,7 @@ export default function ClientsTable({
     }
   };
 
-  const handleRestore = async (id: string) => {
+  const handleRestore = async (id: number) => {
     setProcessingId(id);
     try {
       await restoreUser(id);

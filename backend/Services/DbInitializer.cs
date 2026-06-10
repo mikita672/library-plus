@@ -1,7 +1,8 @@
 using LibraryPlus.Models;
 using LibraryPlus.Models.Book;
 using LibraryPlus.Models.User;
-using LibraryPlus.Services.Storage;
+using LibraryPlus.Models.Reservation;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
@@ -16,7 +17,6 @@ public class DbInitializer
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<LibraryPlusContext>();
-        var storageService = scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
         var httpClient = scope.ServiceProvider.GetRequiredService<HttpClient>();
 
         context.Database.EnsureCreated();
@@ -26,14 +26,13 @@ public class DbInitializer
             return;
         }
 
-        var adminId = "00000000-0000-0000-0000-000000000000";
-        var admin = await context.Users.FindAsync(adminId);
+        var adminEmail = "admin@admin.com";
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
         if (admin == null)
         {
             admin = new UserModel
             {
-                Id = adminId,
-                Email = "admin@admin.com",
+                Email = adminEmail,
                 Name = "Administrator",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
                 JoinedAt = DateTime.UtcNow,
@@ -41,7 +40,31 @@ public class DbInitializer
                 IsDeleted = false
             };
             context.Users.Add(admin);
+            await context.SaveChangesAsync();
         }
+
+        var exampleUsers = new List<UserModel>();
+        for (int i = 1; i <= 3; i++)
+        {
+            var userEmail = $"user{i}@example.com";
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (user == null)
+            {
+                user = new UserModel
+                {
+                    Email = userEmail,
+                    Name = $"Example User {i}",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+                    JoinedAt = DateTime.UtcNow.AddDays(-60),
+                    IsAdmin = false,
+                    IsDeleted = false
+                };
+                context.Users.Add(user);
+            }
+            exampleUsers.Add(user);
+        }
+        await context.SaveChangesAsync();
+
 
         var seedBooks = new List<SeedBook>
         {
@@ -80,8 +103,9 @@ public class DbInitializer
                 author = await context.Authors.FirstOrDefaultAsync(a => a.Name == sb.Author);
                 if (author == null)
                 {
-                    author = new AuthorModel { Id = Guid.NewGuid().ToString(), Name = sb.Author };
+                    author = new AuthorModel { Name = sb.Author };
                     context.Authors.Add(author);
+                    await context.SaveChangesAsync();
                 }
                 authorMap[sb.Author] = author;
             }
@@ -91,13 +115,14 @@ public class DbInitializer
                 publisher = await context.Publishers.FirstOrDefaultAsync(p => p.Name == sb.Publisher);
                 if (publisher == null)
                 {
-                    publisher = new PublisherModel { Id = Guid.NewGuid().ToString(), Name = sb.Publisher };
+                    publisher = new PublisherModel { Name = sb.Publisher };
                     context.Publishers.Add(publisher);
+                    await context.SaveChangesAsync();
                 }
                 publisherMap[sb.Publisher] = publisher;
             }
 
-            var bookCategoryIds = new List<string>();
+            var bookCategoryIds = new List<int>();
             foreach (var catName in sb.Categories)
             {
                 if (!categoryMap.TryGetValue(catName, out var category))
@@ -105,38 +130,17 @@ public class DbInitializer
                     category = await context.Categories.FirstOrDefaultAsync(c => c.Name == catName);
                     if (category == null)
                     {
-                        category = new CategoryModel { Id = Guid.NewGuid().ToString(), Name = catName };
+                        category = new CategoryModel { Name = catName };
                         context.Categories.Add(category);
+                        await context.SaveChangesAsync();
                     }
                     categoryMap[catName] = category;
                 }
                 bookCategoryIds.Add(category.Id);
             }
 
-            string imageId = Guid.NewGuid().ToString();
-            string key = $"covers/{imageId}.jpg";
-            try
-            {
-                var coverBytes = await httpClient.GetByteArrayAsync($"https://picsum.photos/seed/{imageId}/400/600");
-                using var ms = new MemoryStream(coverBytes);
-                await storageService.UploadAsync(key, ms, "image/jpeg");
-                
-                context.Images.Add(new ImageModel
-                {
-                    Id = imageId,
-                    StorageKey = key,
-                    ContentType = "image/jpeg"
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to upload cover for '{sb.Title}': {ex.Message}");
-                imageId = null;
-            }
-
             var book = new BookModel
             {
-                Id = Guid.NewGuid().ToString(),
                 Title = sb.Title,
                 Description = sb.Description,
                 AuthorId = author.Id,
@@ -147,16 +151,17 @@ public class DbInitializer
                 CategoryIds = bookCategoryIds,
                 RepurchasePrice = sb.Price,
                 Popularity = new Random().Next(10, 500),
-                CoverImageId = imageId,
+                CoverImage = null,
+                CoverImageContentType = null,
                 CreatedAt = DateTime.UtcNow
             };
             context.Books.Add(book);
+            await context.SaveChangesAsync();
 
             for (int j = 0; j < 3; j++)
             {
                 context.BookUnits.Add(new BookUnitModel
                 {
-                    Id = Guid.NewGuid().ToString(),
                     BookId = book.Id,
                     IsArchived = false
                 });
@@ -165,6 +170,36 @@ public class DbInitializer
             await context.SaveChangesAsync();
             Console.WriteLine($"Seeded: {sb.Title}");
         }
+
+        var bookUnits = await context.BookUnits.ToListAsync();
+        var random = new Random();
+        foreach (var user in exampleUsers)
+        {
+            var userReservations = await context.Reservations.CountAsync(r => r.UserId == user.Id);
+            if (userReservations < 6)
+            {
+                for (int r = 0; r < 6 - userReservations; r++)
+                {
+                    var randomUnit = bookUnits[random.Next(bookUnits.Count)];
+                    var startDate = DateTime.UtcNow.AddDays(-random.Next(1, 30));
+                    var endDate = startDate.AddDays(14);
+                    
+                    var reservation = new ReservationModel
+                    {
+                        UserId = user.Id,
+                        BookUnitId = randomUnit.Id,
+                        Status = "Returned",
+                        StartDate = startDate,
+                        EndDate = endDate,
+                        CreatedAt = startDate,
+                        ReturnedDate = startDate.AddDays(random.Next(1, 14)),
+                        BookConditionUponReturn = "Good"
+                    };
+                    context.Reservations.Add(reservation);
+                }
+            }
+        }
+        await context.SaveChangesAsync();
 
         Console.WriteLine("Seeding completed successfully.");
     }

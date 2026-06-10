@@ -6,7 +6,7 @@ namespace LibraryPlus.Models.User;
 public class RefreshTokenModel
 {
     public string RefreshTokenHash { get; set; } = null!;
-    public string UserId { get; set; } = null!;
+    public int UserId { get; set; }
     [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
     public DateTime ExpiryDate { get; set; }
 }

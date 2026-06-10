@@ -3,7 +3,7 @@ using LibraryPlus.Models.Book;
 namespace LibraryPlus.Responses.Book;
 
 public record BookPreviewResponse(
-    string Id,
+    int Id,
     string Title,
     string Description,
     AuthorModel? Author,
@@ -21,7 +21,7 @@ public record BookPreviewResponse(
 );
 
 public record BookCardResponse(
-    string Id,
+    int Id,
     string Title,
     string Language,
     string? AuthorName,

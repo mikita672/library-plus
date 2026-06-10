@@ -20,7 +20,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
     public const int USER_PAGE_SIZE = 3;
     public const int ADMIN_PAGE_SIZE = 6;
 
-    public async Task<(ReservationModel? Reservation, string? Error)> CreateReservation(string userId, CreateReservationRequest request)
+    public async Task<(ReservationModel? Reservation, string? Error)> CreateReservation(int userId, CreateReservationRequest request)
     {
         var totalDays = (request.EndDate - request.StartDate).TotalDays;
         if (totalDays < 14 || totalDays > 30) return (null, "Reservation period must be between 14 and 30 days.");
@@ -37,7 +37,6 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
 
         var reservation = new ReservationModel
         {
-            Id = Guid.NewGuid().ToString(),
             BookUnitId = bookUnit.Id,
             UserId = userId,
             StartDate = request.StartDate,
@@ -55,7 +54,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return (reservation, null);
     }
 
-    public async Task<IList<ReservationModel>> GetUserReservations(string userId, int page, string? status = null, string? searchToken = null)
+    public async Task<IList<ReservationModel>> GetUserReservations(int userId, int page, string? status = null, string? searchToken = null)
     {
         var query = BuildFilteredQuery(status, searchToken, userId);
 
@@ -65,14 +64,14 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
             .ToListAsync();
     }
 
-    public async Task<int> GetUserReservationsPageCount(string userId, string? status = null, string? searchToken = null)
+    public async Task<int> GetUserReservationsPageCount(int userId, string? status = null, string? searchToken = null)
     {
         var query = BuildFilteredQuery(status, searchToken, userId);
         var count = await query.CountAsync();
         return (int)Math.Ceiling(count / (double)USER_PAGE_SIZE);
     }
 
-    public async Task<bool> HandleTaken(string id)
+    public async Task<bool> HandleTaken(int id)
     {
         var reservation = await _context.Reservations.FindAsync(id);
         if (reservation != null)
@@ -85,7 +84,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return false;
     }
 
-    public async Task<bool> HandleReturned(string id, HandleReturnRequest request)
+    public async Task<bool> HandleReturned(int id, HandleReturnRequest request)
     {
         var reservation = await _context.Reservations.FindAsync(id);
         if (reservation != null)
@@ -101,7 +100,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return false;
     }
 
-    public async Task<bool> UpdateStatus(string id, string status)
+    public async Task<bool> UpdateStatus(int id, string status)
     {
         var reservation = await _context.Reservations.FindAsync(id);
         if (reservation != null)
@@ -131,16 +130,16 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return (int)Math.Ceiling(count / (double)ADMIN_PAGE_SIZE);
     }
 
-    public async Task<IList<ReservationModel>> GetReservationsByBookUnit(string bookUnitId)
+    public async Task<IList<ReservationModel>> GetReservationsByBookUnit(int bookUnitId)
     {
         return await _context.Reservations.Where(r => r.BookUnitId == bookUnitId).OrderByDescending(r => r.CreatedAt).ToListAsync();
     }
 
-    private IQueryable<ReservationModel> BuildFilteredQuery(string? status, string? searchToken, string? userId = null)
+    private IQueryable<ReservationModel> BuildFilteredQuery(string? status, string? searchToken, int? userId = null)
     {
         var query = _context.Reservations.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(userId))
+        if (userId.HasValue)
         {
             query = query.Where(r => r.UserId == userId);
         }
@@ -165,7 +164,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return query;
     }
 
-    public async Task<bool> CancelReservationByUser(string reservationId, string userId)
+    public async Task<bool> CancelReservationByUser(int reservationId, int userId)
     {
         var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userId);
         if (reservation == null) return false;
@@ -178,7 +177,7 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
         return true;
     }
 
-    private async Task SendStatusNotification(string reservationId, string newStatus)
+    private async Task SendStatusNotification(int reservationId, string newStatus)
     {
         var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == reservationId);
         if (reservation == null) return;

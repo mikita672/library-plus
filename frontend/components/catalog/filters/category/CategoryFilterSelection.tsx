@@ -21,14 +21,14 @@ function CategoryFilterSelection({ categories }: Props) {
 
     const displayedCategories = isExtended ? categories : categories.slice(0, 4);
 
-    const handleSelect = (id: string) => {
+    const handleSelect = (id: number) => {
         const params = new URLSearchParams(searchParams);
-        params.append("categoryIds", id);
+        params.append("categoryIds", id.toString());
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
 
-    const handleUnselect = (id: string) => {
-        const newCategoryIds = categoryIds.filter(_id => _id !== id);
+    const handleUnselect = (id: number) => {
+        const newCategoryIds = categoryIds.filter(_id => _id !== id.toString());
         const params = new URLSearchParams(searchParams.toString());
         params.delete("categoryIds");
         for (const categoryId of newCategoryIds) {
@@ -45,7 +45,7 @@ function CategoryFilterSelection({ categories }: Props) {
                     <Field orientation="horizontal">
                         <Checkbox
                             id={`category-checkbox-${c.id}`}
-                            checked={categoryIds.includes(c.id)}
+                            checked={categoryIds.includes(c.id.toString())}
                             onCheckedChange={(isChecked) => {
                                 if (isChecked) {
                                     handleSelect(c.id);

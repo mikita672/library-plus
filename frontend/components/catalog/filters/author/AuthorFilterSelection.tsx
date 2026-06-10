@@ -21,20 +21,20 @@ function AuthorFilterSelection({ authors }: Props) {
     const displayedAuthors = isExtended ? authors : authors.slice(0, 4);
 
     const handleChange = (id: string) => {
-        setAuthorId(id);
+        setAuthorId(id.toString());
 
         const params = new URLSearchParams(searchParams);
-        if (id.length === 0) {
+        if (id.toString().length === 0) {
             params.delete("authorId");
         } else {
-            params.set("authorId", id);
+            params.set("authorId", id.toString());
         }
         router.replace(`${pathname}?${params.toString()}`);
     }
 
     return (
         <div className="flex flex-col gap-2">
-            <RadioGroup value={authorId} onValueChange={handleChange}>
+            <RadioGroup value={authorId?.toString()} onValueChange={handleChange}>
                 <Field orientation="horizontal">
                     <RadioGroupItem value="" id="author-none" />
                     <FieldContent>
@@ -44,7 +44,7 @@ function AuthorFilterSelection({ authors }: Props) {
 
                 {displayedAuthors.map((a) => (
                     <Field key={a.id} orientation="horizontal">
-                        <RadioGroupItem value={a.id} id={`author-${a.id}`} />
+                        <RadioGroupItem value={a.id.toString()} id={`author-${a.id}`} />
                         <FieldContent>
                             <FieldLabel htmlFor={`author-${a.id}`}>{a.name}</FieldLabel>
                         </FieldContent>

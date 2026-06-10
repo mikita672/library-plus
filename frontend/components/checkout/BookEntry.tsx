@@ -23,6 +23,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
     return (
         <div className="w-full grid grid-cols-5 items-center gap-12 bg-background p-4">
             <div className="col-span-3 flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={book.coverURI ?? "/images/book-placeholder.png"}
                     className="w-full max-w-[100px] h-[100px] object-contain"

@@ -20,7 +20,7 @@ export async function getNotificationsCount(): Promise<{ pagesCount: number; not
   return res.json();
 }
 
-export async function markNotificationRead(id: string): Promise<boolean> {
+export async function markNotificationRead(id: number): Promise<boolean> {
   const res = await fetch(`/api/notifications/read/${id}`, {
     method: "PATCH",
   });

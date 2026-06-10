@@ -1,6 +1,6 @@
-const BASE_URL = "/api/media";
+const BASE_URL = "/api/v1/media";
 
-export async function uploadBookCover(bookId: string, file: File): Promise<{ coverURI: string }> {
+export async function uploadBookCover(bookId: number, file: File): Promise<{ coverURI: string }> {
   const formData = new FormData();
   formData.append("file", file);
 

@@ -27,7 +27,7 @@ public record MeResponse(
 public record MeShortResponse(string Email, string? Name, string? AvatarUrl, string? PhoneNumber);
 
 public record AdminUserResponse(
-    string Id,
+    int Id,
     string Email,
     string? Name,
     string? PhoneNumber,

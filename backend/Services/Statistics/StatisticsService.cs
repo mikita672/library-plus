@@ -63,10 +63,10 @@ public class StatisticsService(LibraryPlusContext context)
                                where r.CreatedAt >= fromDate && r.CreatedAt <= toDate
                                group cid by cid into g
                                orderby g.Count() descending
-                               select g.Key)
+                               select (int?)g.Key)
                                .FirstOrDefaultAsync();
 
-        if (categoryId == null) return "N/A";
+        if (categoryId == null || categoryId == 0) return "N/A";
 
         var category = await _context.Categories.FindAsync(categoryId);
         return category?.Name ?? "N/A";

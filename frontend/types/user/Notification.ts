@@ -1,5 +1,5 @@
 export interface Notification {
-    id: string,
+    id: number,
     subject: string,
     text: string,
     isRead: boolean,

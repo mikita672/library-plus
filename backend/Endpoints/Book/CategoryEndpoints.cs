@@ -31,7 +31,7 @@ public static class CategoryEndpoints
         group.MapPut("/category/{id}", [Authorize] async (
             CategoryService categoryService,
             [FromBody] UpdateCategoryRequest updateCategoryRequest,
-            string id
+            int id
         ) =>
         {
             if (!await categoryService.EditCategory(id, updateCategoryRequest))
@@ -45,7 +45,7 @@ public static class CategoryEndpoints
 
         group.MapDelete("/category/{id}", [Authorize] async (
             CategoryService categoryService,
-            string id
+            int id
         ) =>
         {
             await categoryService.DeleteCategory(id);

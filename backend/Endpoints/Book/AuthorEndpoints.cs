@@ -31,7 +31,7 @@ public static class AuthorEndpoints
         group.MapPut("/author/{id}", [Authorize] async (
             AuthorService authorService,
             [FromBody] UpdateAuthorRequest updateAuthorRequest,
-            string id
+            int id
         ) =>
         {
             if (!await authorService.EditAuthor(id, updateAuthorRequest))
@@ -45,7 +45,7 @@ public static class AuthorEndpoints
 
         group.MapDelete("/author/{id}", [Authorize] async (
             AuthorService authorService,
-            string id
+            int id
         ) =>
         {
             await authorService.DeleteAuthor(id);

@@ -2,7 +2,7 @@ namespace LibraryPlus.Models.Book;
 
 public class BookUnitModel
 {
-    public string Id { get; set; } = null!;
-    public string BookId { get; set; } = null!;
+    public int Id { get; set; }
+    public int BookId { get; set; }
     public bool IsArchived { get; set; } = false;
 }

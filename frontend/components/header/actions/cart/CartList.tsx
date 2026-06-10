@@ -7,7 +7,7 @@ import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 
 interface Props {
-    ids: string[],
+    ids: number[],
 }
 
 function CartList({ ids }: Props) {

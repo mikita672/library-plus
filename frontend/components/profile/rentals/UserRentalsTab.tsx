@@ -41,7 +41,8 @@ export default function UserRentalsTab() {
   });
 
   useEffect(() => {
-    setPageNumber(1);
+    const t = setTimeout(() => setPageNumber(1), 0);
+    return () => clearTimeout(t);
   }, [debouncedSearch, statusFilter]);
 
   const handleClearFilters = () => {

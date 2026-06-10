@@ -22,7 +22,7 @@ export async function createAuthor(name: string): Promise<Author | null> {
   return res.json() as Promise<Author>;
 }
 
-export async function updateAuthor(id: string, name: string): Promise<void> {
+export async function updateAuthor(id: number, name: string): Promise<void> {
   const res = await fetch(`/api/authors/author/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -36,7 +36,7 @@ export async function updateAuthor(id: string, name: string): Promise<void> {
   }
 }
 
-export async function deleteAuthor(id: string): Promise<void> {
+export async function deleteAuthor(id: number): Promise<void> {
   const res = await fetch(`/api/authors/author/${id}`, {
     method: "DELETE",
     credentials: "include",

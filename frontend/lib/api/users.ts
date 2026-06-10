@@ -5,7 +5,7 @@ export interface UserMeShort {
   phoneNumber?: string | null;
 }
 
-export async function getUserById(id: string): Promise<UserMeShort | null> {
+export async function getUserById(id: number): Promise<UserMeShort | null> {
   const res = await fetch(`/api/users/user/${id}`, {
     method: "GET",
     cache: "force-cache",
@@ -15,7 +15,7 @@ export async function getUserById(id: string): Promise<UserMeShort | null> {
 }
 
 export interface AdminUser {
-  id: string;
+  id: number;
   email: string;
   name?: string | null;
   phoneNumber?: string | null;
@@ -52,14 +52,14 @@ export async function getAllUsersPages(searchToken?: string): Promise<number> {
   return res.json() as Promise<number>;
 }
 
-export async function softDeleteUser(id: string): Promise<boolean> {
+export async function softDeleteUser(id: number): Promise<boolean> {
   const res = await fetch(`/api/users/user/${id}/delete`, {
     method: "PATCH",
   });
   return res.ok;
 }
 
-export async function restoreUser(id: string): Promise<boolean> {
+export async function restoreUser(id: number): Promise<boolean> {
   const res = await fetch(`/api/users/user/${id}/restore`, {
     method: "PATCH",
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getBookUnitsForBook, archiveBookUnit, unarchiveBookUnit } from "@/lib/api/books";
@@ -26,7 +26,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [unitsStatus, setUnitsStatus] = useState<BookUnitStatus[]>([]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!book) return;
     setLoading(true);
     try {
@@ -58,14 +58,14 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [book]);
 
   useEffect(() => {
     if (!book || !open) return;
     void fetchData();
-  }, [book, open]);
+  }, [book, open, fetchData]);
 
-  const handleArchive = async (unitId: string) => {
+  const handleArchive = async (unitId: number) => {
     const ok = await archiveBookUnit(unitId);
     if (ok) {
       toast.success("Book unit archived");
@@ -75,7 +75,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
     }
   };
 
-  const handleUnarchive = async (unitId: string) => {
+  const handleUnarchive = async (unitId: number) => {
     const ok = await unarchiveBookUnit(unitId);
     if (ok) {
       toast.success("Book unit unarchived");
@@ -137,7 +137,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                           variant="outline"
                           size="sm"
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleUnarchive(s.unit.id)}
+                          onClick={() => handleUnarchive(Number(s.unit.id))}
                         >
                           Unarchive
                         </Button>
@@ -147,7 +147,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                           size="sm"
                           style={{ cursor: "pointer" }}
                           disabled={!s.isRentable || !s.isAvailable}
-                          onClick={() => handleArchive(s.unit.id)}
+                          onClick={() => handleArchive(Number(s.unit.id))}
                         >
                           Archive
                         </Button>

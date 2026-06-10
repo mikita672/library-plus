@@ -1,9 +1,9 @@
 import { createContext, useEffect, useState } from "react";
 
 export interface ICartContext {
-    bookIds: string[] | null,
-    addBook: (id: string) => void,
-    removeBook: (id: string) => void,
+    bookIds: number[] | null,
+    addBook: (id: number) => void,
+    removeBook: (id: number) => void,
 }
 
 const cartKey = "cartKey";
@@ -11,7 +11,7 @@ const cartKey = "cartKey";
 export const cartContext = createContext({} as ICartContext);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-    const [bookIds, setBookIds] = useState<string[] | null>(null);
+    const [bookIds, setBookIds] = useState<number[] | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -25,11 +25,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
                 setBookIds([]);
                 return;
             }
-            setBookIds(savedCart.bookIds);
+            setBookIds(savedCart.bookIds.map((id: number | string) => Number(id)));
         })()
     }, []);
 
-    const addBook = (id: string) => {
+    const addBook = (id: number) => {
         setBookIds(prev => {
             if (prev === null) return null;
             if (prev.includes(id)) return prev;
@@ -39,7 +39,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }
 
-    const removeBook = (id: string) => {
+    const removeBook = (id: number) => {
         setBookIds(prev => {
             if (prev === null) return null;
             const newBookIds = prev.filter(bookId => bookId !== id);

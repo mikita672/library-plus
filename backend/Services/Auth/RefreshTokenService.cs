@@ -34,7 +34,7 @@ public class RefreshTokenService
         return await _userService.GetUserById(refreshToken.UserId);
     }
 
-    public async Task<string> AddRefreshToken(string userId)
+    public async Task<string> AddRefreshToken(int userId)
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();
@@ -60,7 +60,7 @@ public class RefreshTokenService
         return result.DeletedCount == 1;
     }
 
-    public async Task RemoveRefreshTokensForUser(string userId)
+    public async Task RemoveRefreshTokensForUser(int userId)
     {
         await _refreshTokens.DeleteManyAsync(t => t.UserId == userId);
     }

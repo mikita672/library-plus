@@ -13,7 +13,6 @@ public class PublisherService(LibraryPlusContext context)
     {
         var publisher = new PublisherModel
         {
-            Id = Guid.NewGuid().ToString(),
             Name = createPublisherRequest.Name,
         };
         _context.Publishers.Add(publisher);
@@ -21,7 +20,7 @@ public class PublisherService(LibraryPlusContext context)
         return publisher;
     }
 
-    public async Task<bool> EditPublisher(string id, UpdatePublisherRequest updatePublisherRequest)
+    public async Task<bool> EditPublisher(int id, UpdatePublisherRequest updatePublisherRequest)
     {
         var publisher = await _context.Publishers.FindAsync(id);
         if (publisher == null) return false;
@@ -44,14 +43,14 @@ public class PublisherService(LibraryPlusContext context)
         return await _context.Publishers.ToListAsync();
     }
 
-    public async Task<IList<PublisherModel>> GetPublishersByIds(IList<string?> ids)
+    public async Task<IList<PublisherModel>> GetPublishersByIds(IList<int> ids)
     {
         return await _context.Publishers
             .Where(p => ids.Contains(p.Id))
             .ToListAsync();
     }
 
-    public async Task DeletePublisher(string id)
+    public async Task DeletePublisher(int id)
     {
         var publisher = await _context.Publishers.FindAsync(id);
         if (publisher != null)
@@ -61,7 +60,7 @@ public class PublisherService(LibraryPlusContext context)
         }
     }
 
-    public async Task<PublisherModel?> GetPublisher(string id)
+    public async Task<PublisherModel?> GetPublisher(int id)
     {
         return await _context.Publishers.FirstOrDefaultAsync(p => p.Id == id);
     }
