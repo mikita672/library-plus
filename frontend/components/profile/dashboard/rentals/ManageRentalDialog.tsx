@@ -24,16 +24,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { returnReservation } from "@/lib/api/reservations";
-import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import { getReservationsByUnit, returnReservation } from "@/lib/api/reservations";
+import { EnrichedReservationItem, ReservationItem } from "@/types/reservation/Reservation";
 
 interface Props {
   reservation: EnrichedReservationItem | null;
   onClose: () => void;
   onSuccess: () => void;
+  readOnly?: boolean;
+  hideClientDetails?: boolean;
 }
 
-const CONDITIONS = ["Good", "Minor damages", "Lost", "Destroyed"];
+const CONDITIONS = ["Good", "Minor damages", "Unusable", "Lost"];
 
 const formatDate = (iso: string) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
@@ -45,8 +47,10 @@ const rentalSchema = z.object({
 
 type FormValues = z.infer<typeof rentalSchema>;
 
-export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
+export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, hideClientDetails }: Props) {
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<ReservationItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(rentalSchema),
     defaultValues: { condition: "Good", note: "" },
@@ -58,8 +62,17 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
         condition: reservation.bookConditionUponReturn || "Good",
         note: reservation.additionalNote || "",
       });
+      getReservationsByUnit(reservation.bookUnitId).then((data) => {
+        const pastReturns = data.filter(r => r.id !== reservation.id && r.status.toLowerCase() === "returned");
+        setHistory(pastReturns);
+      });
+    } else {
+      setHistory([]);
+      setShowHistory(false);
     }
-  }, [reservation, form]);
+  }, [reservation, form, readOnly]);
+
+  const hasMinorDamages = history.some(r => r.bookConditionUponReturn?.toLowerCase().includes("minor"));
 
   const { condition } = form.watch();
 
@@ -78,10 +91,10 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
     ? Math.max(0, Math.ceil((new Date().getTime() - dates.e.getTime()) / 86400000)) : 0;
 
   const overdueFine = overdueDays * 1;
-  const conditionFine = Math.round(((condition === "Lost" || condition === "Destroyed") 
-    ? reservation.repurchasePrice 
-    : condition.toLowerCase().includes("minor") 
-      ? reservation.repurchasePrice / 3 
+  const conditionFine = Math.round(((condition === "Lost" || condition === "Unusable" || condition === "Destroyed")
+    ? reservation.repurchasePrice
+    : condition.toLowerCase().includes("minor")
+      ? reservation.repurchasePrice / 3
       : 0) * 100) / 100;
 
   const totalFine = Math.round((overdueFine + conditionFine) * 100) / 100;
@@ -110,6 +123,18 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <p>Author: {reservation.bookAuthor}</p>
               <p>Language: {reservation.bookLanguage}</p>
               <p>Year: {reservation.bookYear}</p>
+              {hasMinorDamages && (
+                <div className="mt-2 inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  Warning: Previously marked as minor damages
+                </div>
+              )}
+              {history.length > 0 && (
+                <div className="mt-2">
+                  <Button type="button" variant="link" className="px-0 h-auto text-xs" onClick={() => setShowHistory(true)}>
+                    See previous return notes ({history.length})
+                  </Button>
+                </div>
+              )}
             </div>
             {reservation.bookCoverUri && (
               <div className="mt-4 relative w-50 h-75 overflow-hidden">
@@ -143,7 +168,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <div className="space-y-2 flex items-center gap-4">
                 <Label>Condition:</Label>
                 <Controller name="condition" control={form.control} render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={readOnly}>
                     <SelectTrigger className="w-45 rounded-none"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-none">{CONDITIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
@@ -152,21 +177,47 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
               <div className="space-y-2 mt-4">
                 <Label>Note:</Label>
                 <Controller name="note" control={form.control} render={({ field }) => (
-                  <Textarea {...field} placeholder="Notes..." className="min-h-30 resize-none rounded-none" />
+                  <Textarea {...field} placeholder="Notes..." className="min-h-30 resize-none rounded-none" disabled={readOnly} />
                 )} />
               </div>
             </div>
           </div>
 
           <div className="space-y-8 flex flex-col">
-            <div>
-              <h3 className="font-bold text-lg">Client</h3>
-              <Link href={`/profile/dashboard/clients?search=${encodeURIComponent(reservation.clientEmail)}`} className="text-primary underline block mb-2">{reservation.clientName === "Unknown" ? reservation.clientEmail : reservation.clientName}</Link>
-              {reservation.clientName !== "Unknown" && reservation.clientName !== reservation.clientEmail && reservation.clientEmail && (
-                <p className="text-sm"><span className="font-medium">Email:</span> {reservation.clientEmail}</p>
-              )}
-              <p className="text-sm"><span className="font-medium">Phone:</span> {reservation.clientPhone}</p>
-            </div>
+            {!hideClientDetails && (reservation.clientName !== "Unknown" || reservation.clientEmail || reservation.clientPhone) && (
+              <div>
+                <h3 className="font-bold text-lg mb-4">Client</h3>
+                <div className="flex items-center gap-4">
+                  {reservation.clientAvatarUrl ? (
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border">
+                      <Image
+                        src={reservation.clientAvatarUrl}
+                        alt={reservation.clientName || "Avatar"}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted border">
+                      <span className="text-muted-foreground font-semibold">
+                        {reservation.clientName && reservation.clientName !== "Unknown" ? reservation.clientName.charAt(0).toUpperCase() : "?"}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <Link href={`/profile/dashboard/clients?search=${encodeURIComponent(reservation.clientEmail || "")}`} className="text-primary underline block mb-1">{reservation.clientName === "Unknown" ? reservation.clientEmail : reservation.clientName}</Link>
+                    {reservation.clientName !== "Unknown" && reservation.clientName !== reservation.clientEmail && reservation.clientEmail && (
+                      <p className="text-sm"><span className="font-medium">Email:</span> {reservation.clientEmail}</p>
+                    )}
+                    {reservation.clientPhone && reservation.clientPhone !== "Unknown" && (
+                      <p className="text-sm"><span className="font-medium">Phone:</span> {reservation.clientPhone}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="mt-auto space-y-6">
               <div className="text-right">
                 <h3 className="font-bold text-lg mb-2">Fines</h3>
@@ -177,13 +228,33 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Button type="submit" size="sm" className="w-full" disabled={loading}>{totalFine > 0 ? "Request payment" : "Return"}</Button>
-                <Button type="button" variant="outline" size="sm" className="w-full" onClick={onClose} disabled={loading}>Cancel</Button>
+                {!readOnly && <Button type="submit" size="sm" className="w-full" disabled={loading}>{totalFine > 0 ? "Confirm payment" : "Return"}</Button>}
+                <Button type="button" variant="outline" size="sm" className="w-full" onClick={onClose} disabled={loading}>{readOnly ? "Close" : "Cancel"}</Button>
               </div>
             </div>
           </div>
         </form>
       </DialogContent>
+
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="sm:max-w-md rounded-none">
+          <DialogHeader>
+            <DialogTitle>Previous Return Notes</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
+            {history.map(h => (
+              <div key={h.id} className="border p-3 text-sm space-y-1">
+                <p className="font-semibold text-xs text-muted-foreground">{formatDate(h.returnedDate || h.endDate)}</p>
+                <p><span className="font-medium">Condition:</span> {h.bookConditionUponReturn || "N/A"}</p>
+                <p><span className="font-medium">Note:</span> {h.additionalNote || "None"}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button type="button" variant="outline" onClick={() => setShowHistory(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

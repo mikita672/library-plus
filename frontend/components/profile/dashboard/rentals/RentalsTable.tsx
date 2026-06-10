@@ -17,6 +17,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { ManageRentalDialog } from "./ManageRentalDialog";
 import { updateReservationStatus } from "@/lib/api/reservations";
@@ -86,22 +87,42 @@ function buildColumns(
       accessorKey: "userId",
       header: "Client",
       cell: ({ row }) => (
-        <div className="max-w-45">
-          <Link
-            href={`/profile/dashboard/clients?search=${encodeURIComponent(row.original.clientEmail)}`}
-            className="block truncate font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
-            title={row.original.clientName}
-          >
-            {row.original.clientName}
-          </Link>
-          {row.original.clientEmail && row.original.clientName !== row.original.clientEmail && (
-            <div
-              className="truncate text-xs text-muted-foreground"
-              title={row.original.clientEmail}
-            >
-              {row.original.clientEmail}
+        <div className="flex items-center gap-3 max-w-55">
+          {row.original.clientAvatarUrl ? (
+            <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border">
+              <Image
+                src={row.original.clientAvatarUrl}
+                alt={row.original.clientName || "Avatar"}
+                fill
+                sizes="32px"
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted border">
+              <span className="text-muted-foreground text-xs font-semibold">
+                {row.original.clientName && row.original.clientName !== "Unknown" ? row.original.clientName.charAt(0).toUpperCase() : "?"}
+              </span>
             </div>
           )}
+          <div className="overflow-hidden">
+            <Link
+              href={`/profile/dashboard/clients?search=${encodeURIComponent(row.original.clientEmail)}`}
+              className="block truncate font-medium text-sm text-primary underline underline-offset-2 hover:text-primary/80"
+              title={row.original.clientName}
+            >
+              {row.original.clientName === "Unknown" ? row.original.clientEmail : row.original.clientName}
+            </Link>
+            {row.original.clientEmail && row.original.clientName !== row.original.clientEmail && row.original.clientName !== "Unknown" && (
+              <div
+                className="truncate text-xs text-muted-foreground"
+                title={row.original.clientEmail}
+              >
+                {row.original.clientEmail}
+              </div>
+            )}
+          </div>
         </div>
       ),
     },
@@ -173,6 +194,11 @@ function buildColumns(
             {(displayStatus === "Taken" || displayStatus === "Overdue") && (
               <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
                 Return
+              </Button>
+            )}
+            {displayStatus === "Returned" && (
+              <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
+                See details
               </Button>
             )}
           </div>
@@ -268,6 +294,7 @@ export default function RentalsTable({
         reservation={selectedReservation}
         onClose={() => setSelectedReservation(null)}
         onSuccess={onRefresh}
+        readOnly={selectedReservation?.status.toLowerCase() === "returned"}
       />
     </div>
   );

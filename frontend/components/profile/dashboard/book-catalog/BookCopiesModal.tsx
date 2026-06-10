@@ -33,12 +33,28 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
       const units = await getBookUnitsForBook(book.id);
       const statuses = await Promise.all(units.map(async (unit) => {
         const reservations = await getReservationsByUnit(unit.id);
-        const latestReturn = reservations.find(r => r.returnedDate !== null);
+        const pastReturns = reservations.filter(r => r.returnedDate !== null);
         const activeReservation = reservations.find(r => r.returnedDate === null);
 
+        const getSeverity = (c: string) => {
+          const low = (c || "").toLowerCase();
+          if (low.includes("lost")) return 3;
+          if (low.includes("destroyed") || low.includes("unusable")) return 2;
+          if (low.includes("minor")) return 1;
+          return 0;
+        };
+
         let condition = "Good";
-        if (latestReturn && latestReturn.bookConditionUponReturn) {
-          condition = latestReturn.bookConditionUponReturn;
+        let maxSeverity = 0;
+        
+        for (const past of pastReturns) {
+          const severity = getSeverity(past.bookConditionUponReturn || "");
+          if (severity > maxSeverity) {
+            maxSeverity = severity;
+            if (severity === 3) condition = "Lost";
+            if (severity === 2) condition = "Unusable";
+            if (severity === 1) condition = "Minor damages";
+          }
         }
 
         const condLower = condition.toLowerCase();
