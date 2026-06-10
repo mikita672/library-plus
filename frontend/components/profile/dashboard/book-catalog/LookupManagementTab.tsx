@@ -133,10 +133,9 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   const handleDelete = useCallback(async (item: T) => {
     if (!window.confirm(`Delete ${entityName} "${item.name}"?`)) return;
     try {
-      if (await deleteItem(item.id)) {
-        toast.success(`${entityName} deleted`);
-        await loadItems();
-      }
+      await deleteItem(item.id);
+      toast.success(`${entityName} deleted`);
+      await loadItems();
     } catch {
       toast.error(`Error deleting ${entityName}`);
     }
@@ -147,11 +146,10 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
     setSubmitting(true);
     try {
       if (editingItem) {
-        if (await updateItem(editingItem.id, nameInput.trim())) {
-          toast.success(`${entityName} updated`);
-          await loadItems();
-          setDialogOpen(false);
-        }
+        await updateItem(editingItem.id, nameInput.trim());
+        toast.success(`${entityName} updated`);
+        await loadItems();
+        setDialogOpen(false);
       } else {
         await createItem(nameInput.trim());
         toast.success(`${entityName} created`);
