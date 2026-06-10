@@ -4,7 +4,7 @@ import React, { useContext } from 'react'
 import { UserData } from '@/types/user/UserData';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import HeaderUserMenuAvatar from './UserMenuAvatar';
-import { ShoppingBagIcon, SignOutIcon, UserCircleIcon } from '@phosphor-icons/react';
+import { BellIcon, BooksIcon, CirclesFourIcon, HandCoinsIcon, ShoppingBagIcon, SignOutIcon, UserCircleIcon, UserIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,8 @@ interface Props {
 
 function HeaderUserMenu({ userData }: Props) {
   const router = useRouter();
-  const { logout } = useContext(userContext);
+  const { logout, fullUserData } = useContext(userContext);
+  const isAdmin = fullUserData?.isAdmin;
 
   const onLogout = async () => {
     const error = await logout();
@@ -46,19 +47,57 @@ function HeaderUserMenu({ userData }: Props) {
       <DropdownMenuContent align="end" sideOffset={10} className="w-50">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href="/profile" className="flex flex-1 gap-2 align-center w-full">
-              <UserCircleIcon className="w-6 h-6" />
-              <span>Profile</span>
+              <UserIcon className="w-6 h-6" />
+              <span>Account</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem className="cursor-pointer" asChild>
             <Link href="/profile/rentals" className="flex flex-1 gap-2 align-center w-full">
               <ShoppingBagIcon className="w-6 h-6" />
               <span>My rentals</span>
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer" asChild>
+            <Link href="/profile/notifications" className="flex flex-1 gap-2 align-center w-full">
+              <BellIcon className="w-6 h-6" />
+              <span>Notifications</span>
+            </Link>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Admin</DropdownMenuLabel>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/profile/dashboard" className="flex flex-1 gap-2 align-center w-full">
+                  <CirclesFourIcon className="w-6 h-6" />
+                  <span>Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/profile/dashboard/book-catalog" className="flex flex-1 gap-2 align-center w-full">
+                  <BooksIcon className="w-6 h-6" />
+                  <span>Book Management</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/profile/dashboard/rentals" className="flex flex-1 gap-2 align-center w-full">
+                  <HandCoinsIcon className="w-6 h-6" />
+                  <span>Rentals and fines</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link href="/profile/dashboard/clients" className="flex flex-1 gap-2 align-center w-full">
+                  <UserIcon className="w-6 h-6" />
+                  <span>Client Management</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer">
           <div onClick={onLogout} className="flex flex-1 gap-2 align-center w-full">

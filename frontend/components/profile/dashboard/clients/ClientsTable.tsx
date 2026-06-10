@@ -17,6 +17,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import Image from "next/image";
 import {
   Popover,
   PopoverContent,
@@ -58,18 +59,39 @@ function buildColumns(
       cell: ({ row }) => {
         const name = row.original.name;
         const email = row.original.email;
+        const avatarUrl = row.original.avatarUrl;
         const hasValidName = name && name !== "Unknown";
         
         return (
-          <div className="max-w-[200px]">
-            {hasValidName ? (
-              <>
-                <div className="truncate font-medium text-sm" title={name}>{name}</div>
-                <div className="truncate text-xs text-muted-foreground" title={email}>{email}</div>
-              </>
+          <div className="flex items-center gap-3 max-w-[250px]">
+            {avatarUrl ? (
+              <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border">
+                <Image
+                  src={avatarUrl}
+                  alt={name || "Avatar"}
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
             ) : (
-              <div className="truncate font-medium text-sm" title={email}>{email}</div>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted border">
+                <span className="text-muted-foreground text-xs font-semibold">
+                  {hasValidName ? name.charAt(0).toUpperCase() : "?"}
+                </span>
+              </div>
             )}
+            <div className="overflow-hidden">
+              {hasValidName ? (
+                <>
+                  <div className="truncate font-medium text-sm" title={name}>{name}</div>
+                  <div className="truncate text-xs text-muted-foreground" title={email}>{email}</div>
+                </>
+              ) : (
+                <div className="truncate font-medium text-sm" title={email}>{email}</div>
+              )}
+            </div>
           </div>
         );
       },

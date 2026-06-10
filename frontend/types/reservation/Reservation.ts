@@ -2,7 +2,7 @@ export type ReservationStatus = "Reserved" | "Taken" | "Returned" | "Overdue";
 
 export interface ReservationItem {
   id: number;
-  bookUnitId: string;
+  bookUnitId: number;
   userId: number;
   startDate: string;
   endDate: string;
@@ -18,6 +18,7 @@ export interface EnrichedReservationItem extends ReservationItem {
   clientName: string;
   clientEmail: string;
   clientPhone: string;
+  clientAvatarUrl?: string;
   bookTitle: string;
   bookAuthor: string;
   bookLanguage: string;
