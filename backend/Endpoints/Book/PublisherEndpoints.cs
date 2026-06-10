@@ -13,9 +13,9 @@ public static class PublisherEndpoints
         var group = app
             .MapGroup("/api/v1/publishers");
 
-        group.MapGet("/", async (PublisherService publisherService) =>
+        group.MapGet("/", async (PublisherService publisherService, [FromQuery] bool includeInactive = false) =>
         {
-            return await publisherService.GetAllPublishers();
+            return await publisherService.GetAllPublishers(includeInactive);
         });
 
         group.MapPost("/", [Authorize] async (

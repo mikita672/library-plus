@@ -24,6 +24,7 @@ function PublisherFilterSelection({ publishers }: Props) {
         setPublisherId(id.toString());
 
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         if (id.toString().length === 0) {
             params.delete("publisherId");
         } else {

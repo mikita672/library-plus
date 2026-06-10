@@ -128,7 +128,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
                   Warning: Previously marked as minor damages
                 </div>
               )}
-              {history.length > 0 && (
+              {history.length > 0 && !readOnly && (
                 <div className="mt-2">
                   <Button type="button" variant="link" className="px-0 h-auto text-xs" onClick={() => setShowHistory(true)}>
                     See previous return notes ({history.length})

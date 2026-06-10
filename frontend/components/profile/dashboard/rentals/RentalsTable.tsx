@@ -183,7 +183,7 @@ function buildColumns(
             {displayStatus === "Reserved" && (
               <>
                 <Button variant="outline" size="sm" onClick={() => onStatusChange(r.id, "Taken")}>
-                  Take
+                  Confirm rent
                 </Button>
                 <Button variant="destructive" size="sm" onClick={() => onStatusChange(r.id, "Returned")}>
                   Cancel

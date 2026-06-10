@@ -11,6 +11,7 @@ function SortSelection() {
     const handleChange = (value: string) => {
         const [attribute, direction] = value.split('-');
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         params.set("sortBy", attribute);
         params.set("sortDescending", direction === "desc" ? "true" : "false");
         router.replace(`${pathname}?${params.toString()}`);

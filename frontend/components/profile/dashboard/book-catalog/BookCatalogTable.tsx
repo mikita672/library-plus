@@ -18,6 +18,11 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -170,15 +175,47 @@ function buildColumns(
             >
               <PencilSimpleIcon className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDeleteClick(book)}
-              aria-label={`Delete ${book.title}`}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Deactivate ${book.title}`}
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 rounded-none border border-border bg-background p-4 mr-10 mb-2">
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold">Deactivate Book</div>
+                  <p className="text-xs text-muted-foreground">
+                    Are you sure you want to deactivate "{book.title}"? It will no longer be shown in the catalog.
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+                        onDeleteClick(book);
+                      }}
+                    >
+                      Deactivate
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         );
       },
@@ -211,14 +248,9 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
 
   const handleDeleteClick = useCallback(
     async (book: BookCard) => {
-      const confirmed = window.confirm(
-        `Are you sure you want to delete "${book.title}"?`,
-      );
-      if (!confirmed) return;
-
       try {
         await deleteBook(book.id);
-        toast.success(`"${book.title}" has been deleted`);
+        toast.success(`"${book.title}" has been deactivated`);
         onSuccess?.();
       } catch (err) {
         toast.error(

@@ -81,11 +81,16 @@ public class BookService(
 
     private async Task<IQueryable<BookModel>> BuildFilterQuery(
         string? token, int? authorId, int? publisherId, List<int>? categories,
-        int? minYear, int? maxYear, bool? available)
+        int? minYear, int? maxYear, bool? available, bool includeInactive)
     {
         var query = _context.Books.AsQueryable()
             .Where(b => b.PublicationYear >= (minYear ?? 0))
             .Where(b => b.PublicationYear <= (maxYear ?? DateTime.Now.Year));
+
+        if (!includeInactive)
+        {
+            query = query.Where(b => b.IsActive);
+        }
 
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -138,9 +143,9 @@ public class BookService(
 
     public async Task<IList<BookCardResponse>> SearchBooks(
         string? token, int? authorId, int? publisherId, List<int>? categories,
-        int? minYear, int? maxYear, bool? available, int page, string? sort, bool desc)
+        int? minYear, int? maxYear, bool? available, int page, string? sort, bool desc, bool includeInactive)
     {
-        var query = await BuildFilterQuery(token, authorId, publisherId, categories, minYear, maxYear, available);
+        var query = await BuildFilterQuery(token, authorId, publisherId, categories, minYear, maxYear, available, includeInactive);
         var sortBy = sort?.ToLower() ?? "title";
 
         query = (desc, sortBy) switch
@@ -159,9 +164,9 @@ public class BookService(
         return await MapToCards(books);
     }
 
-    public async Task<int> GetPagesCount(string? token, int? authorId, int? publisherId, List<int>? categories, int? minYear, int? maxYear, bool? available)
+    public async Task<int> GetPagesCount(string? token, int? authorId, int? publisherId, List<int>? categories, int? minYear, int? maxYear, bool? available, bool includeInactive)
     {
-        var query = await BuildFilterQuery(token, authorId, publisherId, categories, minYear, maxYear, available);
+        var query = await BuildFilterQuery(token, authorId, publisherId, categories, minYear, maxYear, available, includeInactive);
         var count = await query.CountAsync();
         return (int)Math.Ceiling(count / (double)PAGE_SIZE);
     }
@@ -208,7 +213,7 @@ public class BookService(
         var book = await _context.Books.FindAsync(id);
         if (book != null)
         {
-            _context.Books.Remove(book);
+            book.IsActive = false;
             await _context.SaveChangesAsync();
         }
     }
@@ -325,13 +330,13 @@ public class BookService(
 
     public async Task<IList<BookCardResponse>> GetBooksByAuthor(int id, int? excludedId)
     {
-        var books = await _context.Books.Where(b => b.AuthorId == id && b.Id != excludedId).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
+        var books = await _context.Books.Where(b => b.AuthorId == id && b.Id != excludedId && b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
         return await MapToCards(books);
     }
 
     public async Task<IList<BookCardResponse>> GetPopularBooks()
     {
-        var books = await _context.Books.OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
+        var books = await _context.Books.Where(b => b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
         return await MapToCards(books);
     }
 

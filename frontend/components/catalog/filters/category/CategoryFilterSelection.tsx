@@ -23,6 +23,7 @@ function CategoryFilterSelection({ categories }: Props) {
 
     const handleSelect = (id: number) => {
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         params.append("categoryIds", id.toString());
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
@@ -30,6 +31,7 @@ function CategoryFilterSelection({ categories }: Props) {
     const handleUnselect = (id: number) => {
         const newCategoryIds = categoryIds.filter(_id => _id !== id.toString());
         const params = new URLSearchParams(searchParams.toString());
+        params.delete("pageNumber");
         params.delete("categoryIds");
         for (const categoryId of newCategoryIds) {
             params.append("categoryIds", categoryId);

@@ -24,6 +24,7 @@ function AuthorFilterSelection({ authors }: Props) {
         setAuthorId(id.toString());
 
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         if (id.toString().length === 0) {
             params.delete("authorId");
         } else {
