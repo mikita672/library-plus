@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
         port: "9000",
         pathname: "/library-plus/**",
       },
+      {
+        protocol: "https",
+        hostname: "library-plus-production.up.railway.app",
+        pathname: "/api/**",
+      },
     ],
   },
   async rewrites() {
