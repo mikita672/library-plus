@@ -106,7 +106,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess }: Props) {
           <div className="space-y-4">
             <h2 className="text-xl font-bold">{reservation.bookTitle}</h2>
             <div className="text-sm space-y-1">
-              <p>id: {reservation.bookUnitId.substring(0, 8)}</p>
+              <p>id: {reservation.bookUnitId}</p>
               <p>Author: {reservation.bookAuthor}</p>
               <p>Language: {reservation.bookLanguage}</p>
               <p>Year: {reservation.bookYear}</p>

@@ -2,7 +2,7 @@ export type ReservationStatus = "Reserved" | "Taken" | "Returned" | "Overdue";
 
 export interface ReservationItem {
   id: number;
-  bookUnitId: string;
+  bookUnitId: number;
   userId: number;
   startDate: string;
   endDate: string;
