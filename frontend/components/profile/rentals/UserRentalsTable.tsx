@@ -22,6 +22,7 @@ import { cancelReservation } from "@/lib/api/reservations";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ManageRentalDialog } from "../dashboard/rentals/ManageRentalDialog";
+import { LeaveReviewDialog } from "./LeaveReviewDialog";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -99,7 +100,8 @@ function calculateFine(reservation: EnrichedReservationItem): number {
 
 function buildColumns(
   onCancel: (id: number) => void,
-  onManageClick: (r: EnrichedReservationItem) => void
+  onManageClick: (r: EnrichedReservationItem) => void,
+  onReviewClick: (r: EnrichedReservationItem) => void
 ): ColumnDef<EnrichedReservationItem>[] {
   return [
   {
@@ -204,9 +206,16 @@ function buildColumns(
             </Button>
           )}
           {isReturned && (
-            <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
-              See details
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
+                See details
+              </Button>
+              {!r.hasReviewed && (
+                <Button variant="default" size="sm" onClick={() => onReviewClick(r)}>
+                  Leave review
+                </Button>
+              )}
+            </>
           )}
         </div>
       );
@@ -223,6 +232,8 @@ export default function UserRentalsTable({
   onRefresh: () => void;
 }) {
   const [selectedReservation, setSelectedReservation] = useState<EnrichedReservationItem | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ bookId: number; bookTitle: string } | null>(null);
+
   const handleCancel = useCallback(async (id: number) => {
     try {
       const success = await cancelReservation(id);
@@ -237,7 +248,11 @@ export default function UserRentalsTable({
     }
   }, [onRefresh]);
 
-  const columns = useMemo(() => buildColumns(handleCancel, setSelectedReservation), [handleCancel]);
+  const handleReviewClick = useCallback((r: EnrichedReservationItem) => {
+    setReviewTarget({ bookId: r.bookId, bookTitle: r.bookTitle });
+  }, []);
+
+  const columns = useMemo(() => buildColumns(handleCancel, setSelectedReservation, handleReviewClick), [handleCancel, handleReviewClick]);
   const data = useMemo(() => reservations, [reservations]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -292,6 +307,12 @@ export default function UserRentalsTable({
         onSuccess={onRefresh}
         readOnly={true}
         hideClientDetails={true}
+      />
+      <LeaveReviewDialog
+        bookId={reviewTarget?.bookId ?? null}
+        bookTitle={reviewTarget?.bookTitle ?? ""}
+        onClose={() => setReviewTarget(null)}
+        onSuccess={onRefresh}
       />
     </div>
   );

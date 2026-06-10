@@ -73,6 +73,7 @@ builder.Services.AddScoped<AuthorService>();
 builder.Services.AddScoped<PublisherService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<ReservationService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddSingleton<IMailService>(mailService);

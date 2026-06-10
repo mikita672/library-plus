@@ -3,6 +3,7 @@ using LibraryPlus.Requests.Book;
 using LibraryPlus.Services.Book;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LibraryPlus.Endpoints.Book;
 
@@ -207,6 +208,50 @@ public static class BookEndpoints
         })
             .AddEndpointFilter<ActiveUserFilter>()
             .AddEndpointFilter<AdminUserFilter>();
+
+        group.MapGet("/book/{id}/reviews", async (
+            ReviewService reviewService,
+            int id,
+            [FromQuery] int? pageNumber
+        ) =>
+        {
+            return await reviewService.GetBookReviews(id, pageNumber ?? 1);
+        });
+
+        group.MapPost("/book/{id}/reviews", [Authorize] async (
+            ReviewService reviewService,
+            ClaimsPrincipal claims,
+            int id,
+            [FromBody] CreateReviewRequest request
+        ) =>
+        {
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
+            var review = await reviewService.CreateReview(userId, new CreateReviewRequest(id, request.Rating, request.ReviewText));
+            if (review == null)
+            {
+                return Results.BadRequest("You have already reviewed this book or have not returned a rental for it.");
+            }
+            return Results.Ok(review);
+        })
+            .AddEndpointFilter<ActiveUserFilter>();
+
+        group.MapGet("/book/{id}/rating", async (
+            ReviewService reviewService,
+            int id
+        ) =>
+        {
+            return await reviewService.GetBookRatingSummary(id);
+        });
+
+        group.MapGet("/me/reviewed-books", [Authorize] async (
+            ReviewService reviewService,
+            ClaimsPrincipal claims
+        ) =>
+        {
+            var userId = int.Parse(claims.FindFirstValue("sub")!);
+            return await reviewService.GetReviewedBookIds(userId);
+        })
+            .AddEndpointFilter<ActiveUserFilter>();
 
     }
 }

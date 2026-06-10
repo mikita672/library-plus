@@ -12,12 +12,14 @@ public class BookService(
     LibraryPlusContext context,
     CategoryService categoryService,
     AuthorService authorService,
-    PublisherService publisherService)
+    PublisherService publisherService,
+    ReviewService reviewService)
 {
     private readonly LibraryPlusContext _context = context;
     private readonly AuthorService _authorService = authorService;
     private readonly PublisherService _publisherService = publisherService;
     private readonly CategoryService _categoryService = categoryService;
+    private readonly ReviewService _reviewService = reviewService;
     private const int PAGE_SIZE = 12;
 
     public async Task<BookModel> CreateBook(CreateBookRequest request)
@@ -147,6 +149,8 @@ public class BookService(
             (false, "publicationyear") => query.OrderBy(b => b.OriginalPublicationYear ?? b.PublicationYear),
             (true, "relevancy") => query.OrderByDescending(b => b.Popularity),
             (false, "relevancy") => query.OrderBy(b => b.Popularity),
+            (true, "rating") => query.OrderByDescending(b => _context.Reviews.Where(r => r.BookId == b.Id).Average(r => (double?)r.Rating) ?? 0),
+            (false, "rating") => query.OrderBy(b => _context.Reviews.Where(r => r.BookId == b.Id).Average(r => (double?)r.Rating) ?? 0),
             (true, _) => query.OrderByDescending(b => b.Title),
             (false, _) => query.OrderBy(b => b.Title)
         };
@@ -167,10 +171,12 @@ public class BookService(
         var authorIds = books.Select(b => b.AuthorId).OfType<int>().Distinct().ToList();
         var catIds = books.SelectMany(b => b.CategoryIds ?? []).Distinct().ToList();
         var publisherIds = books.Select(b => b.PublisherId).OfType<int>().Distinct().ToList();
+        var bookIds = books.Select(b => b.Id).ToList();
 
         var authors = await _authorService.GetAuthorsByIds(authorIds);
         var categories = await _categoryService.GetCategoriesByIds(catIds);
         var publishers = await _publisherService.GetPublishersByIds(publisherIds);
+        var ratings = await _reviewService.GetBulkBookRatings(bookIds);
 
         var authorMap = authors.ToDictionary(a => a.Id, a => a.Name);
         var catMap = categories.ToDictionary(c => c.Id, c => c.Name);
@@ -180,6 +186,7 @@ public class BookService(
         foreach (var b in books)
         {
             var isAvailable = (await GetAvailableBookUnitForBook(b.Id)) != null;
+            ratings.TryGetValue(b.Id, out var rating);
             results.Add(new BookCardResponse(
                 b.Id, b.Title, b.Language,
                 b.AuthorId != null && authorMap.TryGetValue(b.AuthorId.Value, out var n) ? n : null,
@@ -187,7 +194,9 @@ public class BookService(
                 b.PublisherId != null && pubMap.TryGetValue(b.PublisherId.Value, out var p) ? p : null,
                 b.PublicationYear, b.OriginalPublicationYear,
                 GetImageUrl(b.Id, b.CoverImage),
-                isAvailable
+                isAvailable,
+                rating?.AverageRating ?? 0,
+                rating?.ReviewCount ?? 0
             ));
         }
         return results;
@@ -232,11 +241,13 @@ public class BookService(
         var origPub = book.OriginalPublisherId != null ? await _publisherService.GetPublisher(book.OriginalPublisherId.Value) : null;
         var cats = await _categoryService.GetCategoriesByIds(book.CategoryIds ?? new List<int>());
         var unit = await GetAvailableBookUnitForBook(book.Id);
+        var rating = await _reviewService.GetBookRatingSummary(book.Id);
 
         return new BookPreviewResponse(
             book.Id, book.Title, book.Description, author, pub, book.Language,
             book.PublicationYear, book.PagesCount, cats, book.OriginalTitle, book.OriginalLanguage,
-            book.OriginalPublicationYear, origPub, GetImageUrl(book.Id, book.CoverImage), unit != null
+            book.OriginalPublicationYear, origPub, GetImageUrl(book.Id, book.CoverImage), unit != null,
+            rating.AverageRating, rating.ReviewCount
         );
     }
 
