@@ -62,6 +62,8 @@ function buildColumns(
         const avatarUrl = row.original.avatarUrl;
         const hasValidName = name && name !== "Unknown";
         
+        if (avatarUrl) console.log(`Avatar URL for ${email}:`, avatarUrl);
+
         return (
           <div className="flex items-center gap-3 max-w-[250px]">
             {avatarUrl ? (
@@ -73,6 +75,7 @@ function buildColumns(
                   sizes="32px"
                   className="object-cover"
                   unoptimized
+                  onError={(e) => console.error(`Failed to load avatar for ${email}:`, e)}
                 />
               </div>
             ) : (

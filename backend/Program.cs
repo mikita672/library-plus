@@ -59,6 +59,7 @@ catch
 }
 
 builder.Services.AddHealthChecks();
+builder.Services.AddCors();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
@@ -81,6 +82,9 @@ builder.Services.AddSingleton<IMailService>(mailService);
 builder.Services.AddJwtAuthentication(config);
 
 var app = builder.Build();
+
+app.UseDeveloperExceptionPage();
+app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 await DbInitializer.Initialize(app.Services);
 
