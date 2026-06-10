@@ -50,7 +50,7 @@ public static class MediaEndpoints
         var coverBytes = memoryStream.ToArray();
         await bookService.SetCoverImageId(bookId, coverBytes, file.ContentType);
 
-        return Results.Ok(new { coverURI = $"/api/v1/media/books/{bookId}/cover" });
+        return Results.Ok(new { coverURI = $"/api/media/books/{bookId}/cover" });
     }
 
     private static async Task<IResult> UploadUserAvatar(
@@ -73,7 +73,7 @@ public static class MediaEndpoints
         var avatarBytes = memoryStream.ToArray();
         await userService.SetAvatarImageId(userId, avatarBytes, file.ContentType);
 
-        return Results.Ok(new { avatarUrl = $"/api/v1/media/users/{userId}/avatar" });
+        return Results.Ok(new { avatarUrl = $"/api/media/users/{userId}/avatar" });
     }
 
     private static async Task<IResult> GetBookCover(int bookId, LibraryPlusContext context)

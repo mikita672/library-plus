@@ -16,7 +16,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
     private string? GetImageUrl(int userId, byte[]? avatarImage)
     {
         if (avatarImage == null) return null;
-        return $"/api/v1/media/users/{userId}/avatar";
+        return $"/api/media/users/{userId}/avatar";
     }
 
     public string? GetAvatarUrlById(UserModel user) => GetImageUrl(user.Id, user.AvatarImage);

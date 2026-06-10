@@ -74,7 +74,7 @@ public class BookService(
     private string? GetImageUrl(int bookId, byte[]? coverImage)
     {
         if (coverImage == null) return null;
-        return $"/api/v1/media/books/{bookId}/cover";
+        return $"/api/media/books/{bookId}/cover";
     }
 
     private async Task<IQueryable<BookModel>> BuildFilterQuery(

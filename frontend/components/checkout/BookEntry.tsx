@@ -62,6 +62,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
                                     defaultMonth={dateRange?.from}
                                     selected={dateRange?.from}
                                     onSelect={(date) => changeDateRange({ from: date, to: dateRange?.to })}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                 />
                             </PopoverContent>
                         </Popover>
@@ -85,6 +86,7 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
                                     defaultMonth={dateRange?.to ?? dateRange?.from}
                                     selected={dateRange?.to}
                                     onSelect={(date) => changeDateRange({ from: dateRange?.from, to: date })}
+                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                                 />
                             </PopoverContent>
                         </Popover>

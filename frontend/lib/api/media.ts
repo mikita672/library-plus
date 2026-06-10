@@ -1,4 +1,4 @@
-const BASE_URL = "/api/v1/media";
+const BASE_URL = "/api/media";
 
 export async function uploadBookCover(bookId: number, file: File): Promise<{ coverURI: string }> {
   const formData = new FormData();
@@ -7,6 +7,7 @@ export async function uploadBookCover(bookId: number, file: File): Promise<{ cov
   const response = await fetch(`${BASE_URL}/books/${bookId}/cover`, {
     method: "POST",
     body: formData,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -24,6 +25,7 @@ export async function uploadUserAvatar(file: File): Promise<{ avatarUrl: string 
   const response = await fetch(`${BASE_URL}/users/me/avatar`, {
     method: "POST",
     body: formData,
+    credentials: "include",
   });
 
   if (!response.ok) {
