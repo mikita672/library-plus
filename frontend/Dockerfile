@@ -1,16 +1,16 @@
 FROM node:24-alpine AS dependencies
 WORKDIR /app
-COPY package.json package-lock.json* .
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 
 
 FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY . .
+COPY frontend/ .
 
 ARG API_URL
-ENV API_URL $API_URL
+ENV API_URL=$API_URL
 RUN npm run build
 
 
