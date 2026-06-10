@@ -18,6 +18,7 @@ export interface AdminUser {
   id: number;
   email: string;
   name?: string | null;
+  avatarUrl?: string | null;
   phoneNumber?: string | null;
   joinedAt: string;
   isDeleted: boolean;

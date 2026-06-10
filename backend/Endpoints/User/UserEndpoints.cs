@@ -125,7 +125,7 @@ public static class UserEndpoints
         ) =>
         {
             var users = await userService.GetUsers(pageNumber, searchToken);
-            return Results.Ok(users.Select(AdminUserResponse.FromModel));
+            return Results.Ok(users.Select(u => AdminUserResponse.FromModel(u, userService.GetAvatarUrlById(u))));
         }).AddEndpointFilter<AdminUserFilter>();
 
         group.MapGet("/all/pages", [Authorize] async (

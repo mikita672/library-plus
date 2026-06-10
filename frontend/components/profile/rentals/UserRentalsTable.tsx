@@ -16,11 +16,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Link from "next/link";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import { cancelReservation } from "@/lib/api/reservations";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ManageRentalDialog } from "../dashboard/rentals/ManageRentalDialog";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -96,7 +97,10 @@ function calculateFine(reservation: EnrichedReservationItem): number {
   return Math.round(fine * 100) / 100;
 }
 
-function buildColumns(onCancel: (id: number) => void): ColumnDef<EnrichedReservationItem>[] {
+function buildColumns(
+  onCancel: (id: number) => void,
+  onManageClick: (r: EnrichedReservationItem) => void
+): ColumnDef<EnrichedReservationItem>[] {
   return [
   {
     accessorKey: "bookTitle",
@@ -186,17 +190,25 @@ function buildColumns(onCancel: (id: number) => void): ColumnDef<EnrichedReserva
     cell: ({ row }) => {
       const r = row.original;
       const isPending = r.status.toLowerCase() === "reserved" || r.status.toLowerCase() === "pending";
-
-      if (!isPending) return null;
+      const isReturned = r.status.toLowerCase() === "returned";
 
       return (
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={() => onCancel(r.id)}
-        >
-          Cancel
-        </Button>
+        <div className="flex gap-2">
+          {isPending && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => onCancel(r.id)}
+            >
+              Cancel
+            </Button>
+          )}
+          {isReturned && (
+            <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
+              See details
+            </Button>
+          )}
+        </div>
       );
     },
   },
@@ -210,6 +222,7 @@ export default function UserRentalsTable({
   reservations: EnrichedReservationItem[];
   onRefresh: () => void;
 }) {
+  const [selectedReservation, setSelectedReservation] = useState<EnrichedReservationItem | null>(null);
   const handleCancel = useCallback(async (id: number) => {
     try {
       const success = await cancelReservation(id);
@@ -224,7 +237,7 @@ export default function UserRentalsTable({
     }
   }, [onRefresh]);
 
-  const columns = useMemo(() => buildColumns(handleCancel), [handleCancel]);
+  const columns = useMemo(() => buildColumns(handleCancel, setSelectedReservation), [handleCancel]);
   const data = useMemo(() => reservations, [reservations]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -273,6 +286,13 @@ export default function UserRentalsTable({
           ))}
         </TableBody>
       </Table>
+      <ManageRentalDialog
+        reservation={selectedReservation}
+        onClose={() => setSelectedReservation(null)}
+        onSuccess={onRefresh}
+        readOnly={true}
+        hideClientDetails={true}
+      />
     </div>
   );
 }

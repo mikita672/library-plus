@@ -7,11 +7,13 @@ import { cartContext } from "@/context/cartContext"
 import { BookCard } from "@/types/book/Book";
 import { addDays, format } from "date-fns";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react"
 import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 
 function CheckoutPage() {
+    const router = useRouter();
     const { bookIds, removeBook } = useContext(cartContext);
     const [isLoading, setIsLoading] = useState(true);
     const [books, setBooks] = useState<BookCard[]>([]);
@@ -171,6 +173,7 @@ function CheckoutPage() {
             toast.error("Failed to reserve books");
         } else {
             toast.success(`Reserved ${reservedBooksIds.length} books`);
+            router.push("/profile/dashboard/rentals");
         }
         for (const bookId of reservedBooksIds) {
             removeBook(bookId);

@@ -30,18 +30,20 @@ public record AdminUserResponse(
     int Id,
     string Email,
     string? Name,
+    string? AvatarUrl,
     string? PhoneNumber,
     DateTime JoinedAt,
     bool IsDeleted,
     bool IsAdmin
 )
 {
-    public static AdminUserResponse FromModel(UserModel user)
+    public static AdminUserResponse FromModel(UserModel user, string? avatarUrl)
     {
         return new AdminUserResponse(
             user.Id,
             user.Email,
             user.Name,
+            avatarUrl,
             user.PhoneNumber,
             user.JoinedAt,
             user.IsDeleted,

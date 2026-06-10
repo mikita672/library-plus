@@ -70,6 +70,7 @@ export function useEnrichedReservations({
           clientName: u?.name || u?.email || (isUserView ? "" : "Unknown"),
           clientEmail: u?.email || "",
           clientPhone: u?.phoneNumber || (isUserView ? "" : "none"),
+          clientAvatarUrl: u?.avatarUrl || "",
           bookTitle: b?.title || "Unknown",
           bookAuthor: b?.author?.name || "Unknown",
           bookLanguage: b?.language || "Unknown",
