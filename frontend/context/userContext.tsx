@@ -32,10 +32,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await fetch("/api/users/meShort", {
         method: "GET",
+        cache: "no-store",
       });
 
       if (response.ok) {
-        setUserData(await response.json());
+        const data = await response.json();
+        if (data.avatarUrl) {
+          data.avatarUrl = `${data.avatarUrl}?t=${Date.now()}`;
+        }
+        setUserData(data);
       } else {
         setUserData(null);
       }
@@ -49,10 +54,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshFullUser = useCallback(async (showLoading = true) => {
     if (showLoading) setIsLoading(true);
     try {
-      const response = await fetch("/api/users/me", { method: "GET" });
+      const response = await fetch("/api/users/me", { 
+        method: "GET",
+        cache: "no-store",
+      });
 
       if (response.ok) {
-        setFullUserData(await response.json());
+        const data = await response.json();
+        if (data.avatarUrl) {
+          data.avatarUrl = `${data.avatarUrl}?t=${Date.now()}`;
+        }
+        setFullUserData(data);
       } else {
         setFullUserData(null);
       }

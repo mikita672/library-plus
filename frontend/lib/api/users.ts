@@ -8,10 +8,14 @@ export interface UserMeShort {
 export async function getUserById(id: number): Promise<UserMeShort | null> {
   const res = await fetch(`/api/users/user/${id}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
   });
   if (!res.ok) return null;
-  return res.json() as Promise<UserMeShort>;
+  const data = await res.json() as UserMeShort;
+  if (data.avatarUrl) {
+    data.avatarUrl = `${data.avatarUrl}?t=${Date.now()}`;
+  }
+  return data;
 }
 
 export interface AdminUser {
@@ -38,7 +42,13 @@ export async function getAllUsers(
     cache: "no-store",
   });
   if (!res.ok) return [];
-  return res.json() as Promise<AdminUser[]>;
+  const data = await res.json() as AdminUser[];
+  return data.map(u => {
+    if (u.avatarUrl) {
+      u.avatarUrl = `${u.avatarUrl}?t=${Date.now()}`;
+    }
+    return u;
+  });
 }
 
 export async function getAllUsersPages(searchToken?: string): Promise<number> {
