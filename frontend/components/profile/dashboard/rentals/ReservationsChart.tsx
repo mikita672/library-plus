@@ -8,7 +8,11 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 export default function ReservationsChart() {
   const [data, setData] = useState<ReservationChartData[]>([]);
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
     getReservationsChartData().then(setData);
   }, []);
 
@@ -41,22 +45,28 @@ export default function ReservationsChart() {
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#000", color: "#fff", borderRadius: "0", border: "none" }}
-                  itemStyle={{ color: "#fff" }}
-                  cursor={{ fill: "rgba(0,0,0,0.1)" }}
-                />
-                <Bar dataKey="Reservations" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          {mounted ? (
+            chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#000", color: "#fff", borderRadius: "0", border: "none" }}
+                    itemStyle={{ color: "#fff" }}
+                    cursor={{ fill: "rgba(0,0,0,0.1)" }}
+                  />
+                  <Bar dataKey="Reservations" fill="currentColor" className="fill-primary" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                No data available
+              </div>
+            )
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              No data available
+              Loading chart...
             </div>
           )}
         </div>
