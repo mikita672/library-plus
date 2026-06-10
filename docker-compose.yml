@@ -56,14 +56,6 @@ services:
       mc anonymous set download local/library-plus/covers || true &&
       mc anonymous set download local/library-plus/avatars || true
       "
-    
-  ai:
-    image: ollama/ollama:0.30.6
-    volumes:
-      - ollama_data:/root/.ollama
-    entrypoint: >
-      /bin/sh -c "ollama serve & sleep 3 && ollama pull qwen2.5:1.5b && wait"
-
 
   backend:
     build:
@@ -77,8 +69,6 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
-      ai:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/healthz"]
       interval: 10s
@@ -91,23 +81,13 @@ services:
       context: ./frontend
     environment:
       - API_URL=http://backend:8080/api/v1
+    ports:
+      - "5001:3000"
     depends_on:
       backend:
         condition: service_healthy
-
-  nginx:
-    image: nginx:1.25-alpine
-    ports:
-      - "5001:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - backend
 
 volumes:
   db:
   pg_data:
   minio_data:
-  ollama_data:
-    driver: local
