@@ -25,6 +25,7 @@ public static class BookEndpoints
             [FromQuery] int? pageNumber,
             [FromQuery] string? sortBy,
             [FromQuery] bool? sortDescending,
+            [FromQuery] bool? includeInactive,
             BookService bookService
         ) =>
         {
@@ -38,7 +39,8 @@ public static class BookEndpoints
                 isAvailable,
                 pageNumber ?? 1,
                 sortBy,
-                sortDescending ?? false
+                sortDescending ?? false,
+                includeInactive ?? false
             );
         });
 
@@ -59,6 +61,7 @@ public static class BookEndpoints
             [FromQuery] int? minPublicationYear,
             [FromQuery] int? maxPublicationYear,
             [FromQuery] bool? isAvailable,
+            [FromQuery] bool? includeInactive,
             BookService bookService
         ) =>
         {
@@ -69,7 +72,8 @@ public static class BookEndpoints
                 categoryIds?.ToList(),
                 minPublicationYear,
                 maxPublicationYear,
-                isAvailable
+                isAvailable,
+                includeInactive ?? false
             );
         });
 

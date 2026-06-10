@@ -19,6 +19,7 @@ export interface GetBooksParams {
   pageNumber?: number;
   sortBy?: string;
   sortDescending?: boolean;
+  includeInactive?: boolean;
 }
 
 function buildSearchParams(params: GetBooksParams): URLSearchParams {
@@ -39,6 +40,8 @@ function buildSearchParams(params: GetBooksParams): URLSearchParams {
   if (params.sortBy) sp.set("sortBy", params.sortBy);
   if (params.sortDescending != null)
     sp.set("sortDescending", String(params.sortDescending));
+  if (params.includeInactive != null)
+    sp.set("includeInactive", String(params.includeInactive));
 
   return sp;
 }

@@ -13,9 +13,9 @@ public static class AuthorEndpoints
         var group = app
             .MapGroup("/api/v1/authors");
 
-        group.MapGet("/", async (AuthorService authorService) =>
+        group.MapGet("/", async (AuthorService authorService, [FromQuery] bool includeInactive = false) =>
         {
-            return await authorService.GetAllAuthors();
+            return await authorService.GetAllAuthors(includeInactive);
         });
 
         group.MapPost("/", [Authorize] async (

@@ -13,9 +13,9 @@ public static class CategoryEndpoints
         var group = app
             .MapGroup("/api/v1/categories");
 
-        group.MapGet("/", async (CategoryService categoryService) =>
+        group.MapGet("/", async (CategoryService categoryService, [FromQuery] bool includeInactive = false) =>
         {
-            return await categoryService.GetAllCategories();
+            return await categoryService.GetAllCategories(includeInactive);
         });
 
         group.MapPost("/", [Authorize] async (

@@ -15,6 +15,7 @@ function SearchBar() {
 
     const handleSearch = () => {
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
 
         if (searchToken.length === 0) {
             params.delete("searchToken");

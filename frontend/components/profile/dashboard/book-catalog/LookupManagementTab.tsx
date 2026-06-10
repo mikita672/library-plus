@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -77,9 +78,42 @@ function buildColumns<T extends BaseLookupModel>(
           <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)} className="h-8 w-8 p-0">
             <PencilSimpleIcon className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onDelete(row.original)} className="h-8 w-8 p-0 text-destructive">
-            <TrashIcon className="h-4 w-4" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 rounded-none border border-border bg-background p-4 mr-10 mb-2">
+              <div className="space-y-3">
+                <div className="text-sm font-semibold">Deactivate Item</div>
+                <p className="text-xs text-muted-foreground">
+                  Are you sure you want to deactivate "{row.original.name}"? It will no longer be shown in the catalog dropdowns.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
+                      onDelete(row.original);
+                    }}
+                  >
+                    Deactivate
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       ),
     },
@@ -131,13 +165,12 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   }, []);
 
   const handleDelete = useCallback(async (item: T) => {
-    if (!window.confirm(`Delete ${entityName} "${item.name}"?`)) return;
     try {
       await deleteItem(item.id);
-      toast.success(`${entityName} deleted`);
+      toast.success(`${entityName} deactivated`);
       await loadItems();
     } catch {
-      toast.error(`Error deleting ${entityName}`);
+      toast.error(`Error deactivating ${entityName}`);
     }
   }, [entityName, deleteItem, loadItems]);
 

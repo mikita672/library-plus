@@ -14,7 +14,7 @@ export default function CategoriesTab() {
       entityName="Category"
       entityNamePlural="Categories"
       paramKey="categoryIds"
-      fetchItems={getCategories}
+      fetchItems={() => getCategories(true)}
       createItem={createCategory}
       updateItem={updateCategory}
       deleteItem={deleteCategory}

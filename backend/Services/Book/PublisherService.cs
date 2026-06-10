@@ -38,9 +38,9 @@ public class PublisherService(LibraryPlusContext context)
             .ToListAsync();
     }
 
-    public async Task<IList<PublisherModel>> GetAllPublishers()
+    public async Task<IList<PublisherModel>> GetAllPublishers(bool includeInactive = false)
     {
-        return await _context.Publishers.ToListAsync();
+        return await _context.Publishers.Where(p => includeInactive || p.IsActive).ToListAsync();
     }
 
     public async Task<IList<PublisherModel>> GetPublishersByIds(IList<int> ids)
@@ -55,7 +55,7 @@ public class PublisherService(LibraryPlusContext context)
         var publisher = await _context.Publishers.FindAsync(id);
         if (publisher != null)
         {
-            _context.Publishers.Remove(publisher);
+            publisher.IsActive = false;
             await _context.SaveChangesAsync();
         }
     }

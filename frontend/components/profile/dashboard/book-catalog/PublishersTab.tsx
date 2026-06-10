@@ -14,7 +14,7 @@ export default function PublishersTab() {
       entityName="Publisher"
       entityNamePlural="Publishers"
       paramKey="publisherId"
-      fetchItems={getPublishers}
+      fetchItems={() => getPublishers(true)}
       createItem={createPublisher}
       updateItem={updatePublisher}
       deleteItem={deletePublisher}

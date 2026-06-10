@@ -45,9 +45,9 @@ public class AuthorService(LibraryPlusContext context)
             .ToListAsync();
     }
 
-    public async Task<IList<AuthorModel>> GetAllAuthors()
+    public async Task<IList<AuthorModel>> GetAllAuthors(bool includeInactive = false)
     {
-        return await _context.Authors.ToListAsync();
+        return await _context.Authors.Where(a => includeInactive || a.IsActive).ToListAsync();
     }
 
     public async Task<AuthorModel?> GetAuthor(int id)
@@ -60,7 +60,7 @@ public class AuthorService(LibraryPlusContext context)
         var author = await _context.Authors.FindAsync(id);
         if (author != null)
         {
-            _context.Authors.Remove(author);
+            author.IsActive = false;
             await _context.SaveChangesAsync();
         }
     }

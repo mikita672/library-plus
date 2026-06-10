@@ -20,4 +20,5 @@ public class BookModel
     public byte[]? CoverImage { get; set; }
     public string? CoverImageContentType { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsActive { get; set; } = true;
 }
