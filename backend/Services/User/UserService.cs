@@ -147,7 +147,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
         var query = _context.Users.AsQueryable();
         if (!string.IsNullOrEmpty(token))
         {
-            query = query.Where(u => EF.Functions.ILike(u.Email, $"%{token}%") || (u.Name != null && EF.Functions.ILike(u.Name, $"%{token}%")));
+            query = query.Where(u => u.Email.Contains(token) || (u.Name != null && u.Name.Contains(token)));
         }
         return await query.OrderByDescending(u => u.JoinedAt).Skip((page - 1) * PAGE_SIZE).Take(PAGE_SIZE).ToListAsync();
     }
@@ -157,7 +157,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
         var query = _context.Users.AsQueryable();
         if (!string.IsNullOrEmpty(token))
         {
-            query = query.Where(u => EF.Functions.ILike(u.Email, $"%{token}%") || (u.Name != null && EF.Functions.ILike(u.Name, $"%{token}%")));
+            query = query.Where(u => u.Email.Contains(token) || (u.Name != null && u.Name.Contains(token)));
         }
         var count = await query.CountAsync();
         return (int)Math.Ceiling(count / (double)PAGE_SIZE);
@@ -171,7 +171,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
     public async Task<List<object>> SuggestUsersByEmail(string query)
     {
         var users = await _context.Users
-            .Where(u => EF.Functions.ILike(u.Email, $"%{query}%"))
+            .Where(u => u.Email.Contains(query))
             .Take(10)
             .ToListAsync();
         return users.Select(u => (object)new { email = u.Email, name = u.Name }).ToList();

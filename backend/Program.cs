@@ -40,8 +40,8 @@ var db = mongoClient.GetDatabase(config["MongoDbSettings:DatabaseName"]);
 var pack = new ConventionPack { new CamelCaseElementNameConvention() };
 ConventionRegistry.Register("camel case", pack, t => true);
 
-var pgConnectionString = config.GetConnectionString("PostgreSql");
-builder.Services.AddNpgsql<LibraryPlusContext>(pgConnectionString);
+var sqlConnectionString = config.GetConnectionString("SqlServer");
+builder.Services.AddSqlServer<LibraryPlusContext>(sqlConnectionString);
 
 IMailService mailService;
 try
