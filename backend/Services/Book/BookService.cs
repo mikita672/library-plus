@@ -98,7 +98,7 @@ public class BookService(
 
         if (!string.IsNullOrWhiteSpace(token))
         {
-            query = query.Where(b => EF.Functions.ILike(b.Title, $"%{token}%"));
+            query = query.Where(b => b.Title.Contains(token));
         }
 
         if (authorId != null) { query = query.Where(b => b.AuthorId == authorId); }

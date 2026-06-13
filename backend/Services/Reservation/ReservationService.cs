@@ -155,9 +155,9 @@ public class ReservationService(LibraryPlusContext context, BookService bookServ
                     join u in _context.Users on r.UserId equals u.Id
                     join bu in _context.BookUnits on r.BookUnitId equals bu.Id
                     join b in _context.Books on bu.BookId equals b.Id
-                    where (u.Name != null && EF.Functions.ILike(u.Name, $"%{searchToken}%")) ||
-                          EF.Functions.ILike(u.Email, $"%{searchToken}%") ||
-                          EF.Functions.ILike(b.Title, $"%{searchToken}%")
+                    where (u.Name != null && u.Name.Contains(searchToken)) ||
+                          u.Email.Contains(searchToken) ||
+                          b.Title.Contains(searchToken)
                     select r;
         }
 

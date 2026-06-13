@@ -1,15 +1,14 @@
 services:
-  postgres:
-    image: postgres:17.2-bookworm
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: some_secret_password
-      POSTGRES_DB: libraryplus
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Some_secret_password!123"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - mssql_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d libraryplus"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Some_secret_password!123", "-Q", "SELECT 1", "-No"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +32,7 @@ services:
     build:
       context: ./backend
     depends_on:
-      postgres:
+      mssql:
         condition: service_healthy
       mongo:
         condition: service_healthy
@@ -57,4 +56,4 @@ services:
 
 volumes:
   db:
-  pg_data:
+  mssql_data:
