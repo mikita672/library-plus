@@ -19,6 +19,11 @@ public class DbInitializer
 
         context.Database.EnsureCreated();
 
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Books\" ADD COLUMN IF NOT EXISTS \"IsActive\" boolean NOT NULL DEFAULT true;"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Authors\" ADD COLUMN IF NOT EXISTS \"IsActive\" boolean NOT NULL DEFAULT true;"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Categories\" ADD COLUMN IF NOT EXISTS \"IsActive\" boolean NOT NULL DEFAULT true;"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Publishers\" ADD COLUMN IF NOT EXISTS \"IsActive\" boolean NOT NULL DEFAULT true;"); } catch {}
+
         if (await context.Books.AnyAsync())
         {
             return;

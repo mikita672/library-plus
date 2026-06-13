@@ -14,7 +14,7 @@ export default function AuthorsTab() {
       entityName="Author"
       entityNamePlural="Authors"
       paramKey="authorId"
-      fetchItems={getAuthors}
+      fetchItems={() => getAuthors(true)}
       createItem={createAuthor}
       updateItem={updateAuthor}
       deleteItem={deleteAuthor}

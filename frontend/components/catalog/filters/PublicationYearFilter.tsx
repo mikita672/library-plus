@@ -21,6 +21,7 @@ function PublicationYearFilter() {
 
     const onApply = () => {
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         params.set("minPublicationYear", minPublicationYear);
         params.set("maxPublicationYear", maxPublicationYear);
         router.replace(`${pathname}?${params.toString()}`);

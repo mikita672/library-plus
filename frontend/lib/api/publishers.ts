@@ -1,7 +1,9 @@
 import { Publisher } from "@/types/book/Publisher";
 
-export async function getPublishers(): Promise<Publisher[]> {
-  const res = await fetch("/api/publishers", { method: "GET" });
+export async function getPublishers(includeInactive?: boolean): Promise<Publisher[]> {
+  const url = new URL("/api/publishers", window.location.origin);
+  if (includeInactive) url.searchParams.set("includeInactive", "true");
+  const res = await fetch(url.toString(), { method: "GET" });
   if (!res.ok) return [];
   return res.json() as Promise<Publisher[]>;
 }

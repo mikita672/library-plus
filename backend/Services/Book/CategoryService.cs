@@ -35,14 +35,14 @@ public class CategoryService(LibraryPlusContext context)
         var category = await _context.Categories.FindAsync(id);
         if (category != null)
         {
-            _context.Categories.Remove(category);
+            category.IsActive = false;
             await _context.SaveChangesAsync();
         }
     }
 
-    public async Task<IList<CategoryModel>> GetAllCategories()
+    public async Task<IList<CategoryModel>> GetAllCategories(bool includeInactive = false)
     {
-        return await _context.Categories.ToListAsync();
+        return await _context.Categories.Where(c => includeInactive || c.IsActive).ToListAsync();
     }
 
     public async Task<IList<CategoryModel>> GetCategoriesByIds(IList<int> ids)

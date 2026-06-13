@@ -11,6 +11,7 @@ function AvailabilityFilter() {
 
     const handleChange = (availability: string) => {
         const params = new URLSearchParams(searchParams);
+        params.delete("pageNumber");
         if (availability.length === 0) {
             params.delete("isAvailable");
         } else {

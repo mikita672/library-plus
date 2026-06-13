@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -46,6 +47,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
   const [lookups, setLookups] = useState({ authors: [] as Author[], publishers: [] as Publisher[], categories: [] as Category[] });
   
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [authorId, setAuthorId] = useState("");
   const [publisherId, setPublisherId] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -60,6 +62,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
       try {
         const [details, a, p, c] = await Promise.all([getBookById(book.id), getAuthors(), getPublishers(), getCategories()]);
         setTitle(details.title);
+        setDescription(details.description || "");
         setAuthorId(details.author?.id?.toString() || "");
         setPublisherId(details.publisher?.id?.toString() || "");
         setCategoryId(details.categories?.[0]?.id?.toString() || "");
@@ -78,7 +81,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
         authorId: !authorId ? null : Number(authorId),
         publisherId: !publisherId ? null : Number(publisherId),
         categoryIds: !categoryId ? [] : [Number(categoryId)],
-        description: book.title, language: "English", pagesCount: 100, repurchasePrice: 10,
+        description, language: "English", pagesCount: 100, repurchasePrice: 10,
       };
       await updateBook(book.id, body);
       if (file) await uploadBookCover(book.id, file).catch(() => toast.error("Cover failed"));
@@ -105,6 +108,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
         {loading ? <div className="py-10 text-center">Loading...</div> : (
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Title</Label><Input className="col-span-3" value={title} onChange={e => setTitle(e.target.value)} /></div>
+            <div className="grid grid-cols-4 items-start gap-4"><Label className="text-right pt-2">Description</Label><Textarea className="col-span-3 min-h-[100px]" value={description} onChange={e => setDescription(e.target.value)} /></div>
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Author</Label><Select value={authorId} onValueChange={setAuthorId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.authors.map(a => <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Publisher</Label><Select value={publisherId} onValueChange={setPublisherId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.publishers.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid grid-cols-4 items-center gap-4"><Label className="text-right">Category</Label><Select value={categoryId} onValueChange={setCategoryId}><SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{lookups.categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent></Select></div>

@@ -71,6 +71,7 @@ export default function BooksTab() {
         publisherId: publisherId === "all" ? undefined : publisherId,
         categoryIds: categoryId === "all" ? [] : [categoryId],
         pageNumber,
+        includeInactive: true,
       };
 
       const [data, pages] = await Promise.all([getBooks(params), getBooksPages(params)]);
