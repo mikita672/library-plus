@@ -7,4 +7,7 @@ public class UserNotificationModel
     public int NotificationId { get; set; }
     public bool IsRead { get; set; } = false;
     public DateTime CreatedAt { get; set; }
+
+    public UserModel? User { get; set; }
+    public NotificationModel? Notification { get; set; }
 }

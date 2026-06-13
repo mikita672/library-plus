@@ -13,6 +13,7 @@ public class BookModel
     public int PublicationYear { get; set; }
     public int PagesCount { get; set; }
     public ICollection<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
+    public ICollection<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
     public decimal RepurchasePrice { get; set; }
     public string? OriginalTitle { get; set; }
     public string? OriginalLanguage { get; set; }
