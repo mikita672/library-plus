@@ -259,7 +259,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit" : "Add"} {entityName}</DialogTitle>
             <DialogDescription>Enter the name of the {entityName.toLowerCase()}.</DialogDescription>

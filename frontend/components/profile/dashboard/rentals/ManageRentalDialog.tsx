@@ -113,7 +113,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
 
   return (
     <Dialog open={!!reservation} onOpenChange={o => !o && onClose()}>
-      <DialogContent className="sm:max-w-5xl w-[95vw] rounded-none border-none p-8">
+      <DialogContent className="sm:max-w-5xl w-[95vw] rounded-none border-none p-8 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="hidden"><DialogTitle>Manage</DialogTitle></DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-2">
           <div className="space-y-4">
@@ -128,10 +128,10 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
                   Warning: Previously marked as minor damages
                 </div>
               )}
-              {history.length > 0 && !readOnly && (
+              {history.some(h => h.additionalNote) && !readOnly && (
                 <div className="mt-2">
                   <Button type="button" variant="link" className="px-0 h-auto text-xs" onClick={() => setShowHistory(true)}>
-                    See previous return notes ({history.length})
+                    See previous return notes ({history.filter(h => h.additionalNote).length})
                   </Button>
                 </div>
               )}
@@ -242,11 +242,11 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
             <DialogTitle>Previous Return Notes</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
-            {history.map(h => (
+            {history.filter(h => h.additionalNote).map(h => (
               <div key={h.id} className="border p-3 text-sm space-y-1">
                 <p className="font-semibold text-xs text-muted-foreground">{formatDate(h.returnedDate || h.endDate)}</p>
                 <p><span className="font-medium">Condition:</span> {h.bookConditionUponReturn || "N/A"}</p>
-                <p><span className="font-medium">Note:</span> {h.additionalNote || "None"}</p>
+                <p><span className="font-medium">Note:</span> {h.additionalNote}</p>
               </div>
             ))}
           </div>
