@@ -121,7 +121,7 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button className="h-10 px-4 text-lg"><PlusIcon /> Add book</Button></DialogTrigger>
-      <DialogContent className="sm:max-w-2xl p-6">
+      <DialogContent className="sm:max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Add new book</DialogTitle><DialogDescription>Create a record.</DialogDescription></DialogHeader>
         <form id="add-book-form" className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -143,7 +143,7 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
             <ImageUpload id="coverFile" label="Book cover" onFileSelect={setFile} aspectRatio="cover" labelClassName="text-sm font-medium" />
           </FieldGroup>
           <Field data-invalid={!!form.formState.errors.description}><FieldLabel>Description</FieldLabel><Textarea {...form.register("description")} /><FieldError>{form.formState.errors.description?.message}</FieldError></Field>
-          <Collapsible className="border border-black p-3"><CollapsibleTrigger asChild><Button variant="ghost" size="sm">Original work info (optional)</Button></CollapsibleTrigger><CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <Collapsible className="border border-border rounded-md p-3"><CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="w-full flex justify-between">Original work info (optional)</Button></CollapsibleTrigger><CollapsibleContent className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
             <Field data-invalid={!!form.formState.errors.originalTitle}><FieldLabel>Original Title</FieldLabel><Input {...form.register("originalTitle")} /><FieldError>{form.formState.errors.originalTitle?.message}</FieldError></Field>
             <Field data-invalid={!!form.formState.errors.originalLanguage}><FieldLabel>Original Language</FieldLabel><Input {...form.register("originalLanguage")} /><FieldError>{form.formState.errors.originalLanguage?.message}</FieldError></Field>
             <Field data-invalid={!!form.formState.errors.originalPublicationYear}><FieldLabel>Original Year</FieldLabel><Input type="number" {...form.register("originalPublicationYear", { valueAsNumber: true })} /><FieldError>{form.formState.errors.originalPublicationYear?.message}</FieldError></Field>

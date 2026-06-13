@@ -111,7 +111,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Copies for &quot;{book?.title}&quot;</DialogTitle>
         </DialogHeader>
@@ -156,13 +156,15 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                       )}
                     </TableCell>
                     <TableCell className="text-right flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedHistory(s.history)}
-                      >
-                        Notes ({s.history.length})
-                      </Button>
+                      {s.history.some(h => h.additionalNote) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedHistory(s.history.filter(h => h.additionalNote))}
+                        >
+                          Notes ({s.history.filter(h => h.additionalNote).length})
+                        </Button>
+                      )}
                       {s.unit.isArchived ? (
                         <Button
                           variant="outline"
