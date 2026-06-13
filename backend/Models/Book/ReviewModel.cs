@@ -8,4 +8,7 @@ public class ReviewModel
     public int Rating { get; set; }
     public string? ReviewText { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public LibraryPlus.Models.Book.BookModel Book { get; set; } = null!;
+    public LibraryPlus.Models.User.UserModel User { get; set; } = null!;
 }
