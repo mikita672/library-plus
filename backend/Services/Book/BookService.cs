@@ -34,7 +34,7 @@ public class BookService(
             Language = request.Language,
             PublicationYear = request.PublicationYear,
             PagesCount = request.PagesCount,
-            CategoryIds = request.CategoryIds,
+            Categories = await _context.Categories.Where(c => request.CategoryIds.Contains(c.Id)).ToListAsync(),
             RepurchasePrice = request.RepurchasePrice,
             OriginalTitle = request.OriginalTitle,
             OriginalLanguage = request.OriginalLanguage,
@@ -52,15 +52,19 @@ public class BookService(
 
     public async Task<bool> EditBook(int id, UpdateBookRequest request)
     {
-        var book = await _context.Books.FindAsync(id);
-        if (book == null) return false;
+        var book = await _context.Books.Include(b => b.Categories).FirstOrDefaultAsync(b => b.Id == id);
+        if (book == null) { return false; }
 
         book.Title = request.Title;
         book.Description = request.Description;
         book.Language = request.Language;
         book.PublicationYear = request.PublicationYear;
         book.PagesCount = request.PagesCount;
-        book.CategoryIds = request.CategoryIds;
+        
+        book.Categories.Clear();
+        var newCategories = await _context.Categories.Where(c => request.CategoryIds.Contains(c.Id)).ToListAsync();
+        foreach (var c in newCategories) book.Categories.Add(c);
+
         book.RepurchasePrice = request.RepurchasePrice;
         book.AuthorId = request.AuthorId;
         book.PublisherId = request.PublisherId;
@@ -75,7 +79,7 @@ public class BookService(
 
     private string? GetImageUrl(int bookId, byte[]? coverImage)
     {
-        if (coverImage == null) return null;
+        if (coverImage == null) { return null; }
         return $"/api/media/books/{bookId}/cover";
     }
 
@@ -97,18 +101,17 @@ public class BookService(
             query = query.Where(b => EF.Functions.ILike(b.Title, $"%{token}%"));
         }
 
-        if (authorId != null) query = query.Where(b => b.AuthorId == authorId);
-        if (publisherId != null) query = query.Where(b => b.PublisherId == publisherId);
+        if (authorId != null) { query = query.Where(b => b.AuthorId == authorId); }
+        if (publisherId != null) { query = query.Where(b => b.PublisherId == publisherId); }
         if (categories?.Count > 0)
         {
-            query = query.Where(b => b.CategoryIds.Any(c => categories.Contains(c)));
+            query = query.Where(b => b.Categories.Any(c => categories.Contains(c.Id)));
         }
 
         if (available != null)
         {
             var availableIds = await GetAvailableBookIds();
-            if (available == true)
-                query = query.Where(b => availableIds.Contains(b.Id));
+            if (available == true) { query = query.Where(b => availableIds.Contains(b.Id)); }
             else
                 query = query.Where(b => !availableIds.Contains(b.Id));
         }
@@ -124,7 +127,7 @@ public class BookService(
 
         foreach (var unit in allUnits)
         {
-            if (availableBookIds.Contains(unit.BookId)) continue;
+            if (availableBookIds.Contains(unit.BookId)) { continue; }
             
             var latestReservation = await _context.Reservations
                 .Where(r => r.BookUnitId == unit.Id && r.ReturnedDate != null)
@@ -160,7 +163,7 @@ public class BookService(
             (false, _) => query.OrderBy(b => b.Title)
         };
 
-        var books = await query.Skip(PAGE_SIZE * (page - 1)).Take(PAGE_SIZE).ToListAsync();
+        var books = await query.Include(b => b.Categories).Skip(PAGE_SIZE * (page - 1)).Take(PAGE_SIZE).ToListAsync();
         return await MapToCards(books);
     }
 
@@ -174,7 +177,7 @@ public class BookService(
     private async Task<IList<BookCardResponse>> MapToCards(List<BookModel> books)
     {
         var authorIds = books.Select(b => b.AuthorId).OfType<int>().Distinct().ToList();
-        var catIds = books.SelectMany(b => b.CategoryIds ?? []).Distinct().ToList();
+        var catIds = books.SelectMany(b => b.Categories.Select(c => c.Id)).Distinct().ToList();
         var publisherIds = books.Select(b => b.PublisherId).OfType<int>().Distinct().ToList();
         var bookIds = books.Select(b => b.Id).ToList();
 
@@ -195,7 +198,7 @@ public class BookService(
             results.Add(new BookCardResponse(
                 b.Id, b.Title, b.Language,
                 b.AuthorId != null && authorMap.TryGetValue(b.AuthorId.Value, out var n) ? n : null,
-                b.CategoryIds?.Count > 0 && catMap.TryGetValue(b.CategoryIds[0], out var c) ? c : null,
+                b.Categories.Count > 0 ? b.Categories.First().Name : null,
                 b.PublisherId != null && pubMap.TryGetValue(b.PublisherId.Value, out var p) ? p : null,
                 b.PublicationYear, b.OriginalPublicationYear,
                 GetImageUrl(b.Id, b.CoverImage),
@@ -207,7 +210,7 @@ public class BookService(
         return results;
     }
 
-    public async Task<BookModel?> GetBookById(int id) => await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
+    public async Task<BookModel?> GetBookById(int id) => await _context.Books.Include(b => b.Categories).FirstOrDefaultAsync(b => b.Id == id);
     public async Task DeleteBook(int id)
     {
         var book = await _context.Books.FindAsync(id);
@@ -239,12 +242,12 @@ public class BookService(
     public async Task<BookPreviewResponse?> GetBookPreviewById(int id)
     {
         var book = await GetBookById(id);
-        if (book == null) return null;
+        if (book == null) { return null; }
 
         var author = book.AuthorId != null ? await _authorService.GetAuthor(book.AuthorId.Value) : null;
         var pub = book.PublisherId != null ? await _publisherService.GetPublisher(book.PublisherId.Value) : null;
         var origPub = book.OriginalPublisherId != null ? await _publisherService.GetPublisher(book.OriginalPublisherId.Value) : null;
-        var cats = await _categoryService.GetCategoriesByIds(book.CategoryIds ?? new List<int>());
+        var cats = book.Categories.ToList();
         var unit = await GetAvailableBookUnitForBook(book.Id);
         var rating = await _reviewService.GetBookRatingSummary(book.Id);
 
@@ -252,7 +255,7 @@ public class BookService(
             book.Id, book.Title, book.Description, author, pub, book.Language,
             book.PublicationYear, book.PagesCount, cats, book.OriginalTitle, book.OriginalLanguage,
             book.OriginalPublicationYear, origPub, GetImageUrl(book.Id, book.CoverImage), unit != null,
-            rating.AverageRating, rating.ReviewCount
+            rating.AverageRating, rating.ReviewCount, book.RepurchasePrice
         );
     }
 
@@ -304,7 +307,7 @@ public class BookService(
     public async Task<bool> ArchiveBookUnit(int unitId)
     {
         var activeReservation = await _context.Reservations.FirstOrDefaultAsync(r => r.BookUnitId == unitId && r.ReturnedDate == null);
-        if (activeReservation != null) return false;
+        if (activeReservation != null) { return false; }
         
         var bu = await _context.BookUnits.FindAsync(unitId);
         if (bu != null)
@@ -330,19 +333,19 @@ public class BookService(
 
     public async Task<IList<BookCardResponse>> GetBooksByAuthor(int id, int? excludedId)
     {
-        var books = await _context.Books.Where(b => b.AuthorId == id && b.Id != excludedId && b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
+        var books = await _context.Books.Include(b => b.Categories).Where(b => b.AuthorId == id && b.Id != excludedId && b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
         return await MapToCards(books);
     }
 
     public async Task<IList<BookCardResponse>> GetPopularBooks()
     {
-        var books = await _context.Books.Where(b => b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
+        var books = await _context.Books.Include(b => b.Categories).Where(b => b.IsActive).OrderByDescending(b => b.Popularity).Take(12).ToListAsync();
         return await MapToCards(books);
     }
 
     public async Task<IList<BookCardResponse>> GetMultipleByIds(IList<int> ids)
     {
-        var books = await _context.Books.Where(b => ids.Contains(b.Id)).ToListAsync();
+        var books = await _context.Books.Include(b => b.Categories).Where(b => ids.Contains(b.Id)).ToListAsync();
         return await MapToCards(books);
     }
 }

@@ -19,7 +19,7 @@ function DangerZone() {
   const router = useRouter();
 
   const handleDeleteAccount = async () => {
-    if (loading) return;
+    if (loading) { return; }
 
     setLoading(true);
     setError(null);

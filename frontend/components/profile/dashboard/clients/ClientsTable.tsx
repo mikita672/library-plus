@@ -62,7 +62,7 @@ function buildColumns(
         const avatarUrl = row.original.avatarUrl;
         const hasValidName = name && name !== "Unknown";
         
-        if (avatarUrl) console.log(`Avatar URL for ${email}:`, avatarUrl);
+        if (avatarUrl) { console.log(`Avatar URL for ${email}:`, avatarUrl); }
 
         return (
           <div className="flex items-center gap-3 max-w-[250px]">

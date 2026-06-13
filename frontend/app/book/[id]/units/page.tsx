@@ -28,7 +28,7 @@ const CONDITION_SEVERITY: Record<string, number> = {
 
 function deriveCondition(reservations: ReservationItem[]): UnitCondition {
   const returned = reservations.filter(r => r.bookConditionUponReturn);
-  if (returned.length === 0) return "Good";
+  if (returned.length === 0) { return "Good"; }
 
   let worst: UnitCondition = "Good";
   for (const r of returned) {

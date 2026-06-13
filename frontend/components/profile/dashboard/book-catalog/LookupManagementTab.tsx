@@ -175,7 +175,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   }, [entityName, deleteItem, loadItems]);
 
   const handleSubmit = async () => {
-    if (!nameInput.trim()) return;
+    if (!nameInput.trim()) { return; }
     setSubmitting(true);
     try {
       if (editingItem) {

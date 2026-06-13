@@ -13,7 +13,7 @@ function HeaderActionThemeToggle() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  if (!mounted) return <MoonIcon className="w-6 h-6" />;
+  if (!mounted) { return <MoonIcon className="w-6 h-6" />; }
 
   const nextTheme = resolvedTheme === "light" ? "dark" : "light";
 

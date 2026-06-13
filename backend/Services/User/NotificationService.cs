@@ -27,10 +27,10 @@ public class NotificationService(LibraryPlusContext context)
         var admin = await _context.Users
             .Where(u => u.IsAdmin)
             .FirstOrDefaultAsync();
-        if (admin == null) return;
+        if (admin == null) { return; }
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return;
+        if (user == null) { return; }
 
         var notification = await CreateNotification($"Contact request (from: {user.Email})", message);
         _context.UserNotifications.Add(new UserNotificationModel

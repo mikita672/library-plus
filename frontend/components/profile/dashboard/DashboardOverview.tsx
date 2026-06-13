@@ -71,7 +71,7 @@ export default function DashboardOverview() {
   }, [fetchStats]);
 
   const cards = useMemo(() => {
-    if (!stats) return [];
+    if (!stats) { return []; }
     return [
       { title: "Total books amount", value: stats.totalBooksAmount, sub: "All time" },
       { title: "Total Members", value: stats.totalMembers, sub: "All time" },

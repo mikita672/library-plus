@@ -28,7 +28,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [fullUserData, setFullUserData] = useState<FullUserData | null>(null);
 
   const refreshUser = useCallback(async (showLoading = true) => {
-    if (showLoading) setIsLoading(true);
+    if (showLoading) { setIsLoading(true); }
     try {
       const response = await fetch("/api/users/meShort", {
         method: "GET",
@@ -52,7 +52,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const refreshFullUser = useCallback(async (showLoading = true) => {
-    if (showLoading) setIsLoading(true);
+    if (showLoading) { setIsLoading(true); }
     try {
       const response = await fetch("/api/users/me", { 
         method: "GET",

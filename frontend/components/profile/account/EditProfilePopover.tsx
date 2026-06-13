@@ -115,7 +115,7 @@ export default function EditProfilePopover({ currentName, currentPhone, onSucces
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
-                if (errors?.name) setErrors({ ...errors, name: undefined });
+                if (errors?.name) { setErrors({ ...errors, name: undefined }); }
               }}
               placeholder="Your name"
             />
@@ -129,7 +129,7 @@ export default function EditProfilePopover({ currentName, currentPhone, onSucces
               value={phone}
               onChange={(e) => {
                 setPhone(e.target.value);
-                if (errors?.phone) setErrors({ ...errors, phone: undefined });
+                if (errors?.phone) { setErrors({ ...errors, phone: undefined }); }
               }}
               placeholder="9 digits"
             />
