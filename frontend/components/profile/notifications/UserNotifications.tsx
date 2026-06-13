@@ -84,7 +84,7 @@ export default function UserNotifications() {
       <Dialog
         open={activeNotification !== null}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setActiveNotification(null);
+          if (!isOpen) { setActiveNotification(null); }
         }}
       >
         <DialogContent className="max-w-3xl">

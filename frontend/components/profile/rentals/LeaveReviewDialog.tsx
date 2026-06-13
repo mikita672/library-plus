@@ -33,7 +33,7 @@ export function LeaveReviewDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (rating === 0 || bookId === null) return;
+    if (rating === 0 || bookId === null) { return; }
 
     setSubmitting(true);
     try {

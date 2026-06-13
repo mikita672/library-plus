@@ -61,7 +61,7 @@ public static class ReservationEndpoints
         {
             var userId = int.Parse(claims.FindFirstValue("sub")!);
             var result = await reservationService.CancelReservationByUser(id, userId);
-            if (!result) return Results.BadRequest("Cannot cancel this reservation.");
+            if (!result) { return Results.BadRequest("Cannot cancel this reservation."); }
             return Results.Ok();
         });
 

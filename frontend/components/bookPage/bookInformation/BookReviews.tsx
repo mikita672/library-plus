@@ -12,14 +12,14 @@ interface Props {
 }
 
 function getDisplayName(review: ReviewResponse): string {
-  if (review.userName) return review.userName;
-  if (review.userEmail) return review.userEmail.split("@")[0];
+  if (review.userName) { return review.userName; }
+  if (review.userEmail) { return review.userEmail.split("@")[0]; }
   return "Anonymous";
 }
 
 function getInitial(review: ReviewResponse): string {
-  if (review.userName) return review.userName.charAt(0).toUpperCase();
-  if (review.userEmail) return review.userEmail.charAt(0).toUpperCase();
+  if (review.userName) { return review.userName.charAt(0).toUpperCase(); }
+  if (review.userEmail) { return review.userEmail.charAt(0).toUpperCase(); }
   return "?";
 }
 

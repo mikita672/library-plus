@@ -15,7 +15,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
 
     private string? GetImageUrl(int userId, byte[]? avatarImage)
     {
-        if (avatarImage == null) return null;
+        if (avatarImage == null) { return null; }
         return $"/api/media/users/{userId}/avatar";
     }
 
@@ -46,7 +46,7 @@ public class UserService(LibraryPlusContext context, NotificationService notific
     public async Task<UserModel?> VerifyUserLogin(string email, string password)
     {
         var user = await GetUserByEmail(email);
-        if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash)) return null;
+        if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash)) { return null; }
         return user;
     }
 

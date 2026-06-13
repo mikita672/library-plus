@@ -19,7 +19,7 @@ export default function ReservationsChart() {
   const chartData = useMemo(() => {
     const months = [];
     const today = new Date();
-    // Start from 11 months ago to current month
+    
     for (let i = 11; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       months.push({ year: d.getFullYear(), month: d.getMonth() + 1 });

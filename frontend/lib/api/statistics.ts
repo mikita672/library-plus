@@ -21,7 +21,7 @@ export async function getStatistics(from: Date, to: Date): Promise<StatisticsRes
     credentials: "include",
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) { return null; }
   return response.json();
 }
 
@@ -40,6 +40,6 @@ export async function getReservationsChartData(): Promise<ReservationChartData[]
     credentials: "include",
   });
 
-  if (!response.ok) return [];
+  if (!response.ok) { return []; }
   return response.json();
 }

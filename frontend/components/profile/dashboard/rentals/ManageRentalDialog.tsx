@@ -77,14 +77,14 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
   const { condition } = form.watch();
 
   const dates = useMemo(() => {
-    if (!reservation) return { s: new Date(), e: new Date() };
+    if (!reservation) { return { s: new Date(), e: new Date() }; }
     return {
       s: new Date(reservation.startDate),
       e: new Date(reservation.endDate),
     };
   }, [reservation]);
 
-  if (!reservation) return null;
+  if (!reservation) { return null; }
 
   const totalDays = Math.max(1, Math.ceil((dates.e.getTime() - dates.s.getTime()) / 86400000));
   const overdueDays = (reservation.status === "Overdue" || (reservation.status !== "Returned" && new Date() > dates.e))

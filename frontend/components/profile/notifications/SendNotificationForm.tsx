@@ -73,7 +73,7 @@ export default function SendNotificationForm() {
       toast.success(sendToAll ? "Notification sent to all users" : "Notification sent");
       setSubject("");
       setBody("");
-      if (!sendToAll) setEmail("");
+      if (!sendToAll) { setEmail(""); }
     } else {
       toast.error("Failed to send notification");
     }
@@ -113,7 +113,7 @@ export default function SendNotificationForm() {
               setShowSuggestions(true);
             }}
             onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
+              if (suggestions.length > 0) { setShowSuggestions(true); }
             }}
           />
           {showSuggestions && debouncedEmail.length >= 2 && (

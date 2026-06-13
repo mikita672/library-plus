@@ -23,7 +23,7 @@ public class CategoryService(LibraryPlusContext context)
     public async Task<bool> EditCategory(int id, UpdateCategoryRequest updateCategoryRequest)
     {
         var category = await _context.Categories.FindAsync(id);
-        if (category == null) return false;
+        if (category == null) { return false; }
 
         category.Name = updateCategoryRequest.Name;
         await _context.SaveChangesAsync();

@@ -54,6 +54,7 @@ export interface BookPreview {
   isAvailable: boolean;
   averageRating: number;
   reviewCount: number;
+  repurchasePrice: number;
 }
 
 export interface BookUnit {
