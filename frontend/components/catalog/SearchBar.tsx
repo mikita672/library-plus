@@ -1,50 +1,58 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '../ui/input-group';
+import React, { useEffect, useRef, useState } from 'react'
 import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { useDebounce } from '@/hooks/useDebounce';
 
 function SearchBar() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const [searchToken, setSearchToken] = useState(searchParams.get("searchToken") ?? "");
+    const [inputValue, setInputValue] = useState(searchParams.get("searchToken") ?? "");
+    const debouncedSearch = useDebounce(inputValue, 500);
+    const initialRender = useRef(true);
 
-    const handleSearch = () => {
-        const params = new URLSearchParams(searchParams);
-        params.delete("pageNumber");
+    useEffect(() => {
+        const currentSearch = searchParams.get("searchToken") ?? "";
+        setInputValue(prev => prev !== currentSearch ? currentSearch : prev);
+    }, [searchParams]);
 
-        if (searchToken.length === 0) {
-            params.delete("searchToken");
-        } else {
-            params.set("searchToken", searchToken);
+    useEffect(() => {
+        if (initialRender.current) {
+            initialRender.current = false;
+            return;
         }
 
-        router.replace(`${pathname}?${params.toString()}`);
-    }
+        const params = new URLSearchParams(searchParams);
+        const currentSearch = searchParams.get("searchToken") ?? "";
+
+        if (debouncedSearch !== currentSearch) {
+            params.delete("pageNumber");
+            if (debouncedSearch.length === 0) {
+                params.delete("searchToken");
+            } else {
+                params.set("searchToken", debouncedSearch);
+            }
+            router.replace(`${pathname}?${params.toString()}`);
+        }
+    }, [debouncedSearch, pathname, router, searchParams]);
 
     return (
-        <InputGroup className="py-5 bg-background">
-            <InputGroupInput
-                placeholder="Search books by name"
-                value={searchToken}
-                onChange={(e) => setSearchToken(e.target.value)}
+        <div className="flex w-full gap-2">
+            <Input
+                className="h-10 text-base bg-background"
+                placeholder="Search books..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
             />
-
-            <InputGroupAddon>
-                <MagnifyingGlassIcon />
-            </InputGroupAddon>
-
-            <InputGroupAddon align="inline-end">
-                <Button
-                    className="cursor-pointer px-6"
-                    onClick={handleSearch}
-                >Search</Button>
-            </InputGroupAddon>
-        </InputGroup>
+            <Button variant="outline" className="h-10 w-10 p-0 pointer-events-none bg-background">
+                <MagnifyingGlassIcon className="h-5 w-5" />
+            </Button>
+        </div>
     )
 }
 
