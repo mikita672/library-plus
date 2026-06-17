@@ -1,3 +1,6 @@
+using LibraryPlus.Models.Reservation;
+using System.Text.Json.Serialization;
+
 namespace LibraryPlus.Models.Book;
 
 public class BookUnitModel
@@ -6,5 +9,6 @@ public class BookUnitModel
     public int BookId { get; set; }
     public BookModel Book { get; set; } = null!;
     public bool IsArchived { get; set; } = false;
-    public ICollection<LibraryPlus.Models.Reservation.ReservationModel> Reservations { get; set; } = new List<LibraryPlus.Models.Reservation.ReservationModel>();
+    [JsonIgnore]
+    public ICollection<ReservationModel> Reservations { get; set; } = new List<ReservationModel>();
 }

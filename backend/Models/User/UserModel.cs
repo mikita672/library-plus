@@ -1,3 +1,7 @@
+using LibraryPlus.Models.Book;
+using LibraryPlus.Models.Reservation;
+using System.Text.Json.Serialization;
+
 namespace LibraryPlus.Models.User;
 
 public class UserModel
@@ -13,7 +17,10 @@ public class UserModel
     public bool IsDeleted { get; set; }
     public bool IsAdmin { get; set; } = false;
 
+    [JsonIgnore]
     public ICollection<UserNotificationModel> UserNotifications { get; set; } = new List<UserNotificationModel>();
-    public ICollection<LibraryPlus.Models.Book.ReviewModel> Reviews { get; set; } = new List<LibraryPlus.Models.Book.ReviewModel>();
-    public ICollection<LibraryPlus.Models.Reservation.ReservationModel> Reservations { get; set; } = new List<LibraryPlus.Models.Reservation.ReservationModel>();
+    [JsonIgnore]
+    public ICollection<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
+    [JsonIgnore]
+    public ICollection<ReservationModel> Reservations { get; set; } = new List<ReservationModel>();
 }

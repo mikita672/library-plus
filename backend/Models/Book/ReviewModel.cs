@@ -1,3 +1,5 @@
+using LibraryPlus.Models.User;
+
 namespace LibraryPlus.Models.Book;
 
 public class ReviewModel
@@ -9,6 +11,6 @@ public class ReviewModel
     public string? ReviewText { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public LibraryPlus.Models.Book.BookModel Book { get; set; } = null!;
-    public LibraryPlus.Models.User.UserModel User { get; set; } = null!;
+    public BookModel Book { get; set; } = null!;
+    public UserModel User { get; set; } = null!;
 }

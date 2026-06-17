@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace LibraryPlus.Models.Book;
 
 public class BookModel
@@ -12,7 +14,9 @@ public class BookModel
     public string Language { get; set; } = null!;
     public int PublicationYear { get; set; }
     public int PagesCount { get; set; }
+    [JsonIgnore]
     public ICollection<CategoryModel> Categories { get; set; } = new List<CategoryModel>();
+    [JsonIgnore]
     public ICollection<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
     public decimal RepurchasePrice { get; set; }
     public string? OriginalTitle { get; set; }
@@ -25,5 +29,6 @@ public class BookModel
     public string? CoverImageContentType { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; } = true;
+    [JsonIgnore]
     public ICollection<BookUnitModel> BookUnits { get; set; } = new List<BookUnitModel>();
 }
