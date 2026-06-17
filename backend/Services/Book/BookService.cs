@@ -68,10 +68,26 @@ public class BookService(
         book.RepurchasePrice = request.RepurchasePrice;
         book.AuthorId = request.AuthorId;
         book.PublisherId = request.PublisherId;
-        book.OriginalTitle = request.OriginalTitle;
-        book.OriginalLanguage = request.OriginalLanguage;
-        book.OriginalPublicationYear = request.OriginalPublicationYear;
-        book.OriginalPublisherId = request.OriginalPublisherId;
+        
+        if (!string.IsNullOrWhiteSpace(request.OriginalTitle))
+        {
+            book.OriginalTitle = request.OriginalTitle;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.OriginalLanguage))
+        {
+            book.OriginalLanguage = request.OriginalLanguage;
+        }
+
+        if (request.OriginalPublicationYear.HasValue && request.OriginalPublicationYear > 0)
+        {
+            book.OriginalPublicationYear = request.OriginalPublicationYear;
+        }
+
+        if (request.OriginalPublisherId.HasValue && request.OriginalPublisherId > 0)
+        {
+            book.OriginalPublisherId = request.OriginalPublisherId;
+        }
 
         await _context.SaveChangesAsync();
         return true;

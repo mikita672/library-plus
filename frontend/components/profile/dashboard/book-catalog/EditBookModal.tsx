@@ -70,7 +70,10 @@ const schema = z.object({
   categoryId: z.string().optional(),
   originalTitle: z.string().optional(),
   originalLanguage: z.string().optional(),
-  originalPublicationYear: z.number().int().max(currentYear, "Cannot be in the future").optional(),
+  originalPublicationYear: z.union([
+    z.number().int().max(currentYear, "Cannot be in the future"),
+    z.nan().transform(() => undefined)
+  ]).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
