@@ -40,7 +40,7 @@ export default function EditProfilePopover({ currentName, currentPhone, onSucces
 
   useEffect(() => {
     if (open) {
-      setName(currentName ?? "");
+        setName(currentName ?? "");
       setPhone(currentPhone ?? "");
       setErrors(null);
     }

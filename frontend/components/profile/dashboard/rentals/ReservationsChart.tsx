@@ -11,7 +11,7 @@ export default function ReservationsChart() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setMounted(true);
     getReservationsChartData().then(setData);
   }, []);
@@ -19,7 +19,7 @@ export default function ReservationsChart() {
   const chartData = useMemo(() => {
     const months = [];
     const today = new Date();
-    
+
     for (let i = 11; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       months.push({ year: d.getFullYear(), month: d.getMonth() + 1 });

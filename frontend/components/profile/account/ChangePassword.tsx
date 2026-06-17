@@ -82,7 +82,7 @@ function ChangePassword() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
+          const errorData = await response.json().catch(() => null);
         setServerError(errorData?.message ?? "Failed to update password");
         return;
       }

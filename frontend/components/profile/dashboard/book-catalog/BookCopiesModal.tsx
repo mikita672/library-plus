@@ -33,7 +33,9 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
     iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
 
   const fetchData = useCallback(async () => {
-    if (!book) { return; }
+    if (!book) {
+        return;
+    }
     setLoading(true);
     try {
       const units = await getBookUnitsForBook(book.id);
@@ -44,22 +46,34 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
 
         const getSeverity = (c: string) => {
           const low = (c || "").toLowerCase();
-          if (low.includes("lost")) { return 3; }
-          if (low.includes("destroyed") || low.includes("unusable")) { return 2; }
-          if (low.includes("minor")) { return 1; }
+          if (low.includes("lost")) {
+              return 3;
+          }
+          if (low.includes("destroyed") || low.includes("unusable")) {
+              return 2;
+          }
+          if (low.includes("minor")) {
+              return 1;
+          }
           return 0;
         };
 
         let condition = "Good";
         let maxSeverity = 0;
-        
+
         for (const past of pastReturns) {
           const severity = getSeverity(past.bookConditionUponReturn || "");
           if (severity > maxSeverity) {
             maxSeverity = severity;
-            if (severity === 3) { condition = "Lost"; }
-            if (severity === 2) { condition = "Unusable"; }
-            if (severity === 1) { condition = "Minor damages"; }
+            if (severity === 3) {
+                condition = "Lost";
+            }
+            if (severity === 2) {
+                condition = "Unusable";
+            }
+            if (severity === 1) {
+                condition = "Minor damages";
+            }
           }
         }
 
@@ -84,14 +98,16 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   }, [book]);
 
   useEffect(() => {
-    if (!book || !open) { return; }
+    if (!book || !open) {
+        return;
+    }
     void fetchData();
   }, [book, open, fetchData]);
 
   const handleArchive = async (unitId: number) => {
     const ok = await archiveBookUnit(unitId);
     if (ok) {
-      toast.success("Book unit archived");
+        toast.success("Book unit archived");
       void fetchData();
     } else {
       toast.error("Cannot archive a rented book unit");
@@ -101,7 +117,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   const handleUnarchive = async (unitId: number) => {
     const ok = await unarchiveBookUnit(unitId);
     if (ok) {
-      toast.success("Book unit unarchived");
+        toast.success("Book unit unarchived");
       void fetchData();
     } else {
       toast.error("Failed to unarchive");

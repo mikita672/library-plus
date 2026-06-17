@@ -25,10 +25,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getReservationsByUnit, returnReservation } from "@/lib/api/reservations";
-import { EnrichedReservationItem, ReservationItem } from "@/types/reservation/Reservation";
+import { ReservationItem } from "@/types/reservation/Reservation";
+import { formatDate } from "@/lib/utils/dates";
 
 interface Props {
-  reservation: EnrichedReservationItem | null;
+  reservation: ReservationItem | null;
   onClose: () => void;
   onSuccess: () => void;
   readOnly?: boolean;
@@ -37,8 +38,6 @@ interface Props {
 
 const CONDITIONS = ["Good", "Minor damages", "Unusable", "Lost"];
 
-const formatDate = (iso: string) =>
-  iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
 
 const rentalSchema = z.object({
   condition: z.string(),
@@ -84,7 +83,9 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
     };
   }, [reservation]);
 
-  if (!reservation) { return null; }
+  if (!reservation) {
+      return null;
+  }
 
   const totalDays = Math.max(1, Math.ceil((dates.e.getTime() - dates.s.getTime()) / 86400000));
   const overdueDays = (reservation.status === "Overdue" || (reservation.status !== "Returned" && new Date() > dates.e))
@@ -158,6 +159,7 @@ export function ManageRentalDialog({ reservation, onClose, onSuccess, readOnly, 
               </div>
               <div className="text-sm space-y-1 mt-4">
                 <p>Due: {dates.e.toLocaleDateString("en-GB")}</p>
+                {reservation.returnedDate && <p>Returned: {formatDate(reservation.returnedDate)}</p>}
                 <p>Total: {totalDays} days</p>
                 <p><span className="font-semibold">Overdue:</span> {overdueDays || "none"}</p>
               </div>

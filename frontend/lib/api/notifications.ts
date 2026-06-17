@@ -7,7 +7,9 @@ export async function getNotifications(page: number): Promise<Notification[]> {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) { return []; }
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<Notification[]>;
 }
 
@@ -67,6 +69,8 @@ export async function suggestUsers(query: string): Promise<UserSuggestion[]> {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) { return []; }
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<UserSuggestion[]>;
 }

@@ -34,7 +34,7 @@ export default function PasswordResetPage() {
   const onSubmit = async (data: PasswordResetFormSchema) => {
     const error = await resetPassword(data);
     if (error === null) {
-      toast.success("Check your email");
+        toast.success("Check your email");
       router.push("/login");
       return;
     }

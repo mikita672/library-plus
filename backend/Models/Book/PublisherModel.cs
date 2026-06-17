@@ -8,7 +8,7 @@ public class PublisherModel
 
     [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<BookModel> Books { get; set; } = new List<BookModel>();
-    
+
     [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<BookModel> OriginalBooks { get; set; } = new List<BookModel>();
 }

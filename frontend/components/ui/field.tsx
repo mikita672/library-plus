@@ -183,11 +183,11 @@ function FieldError({
 }) {
   const content = useMemo(() => {
     if (children) {
-      return children
+        return children
     }
 
     if (!errors?.length) {
-      return null
+        return null
     }
 
     const uniqueErrors = [
@@ -195,7 +195,7 @@ function FieldError({
     ]
 
     if (uniqueErrors?.length == 1) {
-      return uniqueErrors[0]?.message
+        return uniqueErrors[0]?.message
     }
 
     return (
@@ -209,7 +209,7 @@ function FieldError({
   }, [children, errors])
 
   if (!content) {
-    return null
+      return null
   }
 
   return (

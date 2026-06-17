@@ -82,7 +82,9 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
   });
 
   useEffect(() => {
-    if (!open) { return; }
+    if (!open) {
+        return;
+    }
     (async () => {
       try {
         const [a, p, c] = await Promise.all([getAuthors(), getPublishers(), getCategories()]);
@@ -106,9 +108,13 @@ export default function AddBookDialog({ onSuccess }: { onSuccess?: () => void })
 
     try {
       const book = await createBook(payload);
-      if (file) { await uploadBookCover(book.id, file).catch(() => toast.error("Cover upload failed")); }
-      if (values.initialCopies > 0) { await addBookUnits(book.id, values.initialCopies); }
-      
+      if (file) {
+          await uploadBookCover(book.id, file).catch(() => toast.error("Cover upload failed"));
+      }
+      if (values.initialCopies > 0) {
+          await addBookUnits(book.id, values.initialCopies);
+      }
+
       toast.success("Book created");
       form.reset();
       setFile(null);

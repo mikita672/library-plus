@@ -22,7 +22,7 @@ function HeaderUserMenu({ userData }: Props) {
   const onLogout = async () => {
     const error = await logout();
     if (error === null) {
-      toast.success("Logged out successfully");
+        toast.success("Logged out successfully");
       router.push('/login');
     } else {
       toast.error("Failed to logout", {
@@ -33,7 +33,7 @@ function HeaderUserMenu({ userData }: Props) {
 
   let username = userData.name ?? userData.email;
   if (username.length > 12) {
-    username = username.substring(0, 12) + '...';
+      username = username.substring(0, 12) + '...';
   }
 
   return (

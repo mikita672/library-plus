@@ -15,7 +15,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!isLoading) {
       if (userData === null) {
-        router.push("/auth/login");
+        router.push("/login");
       } else if (fullUserData !== null) {
         if (!fullUserData.isAdmin) {
           router.push("/profile");

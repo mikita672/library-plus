@@ -28,14 +28,16 @@ const CONDITION_SEVERITY: Record<string, number> = {
 
 function deriveCondition(reservations: ReservationItem[]): UnitCondition {
   const returned = reservations.filter(r => r.bookConditionUponReturn);
-  if (returned.length === 0) { return "Good"; }
+  if (returned.length === 0) {
+      return "Good";
+  }
 
   let worst: UnitCondition = "Good";
   for (const r of returned) {
     const condition = r.bookConditionUponReturn!;
     const severity = CONDITION_SEVERITY[condition] ?? 0;
     if (severity > CONDITION_SEVERITY[worst]) {
-      worst = condition as UnitCondition;
+        worst = condition as UnitCondition;
     }
   }
   return worst;

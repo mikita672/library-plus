@@ -41,7 +41,9 @@ function NotificationsList({ notifications }: Params) {
             <Dialog
                 open={activeNotification !== null}
                 onOpenChange={(isOpen) => {
-                    if (!isOpen) { setActiveNotification(null); }
+                    if (!isOpen) {
+                        setActiveNotification(null);
+                    }
                 }}
             >
                 <DialogContent className="max-w-3xl">

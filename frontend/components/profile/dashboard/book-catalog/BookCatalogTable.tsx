@@ -274,7 +274,7 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
 
   const data = useMemo(() => books, [books]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+
   const table = useReactTable({
     data,
     columns,
@@ -285,7 +285,7 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
   });
 
   if (!books.length) {
-    return (
+      return (
       <div className="text-center text-muted-foreground">No books found.</div>
     );
   }

@@ -25,17 +25,37 @@ export interface GetBooksParams {
 function buildSearchParams(params: GetBooksParams): URLSearchParams {
   const sp = new URLSearchParams();
 
-  if (params.searchToken) { sp.set("searchToken", params.searchToken); }
-  if (params.authorId) { sp.set("authorId", params.authorId); }
-  if (params.publisherId) { sp.set("publisherId", params.publisherId); }
+  if (params.searchToken) {
+      sp.set("searchToken", params.searchToken);
+  }
+  if (params.authorId) {
+      sp.set("authorId", params.authorId);
+  }
+  if (params.publisherId) {
+      sp.set("publisherId", params.publisherId);
+  }
   params.categoryIds?.forEach((id) => sp.append("categoryIds", id));
-  if (params.minPublicationYear != null) { sp.set("minPublicationYear", String(params.minPublicationYear)); }
-  if (params.maxPublicationYear != null) { sp.set("maxPublicationYear", String(params.maxPublicationYear)); }
-  if (params.isAvailable != null) { sp.set("isAvailable", String(params.isAvailable)); }
-  if (params.pageNumber != null) { sp.set("pageNumber", String(params.pageNumber)); }
-  if (params.sortBy) { sp.set("sortBy", params.sortBy); }
-  if (params.sortDescending != null) { sp.set("sortDescending", String(params.sortDescending)); }
-  if (params.includeInactive != null) { sp.set("includeInactive", String(params.includeInactive)); }
+  if (params.minPublicationYear != null) {
+      sp.set("minPublicationYear", String(params.minPublicationYear));
+  }
+  if (params.maxPublicationYear != null) {
+      sp.set("maxPublicationYear", String(params.maxPublicationYear));
+  }
+  if (params.isAvailable != null) {
+      sp.set("isAvailable", String(params.isAvailable));
+  }
+  if (params.pageNumber != null) {
+      sp.set("pageNumber", String(params.pageNumber));
+  }
+  if (params.sortBy) {
+      sp.set("sortBy", params.sortBy);
+  }
+  if (params.sortDescending != null) {
+      sp.set("sortDescending", String(params.sortDescending));
+  }
+  if (params.includeInactive != null) {
+      sp.set("includeInactive", String(params.includeInactive));
+  }
 
   return sp;
 }
@@ -50,7 +70,9 @@ export async function getBooks(
     : `/api/books?${sp.toString()}`;
 
   const res = await fetch(url, { method: "GET", cache: "no-store" });
-  if (!res.ok) { return []; }
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<BookCard[]>;
 }
 
@@ -64,7 +86,9 @@ export async function getBooksPages(
     : `/api/books/pages?${sp.toString()}`;
 
   const res = await fetch(url, { method: "GET", cache: "no-store" });
-  if (!res.ok) { return 1; }
+  if (!res.ok) {
+      return 1;
+  }
   return res.json() as Promise<number>;
 }
 
@@ -110,7 +134,9 @@ export async function getBookUnitById(id: number): Promise<BookUnit | null> {
     method: "GET",
     cache: "force-cache",
   });
-  if (!res.ok) { return null; }
+  if (!res.ok) {
+      return null;
+  }
   return res.json() as Promise<BookUnit>;
 }
 
@@ -170,7 +196,9 @@ export async function getBookUnitsForBook(bookId: number): Promise<BookUnit[]> {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) { return []; }
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<BookUnit[]>;
 }
 
@@ -196,6 +224,8 @@ export async function getReviewedBooks(): Promise<number[]> {
     credentials: "include",
     cache: "no-store",
   });
-  if (!res.ok) { return []; }
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<number[]>;
 }

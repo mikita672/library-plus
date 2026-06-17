@@ -120,7 +120,9 @@ function CheckoutPage() {
                     }
                 }
             } else {
-                if (diff < FOURTEEN_DAYS) { range.to = new Date(range.from.getTime() + FOURTEEN_DAYS); }
+                if (diff < FOURTEEN_DAYS) {
+                    range.to = new Date(range.from.getTime() + FOURTEEN_DAYS);
+                }
                 else if (diff > THIRTY_DAYS) { range.to = new Date(range.from.getTime() + THIRTY_DAYS); }
             }
         }

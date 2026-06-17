@@ -82,7 +82,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lookups, setLookups] = useState({ authors: [] as Author[], publishers: [] as Publisher[], categories: [] as Category[] });
-  
+
   const [file, setFile] = useState<File | null>(null);
   const [copies, setCopies] = useState(1);
 
@@ -92,12 +92,14 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
   });
 
   useEffect(() => {
-    if (!open || !book) { return; }
+    if (!open || !book) {
+        return;
+    }
     (async () => {
       setLoading(true);
       try {
         const [details, a, p, c] = await Promise.all([getBookById(book.id), getAuthors(), getPublishers(), getCategories()]);
-        
+
         form.reset({
           title: details.title || "",
           description: details.description || "",
@@ -119,7 +121,9 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
   }, [open, book, form]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!book) { return; }
+    if (!book) {
+        return;
+    }
     setSaving(true);
     try {
       const body: UpdateBookRequest = {
@@ -133,7 +137,9 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
         originalPublisherId: null,
       };
       await updateBook(book.id, body);
-      if (file) { await uploadBookCover(book.id, file).catch(() => toast.error("Cover failed")); }
+      if (file) {
+          await uploadBookCover(book.id, file).catch(() => toast.error("Cover failed"));
+      }
       toast.success("Updated");
       await onSave?.(book);
       onOpenChange(false);
@@ -141,14 +147,18 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
   };
 
   const handleAddUnits = async () => {
-    if (!book || copies < 1) { return; }
+    if (!book || copies < 1) {
+        return;
+    }
     try {
       await addBookUnits(book.id, copies);
       toast.success(`${copies} copies added`);
     } catch { toast.error("Failed to add copies"); }
   };
 
-  if (!book) { return null; }
+  if (!book) {
+      return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -181,7 +191,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
                 <Field data-invalid={!!form.formState.errors.originalPublicationYear}><FieldLabel>Original Year</FieldLabel><Input type="number" {...form.register("originalPublicationYear", { valueAsNumber: true })} /><FieldError>{form.formState.errors.originalPublicationYear?.message}</FieldError></Field>
               </CollapsibleContent></Collapsible>
             </form>
-            
+
             <Separator className="my-2" />
             <div className="flex items-center gap-4 justify-between border border-border rounded-md p-3">
               <Label className="font-semibold">Add More Copies</Label>
@@ -190,7 +200,7 @@ export default function EditBookModal({ book, open, onOpenChange, onSave }: Prop
                 <Button variant="outline" size="sm" onClick={handleAddUnits} className="gap-2"><PlusIcon /> Add Copies</Button>
               </div>
             </div>
-            
+
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button form="edit-book-form" type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>

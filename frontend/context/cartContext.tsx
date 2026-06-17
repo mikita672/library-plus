@@ -31,8 +31,12 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const addBook = (id: number) => {
         setBookIds(prev => {
-            if (prev === null) { return null; }
-            if (prev.includes(id)) { return prev; }
+            if (prev === null) {
+                return null;
+            }
+            if (prev.includes(id)) {
+                return prev;
+            }
             const newBookIds = [...prev, id];
             localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
             return newBookIds;
@@ -41,7 +45,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     const removeBook = (id: number) => {
         setBookIds(prev => {
-            if (prev === null) { return null; }
+            if (prev === null) {
+                return null;
+            }
             const newBookIds = prev.filter(bookId => bookId !== id);
             localStorage.setItem(cartKey, JSON.stringify({ bookIds: newBookIds }));
             return newBookIds;

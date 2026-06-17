@@ -53,14 +53,17 @@ public class BookService(
     public async Task<bool> EditBook(int id, UpdateBookRequest request)
     {
         var book = await _context.Books.Include(b => b.Categories).FirstOrDefaultAsync(b => b.Id == id);
-        if (book == null) { return false; }
+        if (book == null)
+        {
+            return false;
+        }
 
         book.Title = request.Title;
         book.Description = request.Description;
         book.Language = request.Language;
         book.PublicationYear = request.PublicationYear;
         book.PagesCount = request.PagesCount;
-        
+
         book.Categories.Clear();
         var newCategories = await _context.Categories.Where(c => request.CategoryIds.Contains(c.Id)).ToListAsync();
         foreach (var c in newCategories) book.Categories.Add(c);
@@ -68,7 +71,7 @@ public class BookService(
         book.RepurchasePrice = request.RepurchasePrice;
         book.AuthorId = request.AuthorId;
         book.PublisherId = request.PublisherId;
-        
+
         if (!string.IsNullOrWhiteSpace(request.OriginalTitle))
         {
             book.OriginalTitle = request.OriginalTitle;
@@ -95,7 +98,10 @@ public class BookService(
 
     private string? GetImageUrl(int bookId, byte[]? coverImage)
     {
-        if (coverImage == null) { return null; }
+        if (coverImage == null)
+        {
+            return null;
+        }
         return $"/api/media/books/{bookId}/cover";
     }
 
@@ -117,8 +123,14 @@ public class BookService(
             query = query.Where(b => EF.Functions.ILike(b.Title, $"%{token}%"));
         }
 
-        if (authorId != null) { query = query.Where(b => b.AuthorId == authorId); }
-        if (publisherId != null) { query = query.Where(b => b.PublisherId == publisherId); }
+        if (authorId != null)
+        {
+            query = query.Where(b => b.AuthorId == authorId);
+        }
+        if (publisherId != null)
+        {
+            query = query.Where(b => b.PublisherId == publisherId);
+        }
         if (categories?.Count > 0)
         {
             query = query.Where(b => b.Categories.Any(c => categories.Contains(c.Id)));
@@ -127,7 +139,10 @@ public class BookService(
         if (available != null)
         {
             var availableIds = await GetAvailableBookIds();
-            if (available == true) { query = query.Where(b => availableIds.Contains(b.Id)); }
+            if (available == true)
+            {
+                query = query.Where(b => availableIds.Contains(b.Id));
+            }
             else
                 query = query.Where(b => !availableIds.Contains(b.Id));
         }
@@ -137,26 +152,29 @@ public class BookService(
 
     private async Task<HashSet<int>> GetAvailableBookIds()
     {
-        var takenIds = await _context.Reservations.Where(r => r.ReturnedDate == null).Select(r => r.BookUnitId).ToListAsync();
+        var takenIds = await _context.Reservations.Where(r => r.ReturnedDate == null && r.Status != "Canceled").Select(r => r.BookUnitId).ToListAsync();
         var allUnits = await _context.BookUnits.Where(bu => !takenIds.Contains(bu.Id) && !bu.IsArchived).ToListAsync();
         var availableBookIds = new HashSet<int>();
 
         foreach (var unit in allUnits)
         {
-            if (availableBookIds.Contains(unit.BookId)) { continue; }
-            
+            if (availableBookIds.Contains(unit.BookId))
+            {
+                continue;
+            }
+
             var latestReservation = await _context.Reservations
                 .Where(r => r.BookUnitId == unit.Id && r.ReturnedDate != null)
                 .OrderByDescending(r => r.CreatedAt)
                 .FirstOrDefaultAsync();
-            
+
             var condition = latestReservation?.BookConditionUponReturn?.ToLower() ?? "good";
             if (condition.Contains("good") || condition.Contains("minor"))
             {
                 availableBookIds.Add(unit.BookId);
             }
         }
-        
+
         return availableBookIds;
     }
 
@@ -258,7 +276,10 @@ public class BookService(
     public async Task<BookPreviewResponse?> GetBookPreviewById(int id)
     {
         var book = await GetBookById(id);
-        if (book == null) { return null; }
+        if (book == null)
+        {
+            return null;
+        }
 
         var author = book.AuthorId != null ? await _authorService.GetAuthor(book.AuthorId.Value) : null;
         var pub = book.PublisherId != null ? await _publisherService.GetPublisher(book.PublisherId.Value) : null;
@@ -300,31 +321,34 @@ public class BookService(
 
     public async Task<BookUnitModel?> GetAvailableBookUnitForBook(int bookId)
     {
-        var takenIds = await _context.Reservations.Where(r => r.ReturnedDate == null).Select(r => r.BookUnitId).ToListAsync();
+        var takenIds = await _context.Reservations.Where(r => r.ReturnedDate == null && r.Status != "Canceled").Select(r => r.BookUnitId).ToListAsync();
         var availableUnits = await _context.BookUnits.Where(bu => bu.BookId == bookId && !takenIds.Contains(bu.Id) && !bu.IsArchived).ToListAsync();
-        
+
         foreach (var unit in availableUnits)
         {
             var latestReservation = await _context.Reservations
                 .Where(r => r.BookUnitId == unit.Id && r.ReturnedDate != null)
                 .OrderByDescending(r => r.CreatedAt)
                 .FirstOrDefaultAsync();
-            
+
             var condition = latestReservation?.BookConditionUponReturn?.ToLower() ?? "good";
             if (condition.Contains("good") || condition.Contains("minor"))
             {
                 return unit;
             }
         }
-        
+
         return null;
     }
 
     public async Task<bool> ArchiveBookUnit(int unitId)
     {
         var activeReservation = await _context.Reservations.FirstOrDefaultAsync(r => r.BookUnitId == unitId && r.ReturnedDate == null);
-        if (activeReservation != null) { return false; }
-        
+        if (activeReservation != null)
+        {
+            return false;
+        }
+
         var bu = await _context.BookUnits.FindAsync(unitId);
         if (bu != null)
         {

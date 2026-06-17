@@ -36,7 +36,7 @@ function useCarousel() {
   const context = React.useContext(CarouselContext)
 
   if (!context) {
-    throw new Error("useCarousel must be used within a <Carousel />")
+      throw new Error("useCarousel must be used within a <Carousel />")
   }
 
   return context
@@ -62,7 +62,9 @@ function Carousel({
   const [canScrollNext, setCanScrollNext] = React.useState(false)
 
   const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) { return }
+    if (!api) {
+        return
+    }
     setCanScrollPrev(api.canScrollPrev())
     setCanScrollNext(api.canScrollNext())
   }, [])
@@ -78,7 +80,7 @@ function Carousel({
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.key === "ArrowLeft") {
-        event.preventDefault()
+          event.preventDefault()
         scrollPrev()
       } else if (event.key === "ArrowRight") {
         event.preventDefault()
@@ -89,12 +91,16 @@ function Carousel({
   )
 
   React.useEffect(() => {
-    if (!api || !setApi) { return }
+    if (!api || !setApi) {
+        return
+    }
     setApi(api)
   }, [api, setApi])
 
   React.useEffect(() => {
-    if (!api) { return }
+    if (!api) {
+        return
+    }
     onSelect(api)
     api.on("reInit", onSelect)
     api.on("select", onSelect)

@@ -32,11 +32,14 @@ public static class MiscEndpoints
         ) =>
         {
             var userIdStr = claims.FindFirstValue("sub");
-            if (userIdStr == null || !int.TryParse(userIdStr, out var userId)) { return Results.Unauthorized(); }
-            
+            if (userIdStr == null || !int.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
             var last12Months = DateTime.UtcNow.AddMonths(-11);
             var startOfMonth = new DateTime(last12Months.Year, last12Months.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-            
+
             var data = await context.Reservations
                 .Where(r => r.CreatedAt >= startOfMonth)
                 .GroupBy(r => new { r.CreatedAt.Year, r.CreatedAt.Month })

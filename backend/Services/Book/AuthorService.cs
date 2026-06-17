@@ -23,7 +23,10 @@ public class AuthorService(LibraryPlusContext context)
     public async Task<bool> EditAuthor(int id, UpdateAuthorRequest updateAuthorRequest)
     {
         var author = await _context.Authors.FindAsync(id);
-        if (author == null) { return false; }
+        if (author == null)
+        {
+            return false;
+        }
 
         author.Name = updateAuthorRequest.Name;
         await _context.SaveChangesAsync();

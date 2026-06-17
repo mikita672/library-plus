@@ -39,14 +39,14 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: SignUpFormSchema) => {
     if (data.password !== data.passwordConfirmation) {
-      return;
+        return;
     }
 
     const error = await signup(data);
     if (error === null) {
       const loginError = await login(data);
       if (loginError === null) {
-        await refreshUser();
+          await refreshUser();
         await refreshFullUser();
         toast.success("Logged in successfully");
         router.replace("/");

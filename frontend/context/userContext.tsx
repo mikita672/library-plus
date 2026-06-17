@@ -28,7 +28,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [fullUserData, setFullUserData] = useState<FullUserData | null>(null);
 
   const refreshUser = useCallback(async (showLoading = true) => {
-    if (showLoading) { setIsLoading(true); }
+    if (showLoading) {
+        setIsLoading(true);
+    }
     try {
       const response = await fetch("/api/users/meShort", {
         method: "GET",
@@ -52,7 +54,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const refreshFullUser = useCallback(async (showLoading = true) => {
-    if (showLoading) { setIsLoading(true); }
+    if (showLoading) {
+        setIsLoading(true);
+    }
     try {
       const response = await fetch("/api/users/me", { 
         method: "GET",
@@ -96,7 +100,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!response.ok) {
-      return "Bad credentials";
+        return "Bad credentials";
     }
     return null;
   }, []);
@@ -150,12 +154,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       body: JSON.stringify({ email }),
     });
     if (response.status === 400) {
-      return "Bad request";
+        return "Bad request";
     } else if (response.status === 204) {
       return "Password was reset, email was not sent";
     }
     if (!response.ok) {
-      return "Unknown error";
+        return "Unknown error";
     }
     return null;
   }, []);

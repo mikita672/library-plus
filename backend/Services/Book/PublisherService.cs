@@ -23,7 +23,10 @@ public class PublisherService(LibraryPlusContext context)
     public async Task<bool> EditPublisher(int id, UpdatePublisherRequest updatePublisherRequest)
     {
         var publisher = await _context.Publishers.FindAsync(id);
-        if (publisher == null) { return false; }
+        if (publisher == null)
+        {
+            return false;
+        }
 
         publisher.Name = updatePublisherRequest.Name;
         await _context.SaveChangesAsync();

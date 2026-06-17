@@ -32,7 +32,7 @@ function BooksCarousel({ books, includeAuthor }: Props) {
 
   useEffect(() => {
     if (!api) {
-      return;
+        return;
     }
 
     const initialSnap = api.selectedScrollSnap();
@@ -53,7 +53,7 @@ function BooksCarousel({ books, includeAuthor }: Props) {
 
   useEffect(() => {
     if (api) {
-      api.scrollTo(0);
+        api.scrollTo(0);
     }
   }, [api, booksPerSlide]);
 

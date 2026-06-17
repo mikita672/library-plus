@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useEnrichedReservations } from "@/hooks/useEnrichedReservations";
+import { useCallback } from "react";
+import {
+  GetReservationsParams,
+  getReservationPages,
+  getReservations,
+} from "@/lib/api/reservations";
+import { ReservationItem } from "@/types/reservation/Reservation";
 
 import RentalsTable from "./RentalsTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -23,6 +29,7 @@ const STATUS_OPTIONS = [
   { value: "Reserved", label: "Pending" },
   { value: "Taken", label: "Rented" },
   { value: "Returned", label: "Returned" },
+  { value: "Canceled", label: "Canceled" },
   { value: "Overdue", label: "Overdue" },
 ];
 
@@ -32,11 +39,38 @@ export default function RentalsTab() {
   const [inputValue, setInputValue] = useState("");
   const debouncedSearch = useDebounce(inputValue, 500);
 
-  const { reservations, loading, error, totalPages, refetch } = useEnrichedReservations({
-    pageNumber,
-    statusFilter,
-    debouncedSearch,
-  });
+  const [reservations, setReservations] = useState<ReservationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const params: GetReservationsParams = {
+        pageNumber,
+        ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(debouncedSearch && { searchToken: debouncedSearch }),
+      };
+
+      const [data, pages] = await Promise.all([
+        getReservations(params),
+        getReservationPages(params),
+      ]);
+
+      setReservations(data);
+      setTotalPages(Math.max(1, pages));
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [pageNumber, statusFilter, debouncedSearch]);
+
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     const t = setTimeout(() => setPageNumber(1), 0);
@@ -87,7 +121,7 @@ export default function RentalsTab() {
         <div className="text-destructive py-8">Error loading reservations</div>
       ) : (
         <div className="flex flex-col justify-between">
-          <RentalsTable reservations={reservations} onRefresh={refetch} />
+          <RentalsTable reservations={reservations} onRefresh={fetchData} />
           <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>
       )}
