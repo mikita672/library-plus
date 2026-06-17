@@ -25,7 +25,6 @@ Before starting the application, you need to configure the backend settings.
      - `Username`: Your email address.
      - `Password`: Your email application password.
      - `SmtpServer` and `Port` (e.g., `smtp.gmail.com` and `587`).
-   - **MongoExpress:** Set your preferred username and password for the MongoDB administration interface.
 
 ## Running the Application
 

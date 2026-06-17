@@ -175,7 +175,9 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   }, [entityName, deleteItem, loadItems]);
 
   const handleSubmit = async () => {
-    if (!nameInput.trim()) return;
+    if (!nameInput.trim()) {
+        return;
+    }
     setSubmitting(true);
     try {
       if (editingItem) {
@@ -199,7 +201,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
   const filteredItems = useMemo(() => items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())), [items, searchQuery]);
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
   const paginatedItems = useMemo(() => filteredItems.slice((pageNumber - 1) * ITEMS_PER_PAGE, pageNumber * ITEMS_PER_PAGE), [filteredItems, pageNumber]);
-  
+
   useEffect(() => { setPageNumber(1); }, [searchQuery]);
 
   const columns = useMemo(() => buildColumns<T>(openEditDialog, handleDelete, paramKey), [openEditDialog, handleDelete, paramKey]);
@@ -259,7 +261,7 @@ export default function LookupManagementTab<T extends BaseLookupModel>({
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit" : "Add"} {entityName}</DialogTitle>
             <DialogDescription>Enter the name of the {entityName.toLowerCase()}.</DialogDescription>

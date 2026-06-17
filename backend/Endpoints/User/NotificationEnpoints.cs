@@ -66,7 +66,10 @@ public static class NotificationEndpoints
             [FromQuery] string query
         ) =>
         {
-            if (string.IsNullOrWhiteSpace(query)) return Results.Ok(Array.Empty<object>());
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Results.Ok(Array.Empty<object>());
+            }
             var suggestions = await userService.SuggestUsersByEmail(query);
             return Results.Ok(suggestions);
         }).AddEndpointFilter<AdminUserFilter>();

@@ -20,7 +20,7 @@ public class StatisticsService(LibraryPlusContext context)
         var totalUnits = await _context.BookUnits.CountAsync();
         var totalMembers = await _context.Users.CountAsync(u => !u.IsDeleted);
         var booksRented = await _context.Reservations.CountAsync(r => r.Status == "Taken");
-        
+
         var activeResCount = await _context.Reservations.CountAsync(r => r.Status == "Taken" || r.Status == "Reserved");
 
         var mostPopularBook = await GetMostPopularBookName(fromDate, toDate);
@@ -56,17 +56,20 @@ public class StatisticsService(LibraryPlusContext context)
 
     private async Task<string> GetMostPopularCategoryName(DateTime fromDate, DateTime toDate)
     {
-        var categoryId = await (from r in _context.Reservations
-                               join bu in _context.BookUnits on r.BookUnitId equals bu.Id
-                               join b in _context.Books on bu.BookId equals b.Id
-                               from cid in b.CategoryIds
-                               where r.CreatedAt >= fromDate && r.CreatedAt <= toDate
-                               group cid by cid into g
-                               orderby g.Count() descending
-                               select (int?)g.Key)
-                               .FirstOrDefaultAsync();
+        var categoryId = await _context.Reservations
+            .Where(r => r.CreatedAt >= fromDate && r.CreatedAt <= toDate)
+            .Join(_context.BookUnits, r => r.BookUnitId, bu => bu.Id, (r, bu) => bu)
+            .Join(_context.Books, bu => bu.BookId, b => b.Id, (bu, b) => b)
+            .SelectMany(b => b.Categories)
+            .GroupBy(c => c.Id)
+            .OrderByDescending(g => g.Count())
+            .Select(g => (int?)g.Key)
+            .FirstOrDefaultAsync();
 
-        if (categoryId == null || categoryId == 0) return "N/A";
+        if (categoryId == null || categoryId == 0)
+        {
+            return "N/A";
+        }
 
         var category = await _context.Categories.FindAsync(categoryId);
         return category?.Name ?? "N/A";
@@ -74,14 +77,14 @@ public class StatisticsService(LibraryPlusContext context)
 
     private async Task<string> GetMostPopularBookName(DateTime fromDate, DateTime toDate)
     {
-        var bookName = await (from r in _context.Reservations
-                               join bu in _context.BookUnits on r.BookUnitId equals bu.Id
-                               join b in _context.Books on bu.BookId equals b.Id
-                               where r.CreatedAt >= fromDate && r.CreatedAt <= toDate
-                               group b.Title by b.Title into g
-                               orderby g.Count() descending
-                               select g.Key)
-                               .FirstOrDefaultAsync();
+        var bookName = await _context.Reservations
+            .Where(r => r.CreatedAt >= fromDate && r.CreatedAt <= toDate)
+            .Join(_context.BookUnits, r => r.BookUnitId, bu => bu.Id, (r, bu) => bu)
+            .Join(_context.Books, bu => bu.BookId, b => b.Id, (bu, b) => b.Title)
+            .GroupBy(title => title)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefaultAsync();
 
         return bookName ?? "N/A";
     }

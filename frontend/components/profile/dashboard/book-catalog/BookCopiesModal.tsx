@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getBookUnitsForBook, archiveBookUnit, unarchiveBookUnit } from "@/lib/api/books";
 import { getReservationsByUnit } from "@/lib/api/reservations";
 import { BookUnit, BookCard } from "@/types/book/Book";
+import { ReservationItem } from "@/types/reservation/Reservation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ interface BookUnitStatus {
   condition: string;
   isAvailable: boolean;
   isRentable: boolean;
+  history: ReservationItem[];
 }
 
 interface Props {
@@ -25,9 +27,15 @@ interface Props {
 export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [unitsStatus, setUnitsStatus] = useState<BookUnitStatus[]>([]);
+  const [selectedHistory, setSelectedHistory] = useState<import("@/types/reservation/Reservation").ReservationItem[] | null>(null);
+
+  const formatDate = (iso: string) =>
+    iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
 
   const fetchData = useCallback(async () => {
-    if (!book) return;
+    if (!book) {
+        return;
+    }
     setLoading(true);
     try {
       const units = await getBookUnitsForBook(book.id);
@@ -38,22 +46,34 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
 
         const getSeverity = (c: string) => {
           const low = (c || "").toLowerCase();
-          if (low.includes("lost")) return 3;
-          if (low.includes("destroyed") || low.includes("unusable")) return 2;
-          if (low.includes("minor")) return 1;
+          if (low.includes("lost")) {
+              return 3;
+          }
+          if (low.includes("destroyed") || low.includes("unusable")) {
+              return 2;
+          }
+          if (low.includes("minor")) {
+              return 1;
+          }
           return 0;
         };
 
         let condition = "Good";
         let maxSeverity = 0;
-        
+
         for (const past of pastReturns) {
           const severity = getSeverity(past.bookConditionUponReturn || "");
           if (severity > maxSeverity) {
             maxSeverity = severity;
-            if (severity === 3) condition = "Lost";
-            if (severity === 2) condition = "Unusable";
-            if (severity === 1) condition = "Minor damages";
+            if (severity === 3) {
+                condition = "Lost";
+            }
+            if (severity === 2) {
+                condition = "Unusable";
+            }
+            if (severity === 1) {
+                condition = "Minor damages";
+            }
           }
         }
 
@@ -65,6 +85,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
           condition,
           isAvailable: !activeReservation && isRentable && !unit.isArchived,
           isRentable,
+          history: pastReturns,
         };
       }));
 
@@ -77,14 +98,16 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   }, [book]);
 
   useEffect(() => {
-    if (!book || !open) return;
+    if (!book || !open) {
+        return;
+    }
     void fetchData();
   }, [book, open, fetchData]);
 
   const handleArchive = async (unitId: number) => {
     const ok = await archiveBookUnit(unitId);
     if (ok) {
-      toast.success("Book unit archived");
+        toast.success("Book unit archived");
       void fetchData();
     } else {
       toast.error("Cannot archive a rented book unit");
@@ -94,7 +117,7 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   const handleUnarchive = async (unitId: number) => {
     const ok = await unarchiveBookUnit(unitId);
     if (ok) {
-      toast.success("Book unit unarchived");
+        toast.success("Book unit unarchived");
       void fetchData();
     } else {
       toast.error("Failed to unarchive");
@@ -102,8 +125,9 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Copies for &quot;{book?.title}&quot;</DialogTitle>
         </DialogHeader>
@@ -147,7 +171,16 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
                         <span className="text-destructive font-medium">Rented</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex justify-end gap-2">
+                      {s.history.some(h => h.additionalNote) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedHistory(s.history.filter(h => h.additionalNote))}
+                        >
+                          Notes ({s.history.filter(h => h.additionalNote).length})
+                        </Button>
+                      )}
                       {s.unit.isArchived ? (
                         <Button
                           variant="outline"
@@ -177,5 +210,31 @@ export default function BookCopiesModal({ book, open, onOpenChange }: Props) {
         )}
       </DialogContent>
     </Dialog>
+
+    {open && (
+      <Dialog open={!!selectedHistory} onOpenChange={() => setSelectedHistory(null)}>
+        <DialogContent className="sm:max-w-md rounded-none z-[100]">
+          <DialogHeader>
+            <DialogTitle>Previous Return Notes</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-2">
+            {selectedHistory?.length === 0 && (
+              <p className="text-muted-foreground text-sm">No previous return notes found.</p>
+            )}
+            {selectedHistory?.map((h) => (
+              <div key={h.id} className="border p-3 text-sm space-y-1">
+                <p className="font-semibold text-xs text-muted-foreground">{formatDate(h.returnedDate || h.endDate)}</p>
+                <p><span className="font-medium">Condition:</span> {h.bookConditionUponReturn || "N/A"}</p>
+                <p><span className="font-medium">Note:</span> {h.additionalNote || "None"}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button type="button" variant="outline" onClick={() => setSelectedHistory(null)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }

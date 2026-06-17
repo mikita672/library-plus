@@ -38,7 +38,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormSchema) => {
     const error = await login(data);
     if (error === null) {
-      await refreshUser();
+        await refreshUser();
       await refreshFullUser();
       toast.success("Logged in successfully");
       router.replace("/");

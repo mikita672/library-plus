@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import { ReservationItem } from "@/types/reservation/Reservation";
 import {
   ColumnDef,
   flexRender,
@@ -22,66 +22,18 @@ import { useCallback, useMemo, useState } from "react";
 import { ManageRentalDialog } from "./ManageRentalDialog";
 import { updateReservationStatus } from "@/lib/api/reservations";
 import { toast } from "sonner";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { formatDate } from "@/lib/utils/dates";
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
-function StatusBadge({ status }: { status: string }) {
-  const normalized = status.toLowerCase();
 
-  let colorClasses: string;
-  let label = status;
-
-  switch (normalized) {
-    case "reserved":
-      colorClasses =
-        "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
-      label = "Pending";
-      break;
-    case "taken":
-      colorClasses =
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-      label = "Rented";
-      break;
-    case "returned":
-      colorClasses =
-        "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
-      label = "Returned";
-      break;
-    case "overdue":
-      colorClasses =
-        "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
-      label = "Overdue";
-      break;
-    case "waiting for payment":
-      colorClasses =
-        "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300";
-      label = "Waiting for payment";
-      break;
-    default:
-      colorClasses = "bg-muted text-muted-foreground";
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${colorClasses}`}
-    >
-      {label}
-    </span>
-  );
-}
 
 
 
 function buildColumns(
-  onManageClick: (r: EnrichedReservationItem) => void,
+  onManageClick: (r: ReservationItem) => void,
   onStatusChange: (id: number, newStatus: string) => void,
-): ColumnDef<EnrichedReservationItem>[] {
+): ColumnDef<ReservationItem>[] {
   return [
     {
       accessorKey: "userId",
@@ -158,14 +110,28 @@ function buildColumns(
     {
       accessorKey: "endDate",
       header: "Due Date",
-      cell: ({ row }) => formatDate(row.original.endDate),
+      cell: ({ row }) => {
+        const isOverdue = new Date() > new Date(row.original.endDate) && row.original.status.toLowerCase() !== "returned" && row.original.status.toLowerCase() !== "canceled";
+        return (
+          <div className="flex flex-col space-y-1">
+            <span className={isOverdue ? "text-destructive font-medium" : ""}>
+              {formatDate(row.original.endDate)}
+            </span>
+            {row.original.returnedDate && (
+              <span className="text-xs text-muted-foreground">
+                Returned: {formatDate(row.original.returnedDate)}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
         const r = row.original;
-        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const isOverdue = r.status !== "Returned" && r.status !== "Canceled" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
         const displayStatus = isOverdue ? "Overdue" : r.status;
         return <StatusBadge status={displayStatus} />;
       },
@@ -175,9 +141,9 @@ function buildColumns(
       header: "Actions",
       cell: ({ row }) => {
         const r = row.original;
-        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const isOverdue = r.status !== "Returned" && r.status !== "Canceled" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
         const displayStatus = isOverdue ? "Overdue" : r.status;
-        
+
         return (
           <div className="flex gap-2">
             {displayStatus === "Reserved" && (
@@ -185,12 +151,12 @@ function buildColumns(
                 <Button variant="outline" size="sm" onClick={() => onStatusChange(r.id, "Taken")}>
                   Confirm rent
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => onStatusChange(r.id, "Returned")}>
+                <Button variant="destructive" size="sm" onClick={() => onStatusChange(r.id, "Canceled")}>
                   Cancel
                 </Button>
               </>
             )}
-            
+
             {(displayStatus === "Taken" || displayStatus === "Overdue") && (
               <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
                 Return
@@ -212,12 +178,12 @@ export default function RentalsTable({
   reservations,
   onRefresh,
 }: {
-  reservations: EnrichedReservationItem[];
+  reservations: ReservationItem[];
   onRefresh: () => void;
 }) {
   "use no memo";
   const [selectedReservation, setSelectedReservation] =
-    useState<EnrichedReservationItem | null>(null);
+    useState<ReservationItem | null>(null);
 
   const handleStatusChange = useCallback(
     async (id: number, newStatus: string) => {
@@ -243,7 +209,7 @@ export default function RentalsTable({
 
   const data = useMemo(() => reservations, [reservations]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+
   const table = useReactTable({
     data,
     columns,
@@ -251,7 +217,7 @@ export default function RentalsTable({
   });
 
   if (!reservations.length) {
-    return (
+      return (
       <div className="text-center text-muted-foreground py-8">
         No reservations found.
       </div>

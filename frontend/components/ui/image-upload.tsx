@@ -33,7 +33,7 @@ export function ImageUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      const url = URL.createObjectURL(file);
+        const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     } else {
       setPreviewUrl(initialPreviewUrl || null);

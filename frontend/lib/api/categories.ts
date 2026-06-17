@@ -2,9 +2,13 @@ import { Category } from "@/types/book/Category";
 
 export async function getCategories(includeInactive?: boolean): Promise<Category[]> {
   const url = new URL("/api/categories", window.location.origin);
-  if (includeInactive) url.searchParams.set("includeInactive", "true");
+  if (includeInactive) {
+      url.searchParams.set("includeInactive", "true");
+  }
   const res = await fetch(url.toString(), { method: "GET" });
-  if (!res.ok) return [];
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<Category[]>;
 }
 

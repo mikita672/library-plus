@@ -8,7 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EnrichedReservationItem } from "@/types/reservation/Reservation";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { ReservationItem } from "@/types/reservation/Reservation";
+import { formatDate } from "@/lib/utils/dates";
+import { calculateFine } from "@/lib/utils/fines";
 import {
   ColumnDef,
   flexRender,
@@ -24,203 +27,140 @@ import { Button } from "@/components/ui/button";
 import { ManageRentalDialog } from "../dashboard/rentals/ManageRentalDialog";
 import { LeaveReviewDialog } from "./LeaveReviewDialog";
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const normalized = status.toLowerCase();
-
-  let colorClasses: string;
-  let label = status;
-
-  switch (normalized) {
-    case "reserved":
-      colorClasses =
-        "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
-      label = "Pending";
-      break;
-    case "taken":
-      colorClasses =
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-      label = "Rented";
-      break;
-    case "returned":
-      colorClasses =
-        "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
-      label = "Returned";
-      break;
-    case "overdue":
-      colorClasses =
-        "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
-      label = "Overdue";
-      break;
-    case "waiting for payment":
-      colorClasses =
-        "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300";
-      label = "Waiting for payment";
-      break;
-    default:
-      colorClasses = "bg-muted text-muted-foreground";
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full ${colorClasses}`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function calculateFine(reservation: EnrichedReservationItem): number {
-  let fine = 0;
-  
-  if (reservation.bookConditionUponReturn?.toLowerCase().includes("minor")) {
-    fine += reservation.repurchasePrice / 3;
-  }
-
-  if (reservation.status.toLowerCase() === "overdue") {
-    const dueDate = new Date(reservation.endDate);
-    const now = new Date();
-    
-    if (now > dueDate) {
-      const diffTime = Math.abs(now.getTime() - dueDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      fine += diffDays * 1; 
-    }
-  }
-  
-  return Math.round(fine * 100) / 100;
-}
-
 function buildColumns(
   onCancel: (id: number) => void,
-  onManageClick: (r: EnrichedReservationItem) => void,
-  onReviewClick: (r: EnrichedReservationItem) => void
-): ColumnDef<EnrichedReservationItem>[] {
+  onManageClick: (r: ReservationItem) => void,
+  onReviewClick: (r: ReservationItem) => void
+): ColumnDef<ReservationItem>[] {
   return [
-  {
-    accessorKey: "bookTitle",
-    header: "Book",
-    cell: ({ row }) => {
-      const title = row.original.bookTitle;
-      const author = row.original.bookAuthor;
-      const coverUri = row.original.bookCoverUri;
+    {
+      accessorKey: "bookTitle",
+      header: "Book",
+      cell: ({ row }) => {
+        const title = row.original.bookTitle;
+        const author = row.original.bookAuthor;
+        const coverUri = row.original.bookCoverUri;
 
-      if (title === "Loading..." || title === "Unknown" || title === "Error") {
-        return <span className="text-muted-foreground text-sm">{title}</span>;
-      }
+        if (title === "Loading..." || title === "Unknown" || title === "Error") {
+          return <span className="text-muted-foreground text-sm">{title}</span>;
+        }
 
-      return (
-        <div className="flex items-center gap-4 py-2">
-          {coverUri ? (
-            <div className="relative h-16 w-12 shrink-0 overflow-hidden border">
-              <Image
-                src={coverUri}
-                alt={title}
-                fill
-                sizes="48px"
-                className="object-cover"
-                unoptimized
-                priority={row.index < 5}
-              />
+        return (
+          <div className="flex items-center gap-4 py-2">
+            {coverUri ? (
+              <div className="relative h-16 w-12 shrink-0 overflow-hidden border">
+                <Image
+                  src={coverUri}
+                  alt={title}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                  unoptimized
+                  priority={row.index < 5}
+                />
+              </div>
+            ) : (
+              <div className="h-16 w-12 shrink-0 bg-muted border flex items-center justify-center">
+                <span className="text-xs text-muted-foreground">No img</span>
+              </div>
+            )}
+            <div className="flex flex-col max-w-50 sm:max-w-75">
+              <Link
+                href={`/catalog?${new URLSearchParams({ searchToken: title }).toString()}`}
+                className="truncate font-medium text-sm text-primary underline-offset-2 hover:underline"
+                title={title}
+              >
+                {title}
+              </Link>
+              <span className="text-xs text-muted-foreground truncate" title={author}>
+                {author}
+              </span>
             </div>
-          ) : (
-            <div className="h-16 w-12 shrink-0 bg-muted border flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">No img</span>
-            </div>
-          )}
-          <div className="flex flex-col max-w-50 sm:max-w-75">
-            <Link
-              href={`/catalog?${new URLSearchParams({ searchToken: title }).toString()}`}
-              className="truncate font-medium text-sm text-primary underline-offset-2 hover:underline"
-              title={title}
-            >
-              {title}
-            </Link>
-            <span className="text-xs text-muted-foreground truncate" title={author}>
-              {author}
-            </span>
           </div>
-        </div>
-      );
+        );
+      },
     },
-  },
-  {
-    accessorKey: "startDate",
-    header: "Date Rented",
-    cell: ({ row }) => formatDate(row.original.startDate),
-  },
-  {
-    accessorKey: "endDate",
-    header: "Due Date",
-    cell: ({ row }) => (
-      <span className={new Date() > new Date(row.original.endDate) && row.original.status.toLowerCase() !== "returned" ? "text-destructive font-medium" : ""}>
-        {formatDate(row.original.endDate)}
-      </span>
-    ),
-  },
+    {
+      accessorKey: "startDate",
+      header: "Date Rented",
+      cell: ({ row }) => formatDate(row.original.startDate),
+    },
+    {
+      accessorKey: "endDate",
+      header: "Due Date",
+      cell: ({ row }) => {
+        const r = row.original;
+        const isOverdue = new Date() > new Date(r.endDate) && r.status.toLowerCase() !== "returned" && r.status.toLowerCase() !== "canceled";
+        return (
+          <div className="flex flex-col space-y-1">
+            <span className={isOverdue ? "text-destructive font-medium" : ""}>
+              {formatDate(r.endDate)}
+            </span>
+            {r.returnedDate && (
+              <span className="text-xs text-muted-foreground">
+                Returned: {formatDate(r.returnedDate)}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
         const r = row.original;
-        const isOverdue = r.status !== "Returned" && new Date(r.endDate).getTime() < new Date().setHours(0,0,0,0);
+        const isOverdue = r.status !== "Returned" && r.status !== "Canceled" && new Date(r.endDate).getTime() < new Date().setHours(0, 0, 0, 0);
         const displayStatus = isOverdue ? "Overdue" : r.status;
         return <StatusBadge status={displayStatus} />;
       },
     },
-  {
-    id: "fines",
-    header: "Fines",
-    cell: ({ row }) => {
-      const fine = calculateFine(row.original);
-      if (fine > 0) {
-        return <span className="text-destructive font-medium">${fine.toFixed(2)}</span>;
-      }
-      return <span className="text-muted-foreground">-</span>;
+    {
+      id: "fines",
+      header: "Fines",
+      cell: ({ row }) => {
+        const fine = calculateFine(row.original);
+        if (fine > 0) {
+          return <span className="text-destructive font-medium">${fine.toFixed(2)}</span>;
+        }
+        return <span className="text-muted-foreground">-</span>;
+      },
     },
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const r = row.original;
-      const isPending = r.status.toLowerCase() === "reserved" || r.status.toLowerCase() === "pending";
-      const isReturned = r.status.toLowerCase() === "returned";
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const r = row.original;
+        const isPending = r.status.toLowerCase() === "reserved" || r.status.toLowerCase() === "pending";
+        const isReturned = r.status.toLowerCase() === "returned";
 
-      return (
-        <div className="flex gap-2">
-          {isPending && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={() => onCancel(r.id)}
-            >
-              Cancel
-            </Button>
-          )}
-          {isReturned && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
-                See details
+        return (
+          <div className="flex gap-2">
+            {isPending && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onCancel(r.id)}
+              >
+                Cancel
               </Button>
-              {!r.hasReviewed && (
-                <Button variant="default" size="sm" onClick={() => onReviewClick(r)}>
-                  Leave review
+            )}
+            {isReturned && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => onManageClick(r)}>
+                  See details
                 </Button>
-              )}
-            </>
-          )}
-        </div>
-      );
+                {!r.hasReviewed && (
+                  <Button variant="default" size="sm" onClick={() => onReviewClick(r)}>
+                    Leave review
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        );
+      },
     },
-  },
   ];
 }
 
@@ -228,10 +168,10 @@ export default function UserRentalsTable({
   reservations,
   onRefresh,
 }: {
-  reservations: EnrichedReservationItem[];
+  reservations: ReservationItem[];
   onRefresh: () => void;
 }) {
-  const [selectedReservation, setSelectedReservation] = useState<EnrichedReservationItem | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<ReservationItem | null>(null);
   const [reviewTarget, setReviewTarget] = useState<{ bookId: number; bookTitle: string } | null>(null);
 
   const handleCancel = useCallback(async (id: number) => {
@@ -248,14 +188,13 @@ export default function UserRentalsTable({
     }
   }, [onRefresh]);
 
-  const handleReviewClick = useCallback((r: EnrichedReservationItem) => {
+  const handleReviewClick = useCallback((r: ReservationItem) => {
     setReviewTarget({ bookId: r.bookId, bookTitle: r.bookTitle });
   }, []);
 
   const columns = useMemo(() => buildColumns(handleCancel, setSelectedReservation, handleReviewClick), [handleCancel, handleReviewClick]);
   const data = useMemo(() => reservations, [reservations]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

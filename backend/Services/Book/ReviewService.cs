@@ -15,7 +15,10 @@ public class ReviewService(LibraryPlusContext context)
     {
         var existingReview = await _context.Reviews
             .FirstOrDefaultAsync(r => r.BookId == request.BookId && r.UserId == userId);
-        if (existingReview != null) return null;
+        if (existingReview != null)
+        {
+            return null;
+        }
 
         var bookUnitIds = await _context.BookUnits
             .Where(bu => bu.BookId == request.BookId)
@@ -27,7 +30,10 @@ public class ReviewService(LibraryPlusContext context)
                 && bookUnitIds.Contains(r.BookUnitId)
                 && r.ReturnedDate != null);
 
-        if (!hasReturnedReservation) return null;
+        if (!hasReturnedReservation)
+        {
+            return null;
+        }
 
         var review = new ReviewModel
         {
@@ -88,7 +94,10 @@ public class ReviewService(LibraryPlusContext context)
             .Where(r => r.BookId == bookId)
             .ToListAsync();
 
-        if (reviews.Count == 0) return new BookRatingSummary(0, 0);
+        if (reviews.Count == 0)
+        {
+            return new BookRatingSummary(0, 0);
+        }
 
         var avg = reviews.Average(r => r.Rating);
         return new BookRatingSummary(Math.Round(avg, 2), reviews.Count);

@@ -34,7 +34,7 @@ function formatDate(iso: string): string {
 
 function StatusBadge({ isDeleted }: { isDeleted: boolean }) {
   if (isDeleted) {
-    return (
+      return (
       <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
         Removed
       </span>
@@ -61,8 +61,8 @@ function buildColumns(
         const email = row.original.email;
         const avatarUrl = row.original.avatarUrl;
         const hasValidName = name && name !== "Unknown";
-        
-        if (avatarUrl) console.log(`Avatar URL for ${email}:`, avatarUrl);
+
+        if (avatarUrl) { console.log(`Avatar URL for ${email}:`, avatarUrl); }
 
         return (
           <div className="flex items-center gap-3 max-w-[250px]">
@@ -119,7 +119,7 @@ function buildColumns(
       header: "Actions",
       cell: ({ row }) => {
         if (row.original.isAdmin) {
-          return null;
+            return null;
         }
 
         const isProcessing = processingId === row.original.id;
@@ -164,7 +164,7 @@ function buildColumns(
                     onClick={() => {
                       document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
                       if (isDeleted) {
-                        onRestoreClick(row.original.id);
+                          onRestoreClick(row.original.id);
                       } else {
                         onRemoveClick(row.original.id);
                       }
@@ -226,7 +226,7 @@ export default function ClientsTable({
   });
 
   if (!users.length) {
-    return (
+      return (
       <div className="text-center text-muted-foreground py-8">
         No clients found.
       </div>

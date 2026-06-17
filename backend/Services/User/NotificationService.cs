@@ -27,10 +27,16 @@ public class NotificationService(LibraryPlusContext context)
         var admin = await _context.Users
             .Where(u => u.IsAdmin)
             .FirstOrDefaultAsync();
-        if (admin == null) return;
+        if (admin == null)
+        {
+            return;
+        }
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return;
+        if (user == null)
+        {
+            return;
+        }
 
         var notification = await CreateNotification($"Contact request (from: {user.Email})", message);
         _context.UserNotifications.Add(new UserNotificationModel
@@ -69,19 +75,19 @@ public class NotificationService(LibraryPlusContext context)
 
     public async Task<IList<UserNotificationResponse>> GetUserNotifications(int userId, int page)
     {
-        return await (from un in _context.UserNotifications
-                      where un.UserId == userId
-                      join n in _context.Notifications on un.NotificationId equals n.Id
-                      orderby un.CreatedAt descending
-                      select new UserNotificationResponse(
-                          un.Id,
-                          n.Subject,
-                          n.Text,
-                          un.IsRead,
-                          un.CreatedAt
-                      ))
+        return await _context.UserNotifications
+            .Where(un => un.UserId == userId)
+            .Join(_context.Notifications, un => un.NotificationId, n => n.Id, (un, n) => new { un, n })
+            .OrderByDescending(x => x.un.CreatedAt)
             .Skip(5 * (page - 1))
             .Take(5)
+            .Select(x => new UserNotificationResponse(
+                x.un.Id,
+                x.n.Subject,
+                x.n.Text,
+                x.un.IsRead,
+                x.un.CreatedAt
+            ))
             .ToListAsync();
     }
 

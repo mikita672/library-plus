@@ -37,12 +37,24 @@ public static class MediaEndpoints
         LibraryPlusContext context,
         CancellationToken ct)
     {
-        if (file.Length == 0) return Results.BadRequest("File is empty.");
-        if (file.Length > MaxBookCoverSize) return Results.BadRequest("File is too large.");
-        if (!AllowedContentTypes.Contains(file.ContentType)) return Results.BadRequest("Invalid file type.");
+        if (file.Length == 0)
+        {
+            return Results.BadRequest("File is empty.");
+        }
+        if (file.Length > MaxBookCoverSize)
+        {
+            return Results.BadRequest("File is too large.");
+        }
+        if (!AllowedContentTypes.Contains(file.ContentType))
+        {
+            return Results.BadRequest("Invalid file type.");
+        }
 
         var book = await bookService.GetBookById(bookId);
-        if (book == null) return Results.NotFound("Book not found.");
+        if (book == null)
+        {
+            return Results.NotFound("Book not found.");
+        }
 
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream, ct);
@@ -61,11 +73,23 @@ public static class MediaEndpoints
         CancellationToken ct)
     {
         var userIdStr = user.FindFirstValue("sub")!;
-        if (!int.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
+        if (!int.TryParse(userIdStr, out var userId))
+        {
+            return Results.Unauthorized();
+        }
 
-        if (file.Length == 0) return Results.BadRequest("File is empty.");
-        if (file.Length > MaxAvatarSize) return Results.BadRequest("File is too large.");
-        if (!AllowedContentTypes.Contains(file.ContentType)) return Results.BadRequest("Invalid file type.");
+        if (file.Length == 0)
+        {
+            return Results.BadRequest("File is empty.");
+        }
+        if (file.Length > MaxAvatarSize)
+        {
+            return Results.BadRequest("File is too large.");
+        }
+        if (!AllowedContentTypes.Contains(file.ContentType))
+        {
+            return Results.BadRequest("Invalid file type.");
+        }
 
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream, ct);
@@ -79,7 +103,10 @@ public static class MediaEndpoints
     private static async Task<IResult> GetBookCover(int bookId, LibraryPlusContext context)
     {
         var book = await context.Books.FindAsync(bookId);
-        if (book?.CoverImage == null || book.CoverImageContentType == null) return Results.NotFound();
+        if (book?.CoverImage == null || book.CoverImageContentType == null)
+        {
+            return Results.NotFound();
+        }
 
         return Results.File(book.CoverImage, book.CoverImageContentType);
     }
@@ -87,7 +114,10 @@ public static class MediaEndpoints
     private static async Task<IResult> GetUserAvatar(int userId, LibraryPlusContext context)
     {
         var user = await context.Users.FindAsync(userId);
-        if (user?.AvatarImage == null || user.AvatarImageContentType == null) return Results.NotFound();
+        if (user?.AvatarImage == null || user.AvatarImageContentType == null)
+        {
+            return Results.NotFound();
+        }
 
         return Results.File(user.AvatarImage, user.AvatarImageContentType);
     }

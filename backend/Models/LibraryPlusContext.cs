@@ -36,6 +36,12 @@ public class LibraryPlusContext : DbContext
 
         modelBuilder.Entity<BookModel>(entity => {
             entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.OriginalPublisher)
+                  .WithMany(p => p.OriginalBooks)
+                  .HasForeignKey(e => e.OriginalPublisherId);
+            entity.HasOne(e => e.Publisher)
+                  .WithMany(p => p.Books)
+                  .HasForeignKey(e => e.PublisherId);
         });
 
         modelBuilder.Entity<BookUnitModel>(entity => {

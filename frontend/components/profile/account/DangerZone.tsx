@@ -19,7 +19,9 @@ function DangerZone() {
   const router = useRouter();
 
   const handleDeleteAccount = async () => {
-    if (loading) return;
+    if (loading) {
+        return;
+    }
 
     setLoading(true);
     setError(null);
@@ -34,7 +36,7 @@ function DangerZone() {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => null);
+          const data = await response.json().catch(() => null);
         setError(data?.message ?? "Failed to delete account");
         return;
       }

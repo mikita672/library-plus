@@ -33,13 +33,15 @@ export function LeaveReviewDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (rating === 0 || bookId === null) return;
+    if (rating === 0 || bookId === null) {
+        return;
+    }
 
     setSubmitting(true);
     try {
       const success = await createReview(bookId, rating, reviewText || null);
       if (success) {
-        toast.success("Review submitted successfully");
+          toast.success("Review submitted successfully");
         onSuccess();
         handleClose();
       } else {

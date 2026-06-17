@@ -11,7 +11,7 @@ export async function uploadBookCover(bookId: number, file: File): Promise<{ cov
   });
 
   if (!response.ok) {
-    const error = await response.text();
+      const error = await response.text();
     throw new Error(error || "Failed to upload cover");
   }
 
@@ -29,7 +29,7 @@ export async function uploadUserAvatar(file: File): Promise<{ avatarUrl: string 
   });
 
   if (!response.ok) {
-    const error = await response.text();
+      const error = await response.text();
     throw new Error(error || "Failed to upload avatar");
   }
 

@@ -19,7 +19,8 @@ public record BookPreviewResponse(
     string? CoverURI,
     bool IsAvailable,
     double AverageRating,
-    int ReviewCount
+    int ReviewCount,
+    decimal RepurchasePrice
 );
 
 public record BookCardResponse(

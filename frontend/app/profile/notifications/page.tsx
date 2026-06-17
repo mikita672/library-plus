@@ -9,7 +9,7 @@ export default function NotificationsPage() {
   const { fullUserData } = useContext(userContext);
 
   if (!fullUserData) {
-    return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+      return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   }
 
   return fullUserData.isAdmin ? <AdminNotifications /> : <UserNotifications />;

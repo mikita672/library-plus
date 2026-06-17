@@ -48,7 +48,7 @@ export default function BooksTab() {
   useEffect(() => {
     const token = searchParams.get("searchToken");
     if (token !== null && token !== inputValue) {
-      setInputValue(token);
+        setInputValue(token);
     }
   }, [searchParams, inputValue]);
 

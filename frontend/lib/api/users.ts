@@ -10,7 +10,9 @@ export async function getUserById(id: number): Promise<UserMeShort | null> {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+      return null;
+  }
   const data = await res.json() as UserMeShort;
   if (data.avatarUrl) {
     data.avatarUrl = `${data.avatarUrl}?t=${Date.now()}`;
@@ -35,13 +37,17 @@ export async function getAllUsers(
 ): Promise<AdminUser[]> {
   const sp = new URLSearchParams();
   sp.set("pageNumber", String(pageNumber));
-  if (searchToken) sp.set("searchToken", searchToken);
+  if (searchToken) {
+      sp.set("searchToken", searchToken);
+  }
 
   const res = await fetch(`/api/users/all?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+      return [];
+  }
   const data = await res.json() as AdminUser[];
   return data.map(u => {
     if (u.avatarUrl) {
@@ -53,13 +59,17 @@ export async function getAllUsers(
 
 export async function getAllUsersPages(searchToken?: string): Promise<number> {
   const sp = new URLSearchParams();
-  if (searchToken) sp.set("searchToken", searchToken);
+  if (searchToken) {
+      sp.set("searchToken", searchToken);
+  }
 
   const res = await fetch(`/api/users/all/pages?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return 1;
+  if (!res.ok) {
+      return 1;
+  }
   return res.json() as Promise<number>;
 }
 

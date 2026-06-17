@@ -11,14 +11,20 @@ export async function getReservations(
 ): Promise<ReservationItem[]> {
   const sp = new URLSearchParams();
   sp.set("pageNumber", String(params.pageNumber));
-  if (params.status) sp.set("status", params.status);
-  if (params.searchToken) sp.set("searchToken", params.searchToken);
+  if (params.status) {
+      sp.set("status", params.status);
+  }
+  if (params.searchToken) {
+      sp.set("searchToken", params.searchToken);
+  }
 
   const res = await fetch(`/api/reservations/all?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<ReservationItem[]>;
 }
 
@@ -27,14 +33,20 @@ export async function getUserReservations(
 ): Promise<ReservationItem[]> {
   const sp = new URLSearchParams();
   sp.set("pageNumber", String(params.pageNumber));
-  if (params.status) sp.set("status", params.status);
-  if (params.searchToken) sp.set("searchToken", params.searchToken);
+  if (params.status) {
+      sp.set("status", params.status);
+  }
+  if (params.searchToken) {
+      sp.set("searchToken", params.searchToken);
+  }
 
   const res = await fetch(`/api/reservations?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<ReservationItem[]>;
 }
 
@@ -42,14 +54,20 @@ export async function getUserReservationPages(
   params: GetReservationsParams,
 ): Promise<number> {
   const sp = new URLSearchParams();
-  if (params.status) sp.set("status", params.status);
-  if (params.searchToken) sp.set("searchToken", params.searchToken);
+  if (params.status) {
+      sp.set("status", params.status);
+  }
+  if (params.searchToken) {
+      sp.set("searchToken", params.searchToken);
+  }
 
   const res = await fetch(`/api/reservations/pages?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return 1;
+  if (!res.ok) {
+      return 1;
+  }
   return res.json() as Promise<number>;
 }
 
@@ -57,14 +75,20 @@ export async function getReservationPages(
   params: GetReservationsParams,
 ): Promise<number> {
   const sp = new URLSearchParams();
-  if (params.status) sp.set("status", params.status);
-  if (params.searchToken) sp.set("searchToken", params.searchToken);
+  if (params.status) {
+      sp.set("status", params.status);
+  }
+  if (params.searchToken) {
+      sp.set("searchToken", params.searchToken);
+  }
 
   const res = await fetch(`/api/reservations/all/pages?${sp.toString()}`, {
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return 1;
+  if (!res.ok) {
+      return 1;
+  }
   return res.json() as Promise<number>;
 }
 
@@ -111,6 +135,8 @@ export async function getReservationsByUnit(unitId: number): Promise<Reservation
     method: "GET",
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+      return [];
+  }
   return res.json() as Promise<ReservationItem[]>;
 }

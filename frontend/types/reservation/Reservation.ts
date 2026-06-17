@@ -1,4 +1,4 @@
-export type ReservationStatus = "Reserved" | "Taken" | "Returned" | "Overdue";
+export type ReservationStatus = "Reserved" | "Taken" | "Returned" | "Overdue" | "Canceled";
 
 export interface ReservationItem {
   id: number;
@@ -12,9 +12,8 @@ export interface ReservationItem {
   repurchasePrice: number;
   createdAt: string;
   additionalNote?: string | null;
-}
-
-export interface EnrichedReservationItem extends ReservationItem {
+  
+  // Enriched fields from backend
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -24,6 +23,6 @@ export interface EnrichedReservationItem extends ReservationItem {
   bookAuthor: string;
   bookLanguage: string;
   bookYear: number;
-  bookCoverUri: string;
+  bookCoverUri?: string | null;
   hasReviewed?: boolean;
 }

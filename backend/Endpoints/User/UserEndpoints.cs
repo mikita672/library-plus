@@ -20,29 +20,44 @@ public static class UserEndpoints
         group.MapGet("/meShort", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
             var userIdStr = claims.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
-            
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
             var user = await userService.GetUserById(userId);
-            if (user == null) return Results.NotFound();
-            
+            if (user == null)
+            {
+                return Results.NotFound();
+            }
+
             return Results.Ok(new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrlById(user), user.PhoneNumber));
         });
 
         group.MapGet("/user/{id}", [Authorize] async (int id, UserService userService) =>
         {
             var user = await userService.GetUserById(id);
-            if (user == null) return Results.NotFound();
-            
+            if (user == null)
+            {
+                return Results.NotFound();
+            }
+
             return Results.Ok(new MeShortResponse(user.Email, user.Name, userService.GetAvatarUrlById(user), user.PhoneNumber));
         });
 
         group.MapGet("/me", [Authorize] async (ClaimsPrincipal claims, UserService userService) =>
         {
             var userIdStr = claims.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
 
             var user = await userService.GetUserById(userId);
-            if (user == null) return Results.NotFound();
+            if (user == null)
+            {
+                return Results.NotFound();
+            }
 
             var response = MeResponse.FromModel(user);
             return Results.Ok(response with { AvatarUrl = userService.GetAvatarUrlById(user) });

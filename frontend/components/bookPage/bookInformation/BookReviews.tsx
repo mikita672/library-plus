@@ -12,14 +12,22 @@ interface Props {
 }
 
 function getDisplayName(review: ReviewResponse): string {
-  if (review.userName) return review.userName;
-  if (review.userEmail) return review.userEmail.split("@")[0];
+  if (review.userName) {
+      return review.userName;
+  }
+  if (review.userEmail) {
+      return review.userEmail.split("@")[0];
+  }
   return "Anonymous";
 }
 
 function getInitial(review: ReviewResponse): string {
-  if (review.userName) return review.userName.charAt(0).toUpperCase();
-  if (review.userEmail) return review.userEmail.charAt(0).toUpperCase();
+  if (review.userName) {
+      return review.userName.charAt(0).toUpperCase();
+  }
+  if (review.userEmail) {
+      return review.userEmail.charAt(0).toUpperCase();
+  }
   return "?";
 }
 
@@ -57,11 +65,11 @@ export default function BookReviews({ bookId }: Props) {
   }, [fetchReviews]);
 
   if (loading) {
-    return <div className="text-muted-foreground py-4">Loading reviews...</div>;
+      return <div className="text-muted-foreground py-4">Loading reviews...</div>;
   }
 
   if (totalCount === 0) {
-    return (
+      return (
       <div className="text-muted-foreground py-4">
         No reviews yet. Be the first to review this book!
       </div>

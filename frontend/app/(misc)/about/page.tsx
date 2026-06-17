@@ -19,8 +19,8 @@ function AboutPage() {
                     </ul>
 
                     <p className="mt-7">The website offers the following functions: book catalog view (searching, filtering, sorting and pagination are supported), authorization (sign-up, login, reset password), cart, order placement, notifications, order history view, profile customization, admin dashboard (books and orders management).</p>
-                    <p>Some features like <b>TRIGGER WARNING</b> AI were added due to requirements of the course instructors.</p>
-                    <p>Otherwise, the website would not have such unnecessary features, because the goal of this website was to mimic a real-world library - a place where people can rest, read books in a calm atmosphere, and stay focused and thoughtful. AI, for instance, is ruining this premise. I hope that in the future, the course instructors at the above-mentioned institution will reconsider their project requirements. This will contribute to the creation of something meaningful instead of something so shallow.</p>
+                    <p>Some features like AI integration were added to explore modern technologies and fulfill the course requirements.</p>
+                    <p>The main goal of this website was to mimic a real-world library - a place where people can easily find books and manage their reservations in a calm and straightforward manner.</p>
 
                     <p className="w-full text-right">Written by Andrii Bialkovskyi</p>
                 </div>

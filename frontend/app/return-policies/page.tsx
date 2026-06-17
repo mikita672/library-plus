@@ -8,7 +8,7 @@ export default function ReturnPoliciesPage() {
     <div className="container mx-auto py-12 px-4 md:px-6">
       <div className="max-w-4xl mx-auto bg-card p-8 rounded-lg shadow-sm border">
         <h1 className="text-3xl font-bold mb-6">Library Plus Return Policies</h1>
-        
+
         <div className="space-y-8 text-muted-foreground">
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">1. General Rental Terms</h2>

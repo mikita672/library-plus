@@ -44,7 +44,7 @@ export default function SendNotificationForm() {
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
+          setShowSuggestions(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -53,18 +53,18 @@ export default function SendNotificationForm() {
 
   const handleSend = useCallback(async () => {
     if (!subject.trim() || !body.trim()) {
-      toast.error("Subject and message body are required");
+        toast.error("Subject and message body are required");
       return;
     }
     if (!sendToAll && !email.trim()) {
-      toast.error("Please enter a user email");
+        toast.error("Please enter a user email");
       return;
     }
 
     setSending(true);
     let ok: boolean;
     if (sendToAll) {
-      ok = await sendNotificationToAll(subject, body);
+        ok = await sendNotificationToAll(subject, body);
     } else {
       ok = await sendNotificationToUser(email, subject, body);
     }
@@ -73,7 +73,9 @@ export default function SendNotificationForm() {
       toast.success(sendToAll ? "Notification sent to all users" : "Notification sent");
       setSubject("");
       setBody("");
-      if (!sendToAll) setEmail("");
+      if (!sendToAll) {
+          setEmail("");
+      }
     } else {
       toast.error("Failed to send notification");
     }
@@ -113,7 +115,9 @@ export default function SendNotificationForm() {
               setShowSuggestions(true);
             }}
             onFocus={() => {
-              if (suggestions.length > 0) setShowSuggestions(true);
+              if (suggestions.length > 0) {
+                  setShowSuggestions(true);
+              }
             }}
           />
           {showSuggestions && debouncedEmail.length >= 2 && (

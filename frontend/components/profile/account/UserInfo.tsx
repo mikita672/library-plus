@@ -12,8 +12,12 @@ function UserInfo() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (!fullUserData) return <div>No user data available</div>;
+  if (isLoading) {
+      return <div>Loading...</div>;
+  }
+  if (!fullUserData) {
+      return <div>No user data available</div>;
+  }
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -21,7 +25,9 @@ function UserInfo() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+        return;
+    }
 
     setUploading(true);
     try {
@@ -32,7 +38,9 @@ function UserInfo() {
       toast.error(err instanceof Error ? err.message : "Failed to upload avatar");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+      }
     }
   };
 

@@ -11,7 +11,7 @@ function HeaderUser() {
   const { isLoading, userData } = useContext(userContext);
 
   if (isLoading) {
-    return (
+      return (
       <div className="flex items-center justify-center">
         <Badge className="bg-card text-foreground h-8">
           <Spinner data-icon="inline-start" />

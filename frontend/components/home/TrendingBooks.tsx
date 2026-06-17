@@ -8,12 +8,12 @@ async function TrendingBooks() {
   );
 
   if (!response.ok) {
-    return <></>;
+      return <></>;
   }
 
   const books: BookCard[] = await response.json();
   if (books.length === 0) {
-    return <></>;
+      return <></>;
   }
 
   return (
