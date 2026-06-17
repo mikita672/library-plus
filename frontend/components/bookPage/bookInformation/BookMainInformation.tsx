@@ -24,6 +24,10 @@ function BookMainInformation({ book }: Props) {
             className="shadow-md object-contain"
             alt="Book cover"
             priority
+            onError={(e) => {
+              e.currentTarget.src = "/images/book-placeholder.png";
+              e.currentTarget.srcset = "";
+            }}
           />
         </div>
       </div>

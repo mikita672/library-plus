@@ -27,6 +27,10 @@ function BookResult({ book, priority }: Props) {
                     className="object-contain"
                     alt="Book cover"
                     priority={priority}
+                    onError={(e) => {
+                        e.currentTarget.src = "/images/book-placeholder.png";
+                        e.currentTarget.srcset = "";
+                    }}
                 />
             </div>
 

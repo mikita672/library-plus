@@ -13,3 +13,7 @@ Library Plus is a comprehensive, full-stack library management system designed t
   - **Backend:** .NET / C#
   - **Databases:** PostgreSQL (Relational Data) & MongoDB (Document Data / Event Sourcing)
   - **Containerization:** Docker & Docker Compose
+
+  
+## Notes
+- **Admin account credentials**: email: admin@admin.com; password: admin

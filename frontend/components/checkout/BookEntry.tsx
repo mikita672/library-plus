@@ -28,6 +28,10 @@ function BookEntry({ book, dateRange, changeDateRange }: Props) {
                     src={book.coverURI ?? "/images/book-placeholder.png"}
                     className="w-full max-w-[100px] h-[100px] object-contain"
                     alt="Book cover"
+                    onError={(e) => {
+                        e.currentTarget.src = "/images/book-placeholder.png";
+                        e.currentTarget.srcset = "";
+                    }}
                 />
 
                 <div className="w-full space-y-2">

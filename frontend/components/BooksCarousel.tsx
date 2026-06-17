@@ -32,7 +32,7 @@ function BooksCarousel({ books, includeAuthor }: Props) {
 
   useEffect(() => {
     if (!api) {
-        return;
+      return;
     }
 
     const initialSnap = api.selectedScrollSnap();
@@ -53,7 +53,7 @@ function BooksCarousel({ books, includeAuthor }: Props) {
 
   useEffect(() => {
     if (api) {
-        api.scrollTo(0);
+      api.scrollTo(0);
     }
   }, [api, booksPerSlide]);
 
@@ -82,6 +82,10 @@ function BooksCarousel({ books, includeAuthor }: Props) {
                     className="object-contain"
                     alt="Book cover"
                     priority={index < 6}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/book-placeholder.png";
+                      e.currentTarget.srcset = "";
+                    }}
                   />
                 </div>
 

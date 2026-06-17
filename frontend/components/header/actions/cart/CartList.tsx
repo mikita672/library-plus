@@ -60,6 +60,10 @@ function CartList({ ids }: Props) {
                         className="object-contain"
                         alt="Book cover"
                         priority={index < 5}
+                        onError={(e) => {
+                            e.currentTarget.src = "/images/book-placeholder.png";
+                            e.currentTarget.srcset = "";
+                        }}
                     />
                 </div>
 
