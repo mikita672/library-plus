@@ -14,6 +14,7 @@ import {
   type Column,
   type ColumnDef,
   type SortingState,
+  type OnChangeFn,
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -222,7 +223,7 @@ interface Props {
   books: BookCard[];
   onSuccess?: () => void;
   sorting: SortingState;
-  setSorting: (sorting: SortingState) => void;
+  setSorting: OnChangeFn<SortingState>;
 }
 
 export default function BookCatalogTable({ books, onSuccess, sorting, setSorting }: Props) {
