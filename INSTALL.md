@@ -67,3 +67,6 @@ To stop and remove the containers, run:
 docker compose down
 ```
 *(Add `-v` if you also want to delete the database volumes).*
+
+## Notes
+- **Admin account credentials**: email: admin@admin.com; password: admin

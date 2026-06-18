@@ -193,6 +193,14 @@ public class BookService(
             (false, "relevancy") => query.OrderBy(b => b.Popularity),
             (true, "rating") => query.OrderByDescending(b => _context.Reviews.Where(r => r.BookId == b.Id).Average(r => (double?)r.Rating) ?? 0),
             (false, "rating") => query.OrderBy(b => _context.Reviews.Where(r => r.BookId == b.Id).Average(r => (double?)r.Rating) ?? 0),
+            (true, "authorname") => query.OrderByDescending(b => b.Author != null ? b.Author.Name : ""),
+            (false, "authorname") => query.OrderBy(b => b.Author != null ? b.Author.Name : ""),
+            (true, "publishername") => query.OrderByDescending(b => b.Publisher != null ? b.Publisher.Name : ""),
+            (false, "publishername") => query.OrderBy(b => b.Publisher != null ? b.Publisher.Name : ""),
+            (true, "categoryname") => query.OrderByDescending(b => b.Categories.FirstOrDefault() != null ? b.Categories.FirstOrDefault()!.Name : ""),
+            (false, "categoryname") => query.OrderBy(b => b.Categories.FirstOrDefault() != null ? b.Categories.FirstOrDefault()!.Name : ""),
+            (true, "language") => query.OrderByDescending(b => b.Language),
+            (false, "language") => query.OrderBy(b => b.Language),
             (true, _) => query.OrderByDescending(b => b.Title),
             (false, _) => query.OrderBy(b => b.Title)
         };

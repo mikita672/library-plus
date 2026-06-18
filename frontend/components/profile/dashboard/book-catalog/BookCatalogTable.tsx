@@ -139,11 +139,6 @@ function buildColumns(
     {
       accessorKey: "publicationYear",
       header: ({ column }) => <SortableHeader label="Year" column={column} />,
-      sortingFn: (rowA, rowB) => {
-        const a = rowA.original.originalPublicationYear ?? rowA.original.publicationYear;
-        const b = rowB.original.originalPublicationYear ?? rowB.original.publicationYear;
-        return a - b;
-      },
       cell: ({ row }) => (
         <div>
           {row.original.originalPublicationYear ??
@@ -226,11 +221,12 @@ function buildColumns(
 interface Props {
   books: BookCard[];
   onSuccess?: () => void;
+  sorting: SortingState;
+  setSorting: (sorting: SortingState) => void;
 }
 
-export default function BookCatalogTable({ books, onSuccess }: Props) {
+export default function BookCatalogTable({ books, onSuccess, sorting, setSorting }: Props) {
   "use no memo";
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [editingBook, setEditingBook] = useState<BookCard | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [copiesBook, setCopiesBook] = useState<BookCard | null>(null);
@@ -281,6 +277,7 @@ export default function BookCatalogTable({ books, onSuccess }: Props) {
     onSortingChange: setSorting,
     getCoreRowModel: useMemo(() => getCoreRowModel(), []),
     getSortedRowModel: useMemo(() => getSortedRowModel(), []),
+    manualSorting: true,
     state: useMemo(() => ({ sorting }), [sorting]),
   });
 

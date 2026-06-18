@@ -31,6 +31,7 @@ import {
 import AddBookDialog from "./AddBookDialog";
 import BookCatalogTable from "./BookCatalogTable";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { SortingState } from "@tanstack/react-table";
 
 
 
@@ -55,6 +56,7 @@ export default function BooksTab() {
   const [authorId, setAuthorId] = useState(searchParams.get("authorId") || "all");
   const [publisherId, setPublisherId] = useState(searchParams.get("publisherId") || "all");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryIds") || "all");
+  const [sorting, setSorting] = useState<SortingState>([]);
 
 
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -72,6 +74,8 @@ export default function BooksTab() {
         categoryIds: categoryId === "all" ? [] : [categoryId],
         pageNumber,
         includeInactive: true,
+        sortBy: sorting[0]?.id,
+        sortDescending: sorting[0]?.desc,
       };
 
       const [data, pages] = await Promise.all([getBooks(params), getBooksPages(params)]);
@@ -82,7 +86,7 @@ export default function BooksTab() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, authorId, publisherId, categoryId, pageNumber]);
+  }, [debouncedSearch, authorId, publisherId, categoryId, pageNumber, sorting]);
 
   useEffect(() => { void fetchBooksAndPages(); }, [fetchBooksAndPages]);
 
@@ -98,7 +102,7 @@ export default function BooksTab() {
     void loadLookups();
   }, []);
 
-  useEffect(() => { setPageNumber(1); }, [debouncedSearch, authorId, publisherId, categoryId]);
+  useEffect(() => { setPageNumber(1); }, [debouncedSearch, authorId, publisherId, categoryId, sorting]);
 
   const handleClearFilters = () => {
     setInputValue("");
@@ -177,7 +181,7 @@ export default function BooksTab() {
         <div className="text-destructive py-8">Error loading books</div>
       ) : (
         <div className="flex flex-col justify-between">
-          <BookCatalogTable books={books} onSuccess={fetchBooksAndPages} />
+          <BookCatalogTable books={books} onSuccess={fetchBooksAndPages} sorting={sorting} setSorting={setSorting} />
           <PaginationControls pageNumber={pageNumber} totalPages={totalPages} onPageChange={setPageNumber} />
         </div>
       )}

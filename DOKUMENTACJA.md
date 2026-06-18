@@ -63,3 +63,6 @@ Aplikacja została przygotowana do uruchomienia w środowisku izolowanym przy po
 3. Środowisko uruchamia się wykonując polecenie:
    `docker compose up --build -d`
 4. Po poprawnym zbudowaniu i uruchomieniu kontenerów aplikacja kliencka dostępna jest w przeglądarce pod adresem `http://localhost:3000`, a interfejs serwera pod adresem `http://localhost:8080`.
+
+## Uwagi
+- **Konto admina**: email: admin@admin.com; hasło: admin
